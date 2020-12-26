@@ -115,8 +115,7 @@ public final class ConfigurationLoader {
     try {
       URL url = new URL("https://intave.de/api/configuration-download.php");
       URLConnection urlConnection = url.openConnection();
-      SSLConnectionVerifier.verifyURLConnection((HttpsURLConnection) urlConnection);
-      urlConnection.addRequestProperty("User-Agent", "Intave/"+IntavePlugin.VERSION);
+      urlConnection.addRequestProperty("User-Agent", "Intave/"+IntavePlugin.version());
       urlConnection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
       urlConnection.setUseCaches(false);
       urlConnection.addRequestProperty("Pragma", "no-cache");
@@ -124,6 +123,8 @@ public final class ConfigurationLoader {
       urlConnection.addRequestProperty("ConfigKey", configurationKey);
       urlConnection.setConnectTimeout(3000);
       urlConnection.setReadTimeout(3000);
+      urlConnection.connect();
+      SSLConnectionVerifier.verifyURLConnection((HttpsURLConnection) urlConnection);
       InputStream inputStream = urlConnection.getInputStream();
       return YamlConfiguration.loadConfiguration(new InputStreamReader(inputStream));
     } catch (IOException exception) {

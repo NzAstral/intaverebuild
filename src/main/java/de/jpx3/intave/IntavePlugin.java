@@ -18,8 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class IntavePlugin extends JavaPlugin {
   private static IntavePlugin singletonInstance;
-
-  public final static String VERSION = "@VERSION@";
+  private static String version = "UNKNOWN";
 
   private IntaveLogger logger;
   private ConfigurationService configurationService;
@@ -40,6 +39,7 @@ public final class IntavePlugin extends JavaPlugin {
   public IntavePlugin() {
     // stage 2
     singletonInstance = this;
+    version = getDescription().getVersion();
     this.logger = new IntaveLogger(this);
   }
 
@@ -132,6 +132,10 @@ public final class IntavePlugin extends JavaPlugin {
 
   public RetributionService retributionService() {
     return this.retributionService;
+  }
+
+  public static String version() {
+    return version;
   }
 
   public static IntavePlugin singletonInstance() {

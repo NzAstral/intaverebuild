@@ -1,12 +1,19 @@
 package de.jpx3.intave.user;
 
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.detect.IntaveCheck;
+import de.jpx3.intave.detect.IntaveMetaCheck;
 import de.jpx3.intave.reflect.Reflection;
 import org.bukkit.entity.Player;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class User {
+  private final Map<Class<? extends UserCustomCheckMeta>, UserCustomCheckMeta> customMetaPool = new ConcurrentHashMap<>();
+
   private final WeakReference<Player> playerRef;
   private final WeakReference<Object> nmsEntity;
   private final UserMeta userMeta;
@@ -32,7 +39,20 @@ public final class User {
     if(player == null) {
       throw new IntaveInternalException("Unable to reference player through service repo: Fallback user lacks reference");
     }
+
     return player;
+  }
+
+  public UserCustomCheckMeta customMeta(Class<? extends UserCustomCheckMeta> classTarget) {
+    UserCustomCheckMeta userCustomCheckMeta = customMetaPool.get(classTarget);
+    if(userCustomCheckMeta == null) {
+      try {
+        customMetaPool.put(classTarget, classTarget.newInstance());
+      } catch (InstantiationException | IllegalAccessException e) {
+        e.printStackTrace();
+      }
+    }
+    return userCustomCheckMeta;
   }
 
   public static User empty() {

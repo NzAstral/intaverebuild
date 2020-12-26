@@ -50,6 +50,9 @@ public final class Reflection {
   private static MethodHandle entityHandleMethod;
 
   public static Object resolveEntityNMSHandle(Entity entity) {
+    if(entity == null) {
+      return null;
+    }
     try {
       if (entityHandleMethod == null) {
         entityHandleMethod = MethodHandles

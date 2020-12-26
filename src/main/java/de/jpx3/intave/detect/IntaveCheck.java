@@ -1,6 +1,8 @@
 package de.jpx3.intave.detect;
 
 import com.google.common.collect.Lists;
+import de.jpx3.intave.user.UserCustomCheckMeta;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 
