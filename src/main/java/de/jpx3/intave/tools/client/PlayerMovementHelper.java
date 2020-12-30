@@ -108,7 +108,7 @@ public final class PlayerMovementHelper {
   }
 
   public static boolean isOnLadder(User user, double positionX, double positionY, double positionZ) {
-    Player player = user.bukkitPlayer();
+    Player player = user.player();
     UserMetaClientData clientData = user.meta().clientData();
     Block block = BlockAccessor.blockAccess(
       player.getWorld(),

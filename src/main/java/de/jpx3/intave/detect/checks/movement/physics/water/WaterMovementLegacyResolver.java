@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 
 public final class WaterMovementLegacyResolver {
   public boolean handleMaterialAcceleration(User user, WrappedAxisAlignedBB boundingBox) {
-    Player player = user.bukkitPlayer();
+    Player player = user.player();
     UserMetaMovementData movementData = user.meta().movementData();
     int minX = WrappedMathHelper.floor(boundingBox.minX);
     int minY = WrappedMathHelper.floor(boundingBox.minY);

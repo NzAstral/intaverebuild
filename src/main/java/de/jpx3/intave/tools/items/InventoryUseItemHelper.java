@@ -85,7 +85,7 @@ public final class InventoryUseItemHelper {
   }
 
   private static boolean tridentUsable(User user, ItemStack itemStack) {
-    Player player = user.bukkitPlayer();
+    Player player = user.player();
     World world = player.getWorld();
     UserMetaMovementData movementData = user.meta().movementData();
     if (tridentRiptideEnchanted(itemStack)) {

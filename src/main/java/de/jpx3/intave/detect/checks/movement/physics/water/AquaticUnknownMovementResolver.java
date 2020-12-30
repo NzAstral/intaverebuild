@@ -23,13 +23,13 @@ public final class AquaticUnknownMovementResolver extends AquaticWaterMovementBa
 
   @Override
   public boolean fluidStateEmpty(User user, double x, double y, double z) {
-    World world = user.bukkitPlayer().getWorld();
+    World world = user.player().getWorld();
     return !isWaterAt(world, x, y, z);
   }
 
   @Override
   public boolean handleFluidAcceleration(User user, WrappedAxisAlignedBB boundingBox) {
-    Player player = user.bukkitPlayer();
+    Player player = user.player();
     UserMetaMovementData movementData = user.meta().movementData();
     World world = player.getWorld();
     WrappedAxisAlignedBB wrappedAxisAlignedBB = boundingBox.shrink(0.001D);
@@ -82,7 +82,7 @@ public final class AquaticUnknownMovementResolver extends AquaticWaterMovementBa
 
   @Override
   public boolean areEyesInFluid(User user, double positionX, double positionY, double positionZ) {
-    Player player = user.bukkitPlayer();
+    Player player = user.player();
     World world = player.getWorld();
     UserMetaMovementData movementData = user.meta().movementData();
     double eyeHeight = movementData.eyeHeight();

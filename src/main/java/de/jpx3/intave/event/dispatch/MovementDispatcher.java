@@ -204,7 +204,7 @@ public final class MovementDispatcher implements EventProcessor {
   }
 
   private void updateSize(User user) {
-    Player player = user.bukkitPlayer();
+    Player player = user.player();
     User.UserMeta meta = user.meta();
     UserMetaMovementData movementData = meta.movementData();
     float width;
@@ -230,7 +230,7 @@ public final class MovementDispatcher implements EventProcessor {
     if (width != movementData.width || height != movementData.height) {
       WrappedAxisAlignedBB boundingBox = movementData.boundingBox();
       boundingBox = new WrappedAxisAlignedBB(boundingBox.minX, boundingBox.minY, boundingBox.minZ, boundingBox.minX + (double) width, boundingBox.minY + (double) height, boundingBox.minZ + (double) width);
-      if (CollisionFactory.getCollisionBoxes(user.bukkitPlayer(), boundingBox).isEmpty()) {
+      if (CollisionFactory.getCollisionBoxes(user.player(), boundingBox).isEmpty()) {
         movementData.width = width;
         movementData.height = height;
       }

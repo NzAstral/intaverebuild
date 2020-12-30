@@ -31,7 +31,7 @@ public final class User {
     return nmsEntity.get();
   }
 
-  public Player bukkitPlayer() {
+  public Player player() {
     Player player = playerRef.get();
     if (player == null) {
       throw new IntaveInternalException("Unable to reference player through service repo: Fallback user lacks reference");
