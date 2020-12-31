@@ -1278,8 +1278,7 @@ public final class Physics extends IntaveCheck {
     }
 
     List<WrappedAxisAlignedBB> collisionBoxes = CollisionFactory.getCollisionBoxes(
-      player,
-      movementData.boundingBox().addCoord(context.motionX, context.motionY, context.motionZ)
+      player, movementData.boundingBox().addCoord(context.motionX, context.motionY, context.motionZ)
     );
     WrappedAxisAlignedBB startBoundingBox = movementData.boundingBox();
     WrappedAxisAlignedBB entityBoundingBox = movementData.boundingBox();
