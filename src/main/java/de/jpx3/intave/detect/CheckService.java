@@ -3,6 +3,7 @@ package de.jpx3.intave.detect;
 import com.google.common.collect.ImmutableMap;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.detect.checks.combat.AttackRaytrace;
 import de.jpx3.intave.detect.checks.combat.Heuristics;
 import de.jpx3.intave.detect.checks.movement.Physics;
 import de.jpx3.intave.detect.checks.world.InteractionRaytrace;
@@ -28,6 +29,7 @@ public final class CheckService {
     addCheck(Physics.class);
     addCheck(InteractionRaytrace.class);
     addCheck(Heuristics.class);
+    addCheck(AttackRaytrace.class);
 
     bakeQuickAccess();
     linkBukkitEventSubscriptions();
