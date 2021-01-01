@@ -64,12 +64,18 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
     User user = UserRepository.userOf(player);
     AttackRaytraceMeta attackRaytraceMeta = metaOf(user);
     PacketContainer packet = event.getPacket();
+    UserMetaClientData clientData = user.meta().clientData();
 
     if (attackRaytraceMeta.lastAttackedEntityIDReach != -1) {
       WrappedEntity entity = entityByIdentifier(user, attackRaytraceMeta.lastAttackedEntityIDReach);
 
-      if (entity != null && entity.checkable() && !player.isDead() && attackRaytraceMeta.lastFlyPacketCounterReach > 1) {
-        processReachCheck(player, entity);
+      if (entity != null && entity.checkable() && !player.isDead()) {
+        int flyingPacketLenience = clientData.flyingPacketStream() ? 1 : 4;
+        if (attackRaytraceMeta.lastFlyPacketCounterReach > flyingPacketLenience) {
+          processReachCheck(player, entity);
+        } else {
+          //TODO: Old check
+        }
       }
 
       attackRaytraceMeta.lastAttackedEntityIDReach = -1;
@@ -89,14 +95,16 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
     AttackRaytraceMeta attackRaytraceMeta = metaOf(user);
     UserMetaAttackData attackData = meta.attackData();
     UserMetaMovementData movementData = meta.movementData();
+    UserMetaClientData clientData = meta.clientData();
 
     double blockReachDistance = reachDistance(player.getGameMode() == GameMode.CREATIVE);
     float lastRotationYaw = movementData.lastRotationYaw % 360;
     float rotationYaw = movementData.rotationYaw;
+    boolean alternativePositionY = clientData.protocolVersion() == UserMetaClientData.PROTOCOL_VERSION_BOUNTIFUL_UPDATE;
 
     // normal
     double reach = distanceOf(
-      entity,
+      entity, alternativePositionY,
       movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ,
       lastRotationYaw, movementData.rotationPitch,
       movementData.sneaking
@@ -105,7 +113,7 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
     if (reach > blockReachDistance) {
       // mouse delay fix
       reach = distanceOf(
-        entity,
+        entity, alternativePositionY,
         movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ,
         rotationYaw, movementData.rotationPitch,
         movementData.sneaking
@@ -165,7 +173,7 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
    * entity -1 means the player hit outside of the hitbox of the entity >0 means the reach of the player
    */
   private double distanceOf(
-    WrappedEntity entity,
+    WrappedEntity entity, boolean alternativePositionY,
     double prevPosX, double prevPosY, double prevPosZ,
     float prevYaw, float pitch,
     boolean sneak
@@ -179,6 +187,9 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
       interpolatedLookVec.zCoord * blockReachDistance
     );
     WrappedAxisAlignedBB hitBox = entity.entityBoundingBox().expand(0.1f, 0.1f, 0.1f);
+    if (alternativePositionY) {
+      hitBox = hitBox.addJustMaxY(entity.alternativePositions.posY - entity.positions.posY);
+    }
     WrappedMovingObjectPosition movingObjectPosition = hitBox.calculateIntercept(eyePosition, rayCastedPosition);
     if (hitBox.isVecInside(eyePosition)) {
       return 0;
