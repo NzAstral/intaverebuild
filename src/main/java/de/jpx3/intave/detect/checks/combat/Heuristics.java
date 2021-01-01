@@ -1,17 +1,27 @@
 package de.jpx3.intave.detect.checks.combat;
 
-import com.google.common.collect.ImmutableList;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.detect.IntaveMetaCheck;
 import de.jpx3.intave.detect.checks.combat.heuristics.ExampleHeuristic;
+import de.jpx3.intave.detect.checks.combat.heuristics.ReshapedJumpHeuristic;
+import de.jpx3.intave.event.packet.PacketDescriptor;
+import de.jpx3.intave.event.packet.PacketSubscription;
+import de.jpx3.intave.event.packet.Sender;
 import de.jpx3.intave.tools.AccessHelper;
+import de.jpx3.intave.tools.MathHelper;
 import de.jpx3.intave.user.UserCustomCheckMeta;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -23,10 +33,29 @@ public final class Heuristics extends IntaveMetaCheck<Heuristics.HeuristicMeta> 
     super("Heuristics", "heuristics", HeuristicMeta.class);
     this.plugin = plugin;
     this.setupSubChecks();
+    this.setupEvaluationScheduler(plugin);
+  }
+
+  @PacketSubscription(
+    packets = {
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "USE_ENTITY")
+    }
+  )
+  public void receiveUseEntity(PacketEvent event) {
+    Player player = event.getPlayer();
+    PacketContainer packet = event.getPacket();
+    if (packet.getEntityUseActions().read(0) == EnumWrappers.EntityUseAction.ATTACK) {
+      metaOf(player).overallAttacks++;
+    }
+  }
+
+  private void setupEvaluationScheduler(IntavePlugin plugin) {
+    Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::evaluateAll, 0, 400);
   }
 
   public void setupSubChecks() {
     appendCheckPart(new ExampleHeuristic(this));
+    appendCheckPart(new ReshapedJumpHeuristic(this));
   }
 
   public void saveAnomaly(Player player, Anomaly anomaly) {
@@ -52,16 +81,23 @@ public final class Heuristics extends IntaveMetaCheck<Heuristics.HeuristicMeta> 
     }
     Confidence overallConfidence = computeOverallConfidence(confidences);
 
-    if(overallConfidence.level >= Confidence.PROBABLE.level()) {
+    if (overallConfidence.level >= Confidence.PROBABLE.level()) {
       boolean hasPerformedMiningStrategyYet = !heuristicMeta.performedMiningStrategies.isEmpty();
       boolean mightBeAGoodIdeaToPerformMiningStrategy = overallConfidence.level <= Confidence.VERY_LIKELY.level();
 
-      if(!hasPerformedMiningStrategyYet && mightBeAGoodIdeaToPerformMiningStrategy) {
+      if (!hasPerformedMiningStrategyYet && mightBeAGoodIdeaToPerformMiningStrategy) {
 
       }
 
-      plugin.retributionService().markPlayer(player, -1, this.name(), "is fighting suspiciously (confidence: "+overallConfidence.output()+")");
+      double percentage = resolveConfidencePercentage(overallConfidence.level());
+      String confidence = MathHelper.formatDouble(percentage, 2) + "%" + overallConfidence.output();
+
+      plugin.retributionService().markPlayer(player, -1, this.name(), "is fighting suspiciously (confidence: " + confidence + ")");
     }
+  }
+
+  private double resolveConfidencePercentage(double confidenceOutput) {
+    return confidenceOutput >= 800 ? 100.0 : (confidenceOutput / 800.0) * 100.0;
   }
 
   public MiningStrategy findSuitableMiningStrategy(Player player, Confidence overallConfidence) {
@@ -236,7 +272,7 @@ public final class Heuristics extends IntaveMetaCheck<Heuristics.HeuristicMeta> 
     public static Confidence confidenceFrom(int level) {
       Confidence highest = Confidence.NONE;
       for (Confidence value : Confidence.values()) {
-        if(value.level > highest.level && value.level >= level) {
+        if (value.level > highest.level && value.level <= level) {
           highest = value;
         }
       }
@@ -247,5 +283,6 @@ public final class Heuristics extends IntaveMetaCheck<Heuristics.HeuristicMeta> 
   public static class HeuristicMeta extends UserCustomCheckMeta {
     public List<Anomaly> anomalies = Lists.newCopyOnWriteArrayList();
     public List<MiningStrategy> performedMiningStrategies = Lists.newCopyOnWriteArrayList();
+    public int overallAttacks = 0;
   }
 }

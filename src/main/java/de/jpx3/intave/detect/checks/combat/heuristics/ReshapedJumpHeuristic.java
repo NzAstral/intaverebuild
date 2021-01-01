@@ -1,20 +1,38 @@
 package de.jpx3.intave.detect.checks.combat.heuristics;
 
-import de.jpx3.intave.detect.IntaveCheck;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketEvent;
+import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.detect.IntaveCheckPart;
+import de.jpx3.intave.detect.checks.combat.Heuristics;
+import de.jpx3.intave.event.packet.PacketDescriptor;
+import de.jpx3.intave.event.packet.PacketSubscription;
+import de.jpx3.intave.event.packet.Sender;
 import de.jpx3.intave.tools.client.SinusCache;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserMetaMovementData;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-public final class ReshapedJumpHeuristic extends IntaveCheck {
-  public ReshapedJumpHeuristic(String checkName, String configurationName) {
-    super(checkName, configurationName);
+public final class ReshapedJumpHeuristic extends IntaveCheckPart<Heuristics> {
+  public ReshapedJumpHeuristic(Heuristics parentCheck) {
+    super(parentCheck);
+    IntavePlugin.singletonInstance().packetSubscriptionLinker().linkSubscriptionsIn(this);
   }
 
-  private void checkInvalidJump(Player player) {
+  @PacketSubscription(
+    priority = ListenerPriority.HIGH,
+    packets = {
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "POSITION"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "POSITION_LOOK"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "LOOK")
+    }
+  )
+  public void checkInvalidJump(PacketEvent event) {
+    Player player = event.getPlayer();
     User user = userOf(player);
     UserMetaMovementData movementData = user.meta().movementData();
+    Heuristics.HeuristicMeta heuristicMeta = parentCheck().metaOf(user);
     boolean jump = Math.abs(movementData.jumpUpwardsMotion() - movementData.motionY()) < 1e-5;
 
     if (jump && movementData.sprinting && movementData.suspiciousMovement) {
@@ -30,8 +48,9 @@ public final class ReshapedJumpHeuristic extends IntaveCheck {
       physicsCalculateRelativeMovement(motion, friction, yawSine, yawCosine, moveForward, moveStrafe);
       double distance = Math.hypot(motion.getX() - movementData.motionX(), motion.getZ() - movementData.motionZ());
       double abs = Math.abs(distance - 0.2);
-      if (abs < 1e-5) {
-        //TODO: Flag
+      if (abs < 1e-5 && heuristicMeta.overallAttacks > 200) {
+        Heuristics.Anomaly anomaly = new Heuristics.Anomaly("jump", Heuristics.Confidence.LIKELY, Heuristics.MiningStrategy.EMULATION_LIGHT);
+        parentCheck().saveAnomaly(player, anomaly);
       }
     }
   }

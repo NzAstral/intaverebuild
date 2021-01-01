@@ -3,6 +3,7 @@ package de.jpx3.intave.detect;
 import com.google.common.collect.ImmutableMap;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.detect.checks.combat.Heuristics;
 import de.jpx3.intave.detect.checks.movement.Physics;
 import de.jpx3.intave.detect.checks.world.InteractionRaytrace;
 import de.jpx3.intave.event.bukkit.BukkitEventLinker;
@@ -26,6 +27,7 @@ public final class CheckService {
   public void setup() {
     addCheck(Physics.class);
     addCheck(InteractionRaytrace.class);
+    addCheck(Heuristics.class);
 
     bakeQuickAccess();
     linkBukkitEventSubscriptions();

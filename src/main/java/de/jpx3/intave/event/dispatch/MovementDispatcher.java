@@ -120,8 +120,6 @@ public final class MovementDispatcher implements EventProcessor {
 
     User.UserMeta meta = user.meta();
     UserMetaMovementData movementData = meta.movementData();
-    UserMetaAbilityData abilityData = meta.abilityData();
-    UserMetaInventoryData inventoryData = meta.inventoryData();
     UserMetaViolationLevelData violationLevelData = meta.violationLevelData();
 
     boolean hasMovement = packet.getBooleans().read(1);
@@ -153,7 +151,28 @@ public final class MovementDispatcher implements EventProcessor {
     if (movementData.invalidMovement) {
       event.setCancelled(true);
     }
+  }
 
+  @PacketSubscription(
+    priority = ListenerPriority.HIGHEST,
+    packets = {
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "POSITION"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "POSITION_LOOK"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "LOOK"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "FLYING")
+    }
+  )
+  public void receiveFinalMovement(PacketEvent event) {
+    Player player = event.getPlayer();
+    PacketContainer packet = event.getPacket();
+    User user = UserRepository.userOf(player);
+
+    User.UserMeta meta = user.meta();
+    UserMetaMovementData movementData = meta.movementData();
+    UserMetaAbilityData abilityData = meta.abilityData();
+    UserMetaInventoryData inventoryData = meta.inventoryData();
+
+    boolean hasMovement = packet.getBooleans().read(1);
     physicsCheck.endMovement(user, hasMovement);
 
     movementData.invalidMovement = false;
