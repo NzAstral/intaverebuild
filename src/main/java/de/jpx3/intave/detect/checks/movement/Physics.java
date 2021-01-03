@@ -122,6 +122,7 @@ public final class Physics extends IntaveCheck {
     if (inventoryData.inventoryOpen()) {
       sprinting = false;
     }
+    physicsCalculateMovementClamp(user);
     float rotationYaw = movementData.rotationYaw;
     float yawSine = SinusCache.sin(rotationYaw * (float) Math.PI / 180.0F, false);
     float yawCosine = SinusCache.cos(rotationYaw * (float) Math.PI / 180.0F, false);
@@ -651,8 +652,7 @@ public final class Physics extends IntaveCheck {
       if (violationLevelIncrease > 0) {
         violationLevelIncrease = Math.max(violationLevelIncrease, 1.0);
       }
-      double multiplier = distance > 0.007 ? 8.5 : 3.5;
-      violationLevelIncrease *= multiplier;
+      violationLevelIncrease *= 8.5;
     }
 
     if (violationLevelIncrease == 0 && violationLevelData.physicsVL > 0) {
@@ -962,8 +962,6 @@ public final class Physics extends IntaveCheck {
       physicsCalculateNormalAfter(user, context, gravity, slipperiness);
     }
 
-    physicsCalculateMovementClamp(user, context);
-
     movementData.physicsLastMotionX = context.motionX;
     movementData.physicsLastMotionY = context.motionY;
     movementData.physicsLastMotionZ = context.motionZ;
@@ -1170,17 +1168,17 @@ public final class Physics extends IntaveCheck {
     context.motionZ *= multiplier;
   }
 
-  private void physicsCalculateMovementClamp(User user, PhysicsProcessorContext context) {
+  private void physicsCalculateMovementClamp(User user) {
     UserMetaMovementData movementData = user.meta().movementData();
     double resetMotion = movementData.resetMotion();
-    if (Math.abs(context.motionX) < resetMotion) {
-      context.motionX = 0.0;
+    if (Math.abs(movementData.physicsLastMotionX) < resetMotion) {
+      movementData.physicsLastMotionX = 0.0;
     }
-    if (Math.abs(context.motionY) < resetMotion) {
-      context.motionY = 0.0;
+    if (Math.abs(movementData.physicsLastMotionY) < resetMotion) {
+      movementData.physicsLastMotionY = 0.0;
     }
-    if (Math.abs(context.motionZ) < resetMotion) {
-      context.motionZ = 0.0;
+    if (Math.abs(movementData.physicsLastMotionZ) < resetMotion) {
+      movementData.physicsLastMotionZ = 0.0;
     }
   }
 
