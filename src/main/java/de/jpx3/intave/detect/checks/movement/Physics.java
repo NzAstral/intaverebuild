@@ -161,6 +161,7 @@ public final class Physics extends IntaveCheck {
     movementData.pastRiptideSpin++;
   }
 
+  // simulatePossibleMovements
   private PreciseCollisionResult physicsAccurate(
     User user, float friction,
     boolean sprinting, boolean sneaking,
@@ -262,6 +263,7 @@ public final class Physics extends IntaveCheck {
     return predictedMovement;
   }
 
+  // simulateMovementBiased
   private PreciseCollisionResult physicsFast(
     User user, float friction,
     boolean sprinting, boolean sneaking,
@@ -296,6 +298,7 @@ public final class Physics extends IntaveCheck {
     );
   }
 
+  // performSimulationOfState
   private void physicsCalculate(
     User user, PhysicsProcessorContext context,
     float yawSine, float yawCosine, float friction,
@@ -367,6 +370,7 @@ public final class Physics extends IntaveCheck {
     }
   }
 
+  // performSimulationInWaterOfState
   private void physicsCalculateWater(
     User user, PhysicsProcessorContext context,
     float moveForward, float moveStrafe,
@@ -388,6 +392,7 @@ public final class Physics extends IntaveCheck {
     physicsCalculateRelativeMovement(context, f2, yawSine, yawCosine, moveForward, moveStrafe);
   }
 
+  // performWalkingSimulationOfState
   private void physicsCalculateRelativeMovement(
     PhysicsProcessorContext context, float friction,
     float yawSine, float yawCosine,
@@ -404,6 +409,7 @@ public final class Physics extends IntaveCheck {
     }
   }
 
+  // performElytaSimulationOfState
   private void physicsCalculateElytra(
     Vector lookVector, PhysicsProcessorContext context,
     float rotationPitch, double gravity
@@ -456,6 +462,7 @@ public final class Physics extends IntaveCheck {
     context.motionZ *= 0.99f;
   }
 
+  // performMoveSimulationInLavaOfState
   private void physicsCalculateLava(
     PhysicsProcessorContext context,
     float moveForward, float moveStrafe,
@@ -465,6 +472,7 @@ public final class Physics extends IntaveCheck {
     physicsCalculateRelativeMovement(context, friction, yawSine, yawCosine, moveForward, moveStrafe);
   }
 
+  // performDefaultMoveSimulationOfState
   private void physicsCalculateNormal(
     User user, PhysicsProcessorContext context,
     float moveForward, float moveStrafe,
@@ -487,6 +495,7 @@ public final class Physics extends IntaveCheck {
     physicsCalculateFlying(user, context);
   }
 
+  // tryRelinkFlyingPosition
   private void physicsCalculateFlying(User user, PhysicsProcessorContext context) {
     Player player = user.player();
     UserMetaMovementData movementData = user.meta().movementData();
@@ -594,6 +603,7 @@ public final class Physics extends IntaveCheck {
     return heldItemStack != null && heldItemStack.getType() == InventoryUseItemHelper.ITEM_TRIDENT;
   }
 
+  // evaluateBestSimulation
   private void evaluateMovement(User user, PreciseCollisionResult expectedMovement) {
     Player player = user.player();
     User.UserMeta meta = user.meta();
