@@ -1,13 +1,10 @@
-package de.jpx3.dynref;
+package de.jpx3.patchy;
 
-import de.jpx3.dynref.annotate.DynRefAutoTranslation;
+import de.jpx3.patchy.annotate.PatchyAutoTranslation;
 import de.jpx3.intave.lib.asm.ClassReader;
 import de.jpx3.intave.lib.asm.ClassWriter;
-import de.jpx3.intave.lib.asm.MethodVisitor;
 import de.jpx3.intave.lib.asm.Type;
 import de.jpx3.intave.lib.asm.tree.*;
-import de.jpx3.intave.lib.asm.util.Textifier;
-import de.jpx3.intave.lib.asm.util.TraceMethodVisitor;
 import de.jpx3.intave.tools.annotate.Natify;
 import org.bukkit.Bukkit;
 
@@ -17,8 +14,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-final class DynamicReflectionTranslator {
-  public static final String TRANSLATION_MARKER_ANNOTATION_PATH = slashify(DynRefAutoTranslation.class.getName());
+final class PatchyTranslator {
+  public static final String TRANSLATION_MARKER_ANNOTATION_PATH = slashify(PatchyAutoTranslation.class.getName());
   public static final String CURRENT_SERVER_VERSION;
 
   static {
@@ -71,7 +68,6 @@ final class DynamicReflectionTranslator {
     return original.replace(extractedVersion, CURRENT_SERVER_VERSION);
   }
 
-  @Natify
   private static void processMethods(List<MethodNode> methodNodes) {
     for (MethodNode methodNode : methodNodes) {
 //      System.out.println("Processing " + methodNode.name + methodNode.desc + "..");
@@ -79,14 +75,14 @@ final class DynamicReflectionTranslator {
     }
   }
 
-  @Natify
   private static void processMethod(MethodNode methodNode) {
     processMethodDescription(methodNode);
     processMethodInstructions(methodNode);
   }
 
+  @Natify
   private static void processMethodDescription(MethodNode methodNode) {
-    DynRefTranslationConfiguration configuration = DynRefTranslationConfiguration.createFrom(methodNode);
+    PatchyTranslationConfiguration configuration = PatchyTranslationConfiguration.createFrom(methodNode);
 
     if(!configuration.translateParameters()) {
       return;
@@ -111,8 +107,9 @@ final class DynamicReflectionTranslator {
     methodNode.desc = newDesc;
   }
 
+  @Natify
   private static void processMethodInstructions(MethodNode methodNode) {
-    DynRefTranslationConfiguration configuration = DynRefTranslationConfiguration.createFrom(methodNode);
+    PatchyTranslationConfiguration configuration = PatchyTranslationConfiguration.createFrom(methodNode);
 
     for (AbstractInsnNode instruction : methodNode.instructions) {
       if(instruction instanceof MethodInsnNode) {
@@ -159,7 +156,7 @@ final class DynamicReflectionTranslator {
   }
 
   @Natify
-  private static InstructionTarget process(InstructionTarget original, DynRefTranslationConfiguration configuration) {
+  private static InstructionTarget process(InstructionTarget original, PatchyTranslationConfiguration configuration) {
 //    if(!isServerClass(original.owner)) {
 //      return original;
 //    }
@@ -218,7 +215,7 @@ final class DynamicReflectionTranslator {
   @Natify
   private static List<MethodNode> selectedMethodsIn(ClassNode classNode) {
     return classNode.methods.stream()
-      .filter(DynamicReflectionTranslator::methodSelected)
+      .filter(PatchyTranslator::methodSelected)
       .collect(Collectors.toList());
   }
 

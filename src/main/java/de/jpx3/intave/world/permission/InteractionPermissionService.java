@@ -1,6 +1,6 @@
 package de.jpx3.intave.world.permission;
 
-import de.jpx3.dynref.DynamicReflectionLoader;
+import de.jpx3.patchy.PatchyLoader;
 import de.jpx3.intave.access.BlockPlacePermissionCheck;
 
 public final class InteractionPermissionService {
@@ -15,8 +15,8 @@ public final class InteractionPermissionService {
     ClassLoader classLoader = InteractionPermissionService.class.getClassLoader();
 
     // class load
-    DynamicReflectionLoader.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.world.permission.CustomCraftBlock");
-    DynamicReflectionLoader.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.world.permission.CraftBukkitPlacePermissionResolver");
+    PatchyLoader.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.world.permission.CustomCraftBlock");
+    PatchyLoader.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.world.permission.CraftBukkitPlacePermissionResolver");
 
     // initialize
     blockPlacePermissionCheck = instanceOf("de.jpx3.intave.world.permission.CraftBukkitPlacePermissionResolver");

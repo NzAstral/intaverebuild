@@ -1,8 +1,8 @@
-package de.jpx3.dynref;
+package de.jpx3.patchy;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import de.jpx3.dynref.annotate.*;
+import de.jpx3.patchy.annotate.*;
 import de.jpx3.intave.lib.asm.Type;
 import de.jpx3.intave.lib.asm.tree.AnnotationNode;
 import de.jpx3.intave.lib.asm.tree.ClassNode;
@@ -11,13 +11,13 @@ import de.jpx3.intave.tools.annotate.Natify;
 
 import java.util.*;
 
-final class DynRefTranslationConfiguration {
-  static final String AUTO_TRANSLATION_ANNOTATION_PATH = slashify(DynRefAutoTranslation.class.getName());
-  static final String CUSTOM_METHOD_TRANSLATION_ANNOTATION_PATH = slashify(DynRefCustomMethodTranslation.class.getName());
-  static final String VERSION_METHOD_REFERENCE_ANNOTATION_PATH = slashify(DynRefVersionMethodReference.class.getName());
-  static final String CUSTOM_FIELD_TRANSLATION_ANNOTATION_PATH = slashify(DynRefCustomFieldTranslation.class.getName());
-  static final String VERSION_FIELD_REFERENCE_ANNOTATION_PATH = slashify(DynRefVersionFieldReference.class.getName());
-  static final String TRANSLATE_PARAMETERS_ANNOTATION_PATH = slashify(DynRefTranslateParameters.class.getName());
+final class PatchyTranslationConfiguration {
+  static final String AUTO_TRANSLATION_ANNOTATION_PATH = slashify(PatchyAutoTranslation.class.getName());
+  static final String CUSTOM_METHOD_TRANSLATION_ANNOTATION_PATH = slashify(PatchyCustomMethodTranslation.class.getName());
+  static final String VERSION_METHOD_REFERENCE_ANNOTATION_PATH = slashify(PatchyVersionMethodReference.class.getName());
+  static final String CUSTOM_FIELD_TRANSLATION_ANNOTATION_PATH = slashify(PatchyCustomFieldTranslation.class.getName());
+  static final String VERSION_FIELD_REFERENCE_ANNOTATION_PATH = slashify(PatchyVersionFieldReference.class.getName());
+  static final String TRANSLATE_PARAMETERS_ANNOTATION_PATH = slashify(PatchyTranslateParameters.class.getName());
 
   private boolean translateEverything = false;
   private boolean translateParameters = false;
@@ -74,13 +74,13 @@ final class DynRefTranslationConfiguration {
 
   @Natify
   static String selectSuitableVersion(CustomMethodTranslation selectedTranslation, VersionMethodReference originalMethod) {
-    String serverVersion = DynamicReflectionTranslator.CURRENT_SERVER_VERSION;
+    String serverVersion = PatchyTranslator.CURRENT_SERVER_VERSION;
     String selectedVersion = null;
     List<String> availableVersions = new ArrayList<>();
     for (VersionMethodReference versionMethodReference : selectedTranslation.versionMethodDescriptors()) {
       availableVersions.add(versionMethodReference.version());
     }
-    availableVersions.sort(Comparator.comparingInt(DynRefTranslationConfiguration::versionToInt).reversed());
+    availableVersions.sort(Comparator.comparingInt(PatchyTranslationConfiguration::versionToInt).reversed());
 //    System.out.println(availableVersions);
     boolean nativeVersionAvailable = availableVersions.contains(serverVersion);
     switch (selectedTranslation.versionPolicy()) {
@@ -132,15 +132,15 @@ final class DynRefTranslationConfiguration {
   }
 
   @Natify
-  public static DynRefTranslationConfiguration createFrom(ClassNode classNode) {
-    DynRefTranslationConfiguration configuration = new DynRefTranslationConfiguration();
+  public static PatchyTranslationConfiguration createFrom(ClassNode classNode) {
+    PatchyTranslationConfiguration configuration = new PatchyTranslationConfiguration();
     classNode.visibleAnnotations.forEach(annotation -> processAnnotation(configuration, annotation));
     return configuration;
   }
 
   @Natify
-  public static DynRefTranslationConfiguration createFrom(MethodNode methodNode) {
-    DynRefTranslationConfiguration configuration = new DynRefTranslationConfiguration();
+  public static PatchyTranslationConfiguration createFrom(MethodNode methodNode) {
+    PatchyTranslationConfiguration configuration = new PatchyTranslationConfiguration();
     annotationsOf(methodNode).forEach(annotation -> processAnnotation(configuration, annotation));
     configuration.customMethodTranslationList = ImmutableList.copyOf(configuration.customMethodTranslationList);
     configuration.customFieldTranslations = ImmutableList.copyOf(configuration.customFieldTranslations);
@@ -155,7 +155,7 @@ final class DynRefTranslationConfiguration {
   }
 
   @Natify
-  private static void processAnnotation(DynRefTranslationConfiguration configuration, AnnotationNode annotation) {
+  private static void processAnnotation(PatchyTranslationConfiguration configuration, AnnotationNode annotation) {
     String className = className(annotation);
     if(className.equals(AUTO_TRANSLATION_ANNOTATION_PATH)) {
       configuration.translateEverything = true;

@@ -1,7 +1,7 @@
-package de.jpx3.dynref;
+package de.jpx3.patchy;
 
 import com.google.common.collect.ImmutableList;
-import de.jpx3.dynref.annotate.DynRefUnknownVersionPolicy;
+import de.jpx3.patchy.annotate.PatchyUnknownVersionPolicy;
 import de.jpx3.intave.lib.asm.tree.AnnotationNode;
 import de.jpx3.intave.tools.annotate.Natify;
 
@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 public final class CustomFieldTranslation {
-  private DynRefUnknownVersionPolicy versionPolicy;
+  private PatchyUnknownVersionPolicy versionPolicy;
   private List<VersionFieldReference> versionFieldReferences = new ArrayList<>();
 
-  public DynRefUnknownVersionPolicy versionPolicy() {
+  public PatchyUnknownVersionPolicy versionPolicy() {
     return versionPolicy;
   }
 
@@ -23,15 +23,15 @@ public final class CustomFieldTranslation {
 
   @Natify
   public static CustomFieldTranslation buildFrom(AnnotationNode annotationNode) {
-    if (!DynRefTranslationConfiguration.className(annotationNode).equals(DynRefTranslationConfiguration.CUSTOM_FIELD_TRANSLATION_ANNOTATION_PATH)) {
+    if (!PatchyTranslationConfiguration.className(annotationNode).equals(PatchyTranslationConfiguration.CUSTOM_FIELD_TRANSLATION_ANNOTATION_PATH)) {
       throw new IllegalArgumentException("Invalid annotation type");
     }
     CustomFieldTranslation customFieldTranslation = new CustomFieldTranslation();
-    Map<String, Object> stringObjectMap = DynRefTranslationConfiguration.buildAnnotationMap(annotationNode.values);
+    Map<String, Object> stringObjectMap = PatchyTranslationConfiguration.buildAnnotationMap(annotationNode.values);
     if (stringObjectMap.containsKey("unknownVersionPolicy")) {
-      customFieldTranslation.versionPolicy = Enum.valueOf(DynRefUnknownVersionPolicy.class, ((String[]) stringObjectMap.get("unknownVersionPolicy"))[1]);
+      customFieldTranslation.versionPolicy = Enum.valueOf(PatchyUnknownVersionPolicy.class, ((String[]) stringObjectMap.get("unknownVersionPolicy"))[1]);
     } else {
-      customFieldTranslation.versionPolicy = DynRefUnknownVersionPolicy.USE_NEXT_LOWER;
+      customFieldTranslation.versionPolicy = PatchyUnknownVersionPolicy.USE_NEXT_LOWER;
     }
     //noinspection unchecked
     for (AnnotationNode value : (List<AnnotationNode>) stringObjectMap.get("value")) {

@@ -1,4 +1,4 @@
-package de.jpx3.dynref.annotate;
+package de.jpx3.patchy.annotate;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,5 +12,5 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DynRefTranslateParameters {
+public @interface PatchyTranslateParameters {
 }

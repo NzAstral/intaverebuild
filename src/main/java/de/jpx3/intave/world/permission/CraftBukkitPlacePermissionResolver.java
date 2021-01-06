@@ -1,6 +1,6 @@
 package de.jpx3.intave.world.permission;
 
-import de.jpx3.dynref.annotate.DynRefAutoTranslation;
+import de.jpx3.patchy.annotate.PatchyAutoTranslation;
 import de.jpx3.intave.access.BlockPlacePermissionCheck;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_8_R3.CraftChunk;
@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 
 public final class CraftBukkitPlacePermissionResolver extends BlockPlacePermissionCheck {
   @Override
-  @DynRefAutoTranslation
+  @PatchyAutoTranslation
   public boolean hasPermission(Player player, World world, int blockX, int blockY, int blockZ, int typeId, byte data) {
     if(world.isChunkLoaded(blockX >> 4, blockZ >> 4)) {
       CraftChunk chunk = (CraftChunk) world.getChunkAt(blockX >> 4, blockZ >> 4);

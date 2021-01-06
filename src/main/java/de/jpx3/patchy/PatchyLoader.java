@@ -1,4 +1,4 @@
-package de.jpx3.dynref;
+package de.jpx3.patchy;
 
 import de.jpx3.intave.tools.annotate.Natify;
 
@@ -9,7 +9,7 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public final class DynamicReflectionLoader {
+public final class PatchyLoader {
 
   @Natify
   public static <T> Class<T> loadUnloadedClassPatched(ClassLoader classLoader, String className) {
@@ -17,7 +17,7 @@ public final class DynamicReflectionLoader {
     try {
       if(!classIsLoaded(classLoader, className)) {
         byte[] classBytes = classBytesOf(classLoader, className);
-        classBytes = DynamicReflectionTranslator.translateClass(classBytes);
+        classBytes = PatchyTranslator.translateClass(classBytes);
         defineClass(classLoader, classBytes);
       }
       return classByName(className);
@@ -46,7 +46,7 @@ public final class DynamicReflectionLoader {
       System.out.println("Unable to resolve class bytes for class " + className + ". Performing manual load attempt..");
       String path;
       try {
-        path = DynamicReflectionLoader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+        path = PatchyLoader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
       } catch (URISyntaxException e) {
         throw new IllegalStateException(e);
       }

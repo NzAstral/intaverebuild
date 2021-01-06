@@ -1,4 +1,4 @@
-package de.jpx3.dynref;
+package de.jpx3.patchy;
 
 public final class MissingVersionTranslationException extends RuntimeException {
   public MissingVersionTranslationException() {

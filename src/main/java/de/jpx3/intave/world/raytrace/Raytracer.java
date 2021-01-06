@@ -1,6 +1,6 @@
 package de.jpx3.intave.world.raytrace;
 
-import de.jpx3.dynref.DynamicReflectionLoader;
+import de.jpx3.patchy.PatchyLoader;
 import de.jpx3.intave.reflect.Reflection;
 import de.jpx3.intave.reflect.ReflectionFailureException;
 import de.jpx3.intave.tools.client.SinusCache;
@@ -29,7 +29,7 @@ public final class Raytracer {
       className = "de.jpx3.intave.world.raytrace.LegacyVersionRaytracer";
     }
     System.out.println("Using " + className + " raytracer");
-    DynamicReflectionLoader.loadUnloadedClassPatched(Raytracer.class.getClassLoader(), className);
+    PatchyLoader.loadUnloadedClassPatched(Raytracer.class.getClassLoader(), className);
     versionRaytracer = instanceOf(className);
   }
 
