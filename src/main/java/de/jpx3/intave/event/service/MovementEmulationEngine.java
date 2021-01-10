@@ -48,10 +48,10 @@ public final class MovementEmulationEngine {
       return;
     }
 
-    if (Math.abs(motion.getY() - jumpUpwardsMotion) < 0.01) {
-      motion.setX(motion.getX() / 3);
-      motion.setZ(motion.getZ() / 3);
-    }
+//    if (Math.abs(motion.getY() - jumpUpwardsMotion) < 0.01) {
+//      motion.setX(motion.getX() / 3);
+//      motion.setZ(motion.getZ() / 3);
+//    }
 
     // starting conditions
 
@@ -155,13 +155,17 @@ public final class MovementEmulationEngine {
     futurePosition.setYaw(movementData.rotationYaw);
     futurePosition.setPitch(movementData.rotationPitch);
 
-    if ((Math.abs(motion.getX()) < 0.05 && Math.abs(motion.getZ()) < 0.05 && motion.getY() == 0.0) || ticks <= 0) {
+    if ((Math.abs(motion.getX()) < 0.01 && Math.abs(motion.getZ()) < 0.01 && motion.getY() == 0.0) || ticks <= 0) {
       // velocity
 
       teleport(player, futurePosition);
 
       Vector futureMotion = motionProceed(motion, user, boundingBox, true);
-      player.setVelocity(futureMotion);
+//      player.setVelocity(futureMotion);
+      movementData.physicsLastMotionX = futureMotion.getX();
+      movementData.physicsLastMotionY = futureMotion.getY();
+      movementData.physicsLastMotionZ = futureMotion.getZ();
+
 
       violationLevelData.isInActiveTeleportBundle = false;
       if (DEBUG_EMULATION) {
@@ -184,7 +188,10 @@ public final class MovementEmulationEngine {
 
       // velocity
       Vector futureMotion = motionProceed(motion, user, boundingBox, true);
-      player.setVelocity(futureMotion);
+      movementData.physicsLastMotionX = futureMotion.getX();
+      movementData.physicsLastMotionY = futureMotion.getY();
+      movementData.physicsLastMotionZ = futureMotion.getZ();
+//      player.setVelocity(futureMotion);
     }
   }
 

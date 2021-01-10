@@ -49,6 +49,7 @@ public final class UserMetaMovementData {
   public int pastElytraFlying = 100, pastVelocity = 100;
   public boolean onLadderLast;
 
+  public int physicsPacketRelinkFlyVL; // In Air
   public boolean invalidMovement, suspiciousMovement;
   public double physicsLastMotionX, physicsLastMotionY, physicsLastMotionZ;
   public int pastRiptideSpin;

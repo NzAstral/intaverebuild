@@ -216,9 +216,12 @@ public final class TeleportPositionObserver implements PacketEventSubscriber {
     movementData.verifiedPositionX = positionX;
     movementData.verifiedPositionY = positionY;
     movementData.verifiedPositionZ = positionZ;
-    movementData.physicsLastMotionX = 0.0;
-    movementData.physicsLastMotionY = 0.0;
-    movementData.physicsLastMotionZ = 0.0;
+
+    if (movementData.onGround) {
+      movementData.physicsLastMotionX = 0.0;
+      movementData.physicsLastMotionY = 0.0;
+      movementData.physicsLastMotionZ = 0.0;
+    }
 
     Location teleportLocation = movementData.teleportLocation;
     double teleportLocationX = teleportLocation.getX();
