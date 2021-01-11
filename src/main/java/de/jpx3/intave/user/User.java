@@ -21,8 +21,9 @@ public final class User {
   private final PermissionCache permissionCache;
   private final BoundingBoxAccess boundingBoxAccess;
   private final boolean hasPlayer;
+//  public final List<Location> raytracerIgnore = new ArrayList<>();
   private boolean ignoreNextPacket;
-  private TrustFactor trustFactor;
+  private TrustFactor trustFactor = TrustFactor.DARK_RED;
 
   private User(Player player) {
     this.playerRef = new WeakReference<>(player);

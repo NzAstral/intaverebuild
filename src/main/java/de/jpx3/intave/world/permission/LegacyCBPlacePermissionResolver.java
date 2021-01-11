@@ -1,5 +1,6 @@
 package de.jpx3.intave.world.permission;
 
+import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.BlockPlacePermissionCheck;
 import de.jpx3.intave.reflect.Reflection;
 import de.jpx3.intave.reflect.ReflectionFailureException;
@@ -10,7 +11,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v1_8_R3.CraftChunk;
-import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.block.CraftBlockState;
 import org.bukkit.entity.Player;
@@ -29,14 +29,12 @@ public final class LegacyCBPlacePermissionResolver implements BlockPlacePermissi
       CraftBlockState replacedBlockState = new CraftBlockState(new CustomCraftBlock(chunk, blockX, blockY, blockZ, typeId, data));
       WorldServer worldServer = ((CraftWorld) world).getHandle();
       CraftWorld craftWorld = worldServer.getWorld();
-      CraftServer craftServer = worldServer.getServer();
-
       Block blockClicked = craftWorld.getBlockAt(blockX, blockY, blockZ);
       Block placedBlock = replacedBlockState.getBlock();
       boolean canBuild = canBuildReflectiveCall(craftWorld, player, placedBlock.getX(), placedBlock.getZ());
       ItemStack item = player.getInventory().getItemInHand();
       BlockPlaceEvent event = new PermissionCheckBlockPlaceEvent(placedBlock, replacedBlockState, blockClicked, item, player, canBuild);
-      craftServer.getPluginManager().callEvent(event);
+      IntavePlugin.singletonInstance().eventLinker().fireExternalEvent(event);
       return !event.isCancelled();
     }
     return false;

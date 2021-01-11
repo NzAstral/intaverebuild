@@ -93,20 +93,6 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
     );
     interactionMeta.interactionList.add(interaction);
     event.setCancelled(true);
-
-    // when nothing is sent
-    Synchronizer.synchronize(() -> {
-      Location location = new Location(player.getWorld(), movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ);
-      location.setYaw(movementData.rotationYaw);
-      location.setPitch(movementData.rotationPitch);
-
-      Location mouseDelayPlayerLocation = location.clone();
-      mouseDelayPlayerLocation.setYaw(movementData.lastRotationYaw);
-
-      WrappedMovingObjectPosition raycastResult = Raytracer.blockRayTrace(player, location);
-      WrappedMovingObjectPosition raycastResultmdf = Raytracer.blockRayTrace(player, mouseDelayPlayerLocation);
-      processTraceReport(interaction, raycastResult, raycastResultmdf, true);
-    });
   }
 
   @PacketSubscription(
@@ -136,31 +122,16 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 
     User user = userOf(player);
     InteractionMeta interactionMeta = metaOf(user);
-    UserMetaMovementData movementData = user.meta().movementData();
 
     Interaction interaction = new Interaction(
       player.getWorld(), player, blockPosition, enumDirection, packet.deepClone(), InteractionType.BREAK
     );
     interactionMeta.interactionList.add(interaction);
     event.setCancelled(true);
-
-    // when nothing is sent
-    Synchronizer.synchronize(() -> {
-      Location location = new Location(player.getWorld(), movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ);
-      location.setYaw(movementData.rotationYaw);
-      location.setPitch(movementData.rotationPitch);
-
-      Location mouseDelayPlayerLocation = location.clone();
-      mouseDelayPlayerLocation.setYaw(movementData.lastRotationYaw);
-
-      WrappedMovingObjectPosition raycastResult = Raytracer.blockRayTrace(player, location);
-      WrappedMovingObjectPosition raycastResultmdf = Raytracer.blockRayTrace(player, mouseDelayPlayerLocation);
-      processTraceReport(interaction, raycastResult, raycastResultmdf, true);
-    });
   }
 
   @PacketSubscription(
-    priority = ListenerPriority.MONITOR, // last one to work with position
+    priority = ListenerPriority.HIGHEST, // last one to work with position
     packets = {
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "LOOK"),
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "FLYING"),
@@ -259,10 +230,9 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 //      boundingBoxAccess.identityInvalidate();
 //    }
 
-
     if(response == ResponseType.RAYTRACE_CAST) {
       if(hitMiss) {
-        player.sendMessage("Emulation " + raycastLocation + " " + targetLocation);
+//        player.sendMessage("Emulation " + raycastLocation + " " + targetLocation);
         refreshBlocksAround(player, targetLocation);
         boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
       } else {
@@ -293,7 +263,8 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
         refreshBlocksAround(player, targetLocation);
         boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
       } else {
-        Synchronizer.synchronize(() -> receiveExcludedPacket(player, interaction.thePacket));
+        //Synchronizer.synchronize(() -> receiveExcludedPacket(player, interaction.thePacket));
+        receiveExcludedPacket(player, interaction.thePacket);
       }
     }
   }

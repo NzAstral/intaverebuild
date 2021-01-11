@@ -1,5 +1,6 @@
 package de.jpx3.intave.trustfactor;
 
+import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.access.TrustFactor;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -33,6 +34,15 @@ public final class YamlTrustFactorConfiguration implements TrustFactorConfigurat
 
   @Override
   public int resolveSetting(String key, TrustFactor trustFactor) {
-    return settingsMap.get(key).get(trustFactor);
+    EnumMap<TrustFactor, Integer> trustFactorIntegerEnumMap = settingsMap.get(key.toLowerCase(Locale.ROOT));
+    if(trustFactorIntegerEnumMap == null) {
+      throw new IntaveInternalException("Unable to find trust-factor setting for " + key);
+    }
+    try {
+      return trustFactorIntegerEnumMap.get(trustFactor);
+    } catch (NullPointerException exception) {
+      System.out.println(key + " " + settingsMap);
+      throw exception;
+    }
   }
 }

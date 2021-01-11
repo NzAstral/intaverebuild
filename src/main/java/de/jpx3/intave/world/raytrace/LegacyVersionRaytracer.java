@@ -15,7 +15,9 @@ public final class LegacyVersionRaytracer implements VersionRaytracer {
   @PatchyAutoTranslation
   public WrappedMovingObjectPosition raytrace(World world, Player player, WrappedVector eyeVector, WrappedVector targetVector) {
     WorldServer handle = ((CraftWorld) world).getHandle();
-    MovingObjectPosition movingObjectPosition = handle.rayTrace((Vec3D) eyeVector.convertToNativeVec3(), (Vec3D) targetVector.convertToNativeVec3());
+    Vec3D nativeEyeVector = (Vec3D) eyeVector.convertToNativeVec3();
+    Vec3D nativeTargetVector = (Vec3D) targetVector.convertToNativeVec3();
+    MovingObjectPosition movingObjectPosition = handle.rayTrace(nativeEyeVector, nativeTargetVector, false, false, false);
     return WrappedMovingObjectPosition.fromNativeMovingObjectPosition(movingObjectPosition);
   }
 }

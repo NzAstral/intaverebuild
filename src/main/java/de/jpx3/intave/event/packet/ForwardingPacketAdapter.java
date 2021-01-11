@@ -31,6 +31,7 @@ public final class ForwardingPacketAdapter extends IntavePacketAdapter {
   public void onPacketReceiving(PacketEvent event) {
     if(UserRepository.userOf(event.getPlayer()).shouldIgnoreNextPacket()) {
       UserRepository.userOf(event.getPlayer()).receiveNextPacket();
+//      Bukkit.broadcastMessage(Bukkit.isPrimaryThread() + " " + event.getPacketType());
       return;
     }
 

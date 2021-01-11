@@ -66,7 +66,11 @@ public final class Synchronizer {
 
   private static Runnable provideTaskEnvironment(Runnable runnable) {
     return () -> {
-      runnable.run();
+      try {
+        runnable.run();
+      } catch (Exception exception) {
+        exception.printStackTrace();
+      }
     };
   }
 }

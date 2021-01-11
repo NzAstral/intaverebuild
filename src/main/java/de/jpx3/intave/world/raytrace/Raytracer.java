@@ -32,13 +32,30 @@ public final class Raytracer {
     versionRaytracer = instanceOf(className);
   }
 
-  private static  <T> T instanceOf(String className) {
+  private static <T> T instanceOf(String className) {
     try {
       return (T) Class.forName(className).newInstance();
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException exception) {
       throw new IllegalStateException(exception);
     }
   }
+
+/*  public static void ignoreBlock(Player player, Location location) {
+    UserRepository.userOf(player).raytracerIgnore.add(location);
+  }
+
+  public static void clearIgnoreBlock(Player player, Location location) {
+    UserRepository.userOf(player).raytracerIgnore.remove(location);
+  }
+
+  public static boolean isIgnored(Player player, BlockPosition blockPosition) {
+    for (Location location : UserRepository.userOf(player).raytracerIgnore) {
+      if(blockPosition.toLocation(player.getWorld()).equals(location)) {
+        return true;
+      }
+    }
+    return false;
+  }*/
 
   public static WrappedMovingObjectPosition blockRayTrace(Player player, Location playerLocation) {
     double blockReachDistance = resolveBlockReachDistance(player.getGameMode());

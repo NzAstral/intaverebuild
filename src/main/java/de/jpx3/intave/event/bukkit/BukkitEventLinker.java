@@ -57,11 +57,11 @@ public final class BukkitEventLinker {
     }
   }
 
-  public final void fireEventPrivileged(Event event) {
+  public final void fireExternalEvent(Event event) {
     for (RegisteredListener registration : event.getHandlers().getRegisteredListeners()) {
       Plugin plugin = registration.getPlugin();
       String pluginName = plugin.getName();
-      if (pluginName.equalsIgnoreCase("Intave") && plugin.isEnabled()) {
+      if (!pluginName.equalsIgnoreCase("Intave") && plugin.isEnabled()) {
         try {
           registration.callEvent(event);
         } catch (AuthorNagException | EventException var10) {

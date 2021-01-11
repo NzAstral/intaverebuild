@@ -1,11 +1,13 @@
 package de.jpx3.intave.event.dispatch;
 
 import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.MultiBlockChangeInfo;
+import com.comphenix.protocol.wrappers.WrappedBlockData;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.detect.EventProcessor;
 import de.jpx3.intave.event.packet.ListenerPriority;
@@ -18,7 +20,7 @@ import de.jpx3.intave.tools.sync.Synchronizer;
 import de.jpx3.intave.tools.wrapper.WrappedEnumDirection;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.world.BlockAccessor;
-import de.jpx3.intave.world.block.BlockDamage;
+import de.jpx3.intave.world.block.BlockDataAccess;
 import de.jpx3.intave.world.collision.BoundingBoxAccess;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -37,6 +39,7 @@ public final class BlockActionDispatcher implements EventProcessor {
   private final IntavePlugin plugin;
 
   public final List<Material> clickableMaterials = new ArrayList<>();
+  public final List<Material> replaceableMaterials = new ArrayList<>();
 
   // TODO: 01/09/21 prevent invalid chunk access
 
@@ -83,7 +86,6 @@ public final class BlockActionDispatcher implements EventProcessor {
     }
 */
 
-
     try {
       for (int i = 0; i < 64000; i++) {
         Material material = Material.getMaterial(i);
@@ -104,7 +106,7 @@ public final class BlockActionDispatcher implements EventProcessor {
   }
 
   @PacketSubscription(
-    priority = ListenerPriority.NORMAL,
+    priority = ListenerPriority.LOWEST,
     packets = {
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "BLOCK_PLACE"),
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "USE_ITEM")
@@ -131,7 +133,8 @@ public final class BlockActionDispatcher implements EventProcessor {
 
     World world = player.getWorld();
     Location blockAgainstLocation = blockPosition.toLocation(world).clone();
-    Location blockPlacementLocation = blockAgainstLocation.clone().add(WrappedEnumDirection.getFront(enumDirection).getDirectionVec().convertToBukkitVec());
+    boolean replace = BlockDataAccess.replacementPlace(world, new BlockPosition(blockAgainstLocation.toVector()));
+    Location blockPlacementLocation = replace ? blockAgainstLocation : blockAgainstLocation.clone().add(WrappedEnumDirection.getFront(enumDirection).getDirectionVec().convertToBukkitVec());
 
     // TODO: 01/10/21 replace with own resolve (getItemInHand is not synchronized !!!)
     Material itemTypeInHand = player.getItemInHand().getType();
@@ -142,6 +145,8 @@ public final class BlockActionDispatcher implements EventProcessor {
     boolean isPlacement = itemTypeInHand != Material.AIR && itemTypeInHand.isBlock() && !clickable;
 
     if(isPlacement) {
+//      Bukkit.broadcastMessage(blockAgainstLocation + " " + WrappedEnumDirection.getFront(enumDirection));
+
       int blockX = blockPlacementLocation.getBlockX();
       int blockY = blockPlacementLocation.getBlockY();
       int blockZ = blockPlacementLocation.getBlockZ();
@@ -162,39 +167,17 @@ public final class BlockActionDispatcher implements EventProcessor {
           (byte) 0
         );
 
-//      player.sendMessage("Block-placement confirmation for " + MathHelper.formatPosition(blockPlacementLocation));
       if(access) {
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
         boundingBoxAccess.override(world, blockX, blockY, blockZ, id, shape);
-        Synchronizer.synchronize(() -> boundingBoxAccess.invalidateOverride(world, blockX, blockY, blockZ));
+      } else {
+        refreshBlocksAround(player, blockPlacementLocation);
+        event.setCancelled(true);
       }
     } else {
-      // wooden doors and trapdoors
       if(clickedType == Material.WOODEN_DOOR) {
-/*
-        // TODO: 01/10/21 interact event
 
-        Block blockOfInterest = clickedBlock;
-        int data = blockOfInterest.getData();
-        boolean upperPart = (data & 8) > 0;
 
-        if(upperPart) {
-          blockOfInterest = clickedBlock.getRelative(BlockFace.DOWN);
-          data = blockOfInterest.getData();
-        }
-
-        boolean isOpen = (data & 4) > 0;
-
-        player.sendMessage(String.valueOf(isOpen));
-
-        int bitMask = 4;
-        byte newData = (byte) (isOpen ? data & ~bitMask : data | bitMask);
-
-        BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
-        boundingBoxAccess.override(world, blockOfInterest.getX(), blockOfInterest.getY(), blockOfInterest.getZ(), blockOfInterest.getTypeId(), newData);
-        if(upperPart) {
-          boundingBoxAccess.override(world, blockOfInterest.getX(), blockOfInterest.getY() + 1, blockOfInterest.getZ(), blockOfInterest.getTypeId(), newData);
-        }*/
       } else if(clickedType == Material.TRAP_DOOR) {
         int data = clickedBlock.getData();
         boolean isOpen = (data & 4) > 0;
@@ -213,7 +196,7 @@ public final class BlockActionDispatcher implements EventProcessor {
   }
 
   @PacketSubscription(
-    priority = ListenerPriority.NORMAL,
+    priority = ListenerPriority.LOWEST,
     packets = {
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "BLOCK_DIG")
     }
@@ -226,21 +209,18 @@ public final class BlockActionDispatcher implements EventProcessor {
       return;
     }
     EnumWrappers.PlayerDigType playerDigType = packet.getPlayerDigTypes().readSafely(0);
-    player.sendMessage(String.valueOf(playerDigType));
 
-    boolean instantBreak = BlockDamage.blockDamage(player, player.getItemInHand(), blockPosition) >= 1.0f;
-    boolean breakBlock = playerDigType == STOP_DESTROY_BLOCK;
+    float blockDamage = BlockDataAccess.blockDamage(player, player.getItemInHand(), blockPosition);
+    boolean instantBreak = blockDamage == Float.POSITIVE_INFINITY || blockDamage >= 1.0f;
+    boolean breakBlock = instantBreak || playerDigType == STOP_DESTROY_BLOCK;
 
     if(!breakBlock) {
       return;
     }
+
     EnumWrappers.Direction direction = packet.getDirections().readSafely(0);
     int enumDirection = direction == null ? 255 : direction.ordinal();
     if(enumDirection == 255) {
-      return;
-    }
-
-    if(event.isCancelled()) {
       return;
     }
 
@@ -254,15 +234,22 @@ public final class BlockActionDispatcher implements EventProcessor {
         BlockAccessor.blockAccess(blockBreakLocation)
       );
 
-//    player.sendMessage("Block-placement confirmation for " + MathHelper.formatPosition(blockBreakLocation));
     if(access) {
       int blockX = blockBreakLocation.getBlockX();
       int blockY = blockBreakLocation.getBlockY();
       int blockZ = blockBreakLocation.getBlockZ();
 
+//      player.sendMessage("Block-placement confirmation for " + MathHelper.formatPosition(blockBreakLocation));
+//      Synchronizer.synchronize(() -> {
+//        Raytracer.ignoreBlock(player, blockBreakLocation);
+//      });
+
       // add to future bounding boxes
       BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
       boundingBoxAccess.override(world, blockX, blockY, blockZ, 0, (byte) 0);
+    } else {
+      refreshBlocksAround(player, blockBreakLocation);
+      event.setCancelled(true);
     }
   }
 
@@ -291,6 +278,34 @@ public final class BlockActionDispatcher implements EventProcessor {
       BlockPosition position = packet.getBlockPositionModifier().readSafely(0);
       boundingBoxAccess.invalidate(position.getX(), position.getY(), position.getZ());
 //      boundingBoxAccess.invalidateOverride(world, position.getX(), position.getY(), position.getZ());
+    }
+  }
+
+//  @BukkitEventSubscription(ignoreCancelled = true)
+//  public void on(BlockBreakEvent event) {
+//    Raytracer.clearIgnoreBlock(event.getPlayer(), event.getBlock().getLocation());
+//  }
+
+  private void refreshBlocksAround(Player player, Location targetLocation) {
+    player.updateInventory();
+    refreshBlock(player, targetLocation);
+    for (WrappedEnumDirection direction : WrappedEnumDirection.values()) {
+      Location placedBlock = targetLocation.clone().add(direction.getDirectionVec().convertToBukkitVec());
+      refreshBlock(player, placedBlock);
+    }
+  }
+
+  private void refreshBlock(Player player, Location location) {
+    PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.BLOCK_CHANGE);
+    Block block = location.getBlock();
+    WrappedBlockData blockData = WrappedBlockData.createData(block.getType(), block.getData());
+    BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    packet.getBlockData().write(0, blockData);
+    packet.getBlockPositionModifier().write(0, position);
+    try {
+      ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet);
+    } catch (InvocationTargetException exception) {
+      exception.printStackTrace();
     }
   }
 }
