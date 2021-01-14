@@ -55,6 +55,9 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
     }
   )
   public void receiveInteraction(PacketEvent event) {
+
+
+
     Player player = event.getPlayer();
     PacketContainer packet = event.getPacket();
     BlockPosition blockPosition = packet.getBlockPositionModifier().readSafely(0);
@@ -88,6 +91,8 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       isPlacement ? InteractionType.PLACE : InteractionType.INTERACT
     );
     interactionMeta.interactionList.add(interaction);
+//    if(!isPlacement) {
+//    }
     event.setCancelled(true);
   }
 
@@ -104,7 +109,6 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
     if(blockPosition == null) {
       return;
     }
-
 
     if(event.isCancelled()) {
       return;
@@ -236,10 +240,14 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 //      boundingBoxAccess.identityInvalidate();
 //    }
 
+    boolean canRefreshBlocks = interaction.type != InteractionType.INTERACT;
+
     if(response == ResponseType.RAYTRACE_CAST) {
       if(hitMiss || raycastResult == null) {
 //        player.sendMessage("Emulation " + raycastLocation + " " + targetLocation);
-        refreshBlocksAround(player, targetLocation);
+        if(canRefreshBlocks) {
+          refreshBlocksAround(player, targetLocation);
+        }
         boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
       } else {
         PacketContainer packet = interaction.thePacket();
@@ -262,11 +270,15 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
         }
 
         receiveExcludedPacket(player, packet);
-        Synchronizer.synchronize(() -> refreshBlocksAround(player, targetLocation));
+        if(canRefreshBlocks) {
+          Synchronizer.synchronize(() -> refreshBlocksAround(player, targetLocation));
+        }
       }
     } else {
       if (punishment) {
-        refreshBlocksAround(player, targetLocation);
+        if(canRefreshBlocks) {
+          refreshBlocksAround(player, targetLocation);
+        }
         boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
       } else {
         //Synchronizer.synchronize(() -> receiveExcludedPacket(player, interaction.thePacket));

@@ -27,6 +27,9 @@ public final class BackgroundExecutor {
   }
 
   public static void execute(Runnable runnable) {
+    if(executorService.isShutdown() || executorService.isTerminated()) {
+      return;
+    }
     executorService.execute(runnable);
   }
 }

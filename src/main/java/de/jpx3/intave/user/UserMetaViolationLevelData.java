@@ -1,14 +1,16 @@
 package de.jpx3.intave.user;
 
+import com.google.common.collect.Maps;
 import de.jpx3.intave.access.TrustFactor;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class UserMetaViolationLevelData {
   public double physicsVL;
   public volatile boolean isInActiveTeleportBundle;
 
-  public Map<String, Map<String, Double>> violationLevel = new ConcurrentHashMap<>();
+  public Map<String, Map<String, Double>> violationLevel = Maps.newConcurrentMap();
+  public Map<String, Map<String, Double>> violationLevelGainedCounter = Maps.newConcurrentMap();
+  public Map<String, Map<String, Long>> lastViolationLevelGainedCounterReset = Maps.newConcurrentMap();
   public TrustFactor trustFactor = TrustFactor.YELLOW;
 }

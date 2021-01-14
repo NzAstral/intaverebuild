@@ -71,7 +71,10 @@ public final class Timer extends IntaveMetaCheck<Timer.TimerData> {
 
     if(delta > 500) {
       timerData.lastLagSpike = AccessHelper.now();
-//      player.sendMessage(String.valueOf(timerData.timerBalance));
+      plugin.eventService().transactionFeedbackService().requestPong(player, null, (player1, target) -> {
+        // Lag spike - requesting feedback to reset balance
+        timerData.timerBalance = Math.max(0, timerData.timerBalance);
+      });
     }
 
     // fast recover

@@ -41,6 +41,7 @@ public final class LocalPacketAdapter extends IntavePacketAdapter implements Com
     if(exceptions > 50) {
       return;
     }
+//    boolean cancelled = event.isCancelled();
     try {
 //      Timings.packetProcessing.start();
       if (TEMP_PLAYER_CHECK) {
@@ -52,9 +53,6 @@ public final class LocalPacketAdapter extends IntavePacketAdapter implements Com
       }
       executor.invoke(subscriber, event);
 //      Timings.packetProcessing.stop();
-    } catch (UnsupportedOperationException exception) {
-      System.out.println("[Intave] We recommend updating ProtocolLib");
-      processException(event.getPacketType(), exception);
     } catch (RuntimeException exception) {
       processException(event.getPacketType(), exception);
 
@@ -62,6 +60,9 @@ public final class LocalPacketAdapter extends IntavePacketAdapter implements Com
         System.out.println(subscriber.getClass().getSimpleName()+"."+methodName + " has been deactivated due to too many exceptions");
       }
     }
+//    if(!cancelled && event.isCancelled()) {
+//      System.out.println(subscriber.getClass().getSimpleName()+"."+methodName + " cancelled packet " + event.getPacketType());
+//    }
   }
 
 //  @Override
@@ -85,7 +86,7 @@ public final class LocalPacketAdapter extends IntavePacketAdapter implements Com
       System.out.println("[Intave] We recommend updating ProtocolLib");
       processException(exception);
     } */catch (RuntimeException exception) {
-      exception.fillInStackTrace();
+      exception.getStackTrace();
       processException(event.getPacketType(), exception);
       if(exceptions++ >= 50) {
         System.out.println(subscriber.getClass().getSimpleName()+"."+methodName + " has been deactivated due to too many exceptions");

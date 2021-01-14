@@ -71,6 +71,8 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
     }
   }
 
+  private final static Object FALLBACK_OBJECT = new Object();
+
   private <T> Short acquireNewId(Player player, T obj, TransactionFeedbackCallback<T> callback) {
     User user = UserRepository.userOf(player);
     if (user == null) {
@@ -80,6 +82,10 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
     short transactionCounter = synchronizeData.transactionCounter++;
     if (transactionCounter >= TRANSACTION_MAX_CODE) {
       transactionCounter = TRANSACTION_MIN_CODE;
+    }
+    if(obj == null) {
+      //noinspection unchecked
+      obj = (T) FALLBACK_OBJECT;
     }
     TransactionCallBackData<T> transactionCallBackData = new TransactionCallBackData<>(callback, obj);
     synchronizeData.transactionFeedBackMap().put(transactionCounter, transactionCallBackData);

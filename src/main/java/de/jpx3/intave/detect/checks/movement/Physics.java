@@ -4,6 +4,7 @@ import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
+import de.jpx3.intave.detect.CheckViolationLevelDecrementer;
 import de.jpx3.intave.detect.IntaveCheck;
 import de.jpx3.intave.detect.checks.movement.physics.CollisionHelper;
 import de.jpx3.intave.detect.checks.movement.physics.collision.PhysicsCollisionRepository;
@@ -36,16 +37,21 @@ import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_AQUATIC_UP
 import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_VILLAGE_UPDATE;
 
 public final class Physics extends IntaveCheck {
+  private final static double VL_DECREMENT_PER_VALID_MOVE = 0.05;
+
   private final IntavePlugin plugin;
   private final PhysicsCollisionRepository collisionRepository;
 
   private WaterMovementLegacyResolver waterMovementLegacyResolver;
   private AquaticWaterMovementBase aquaticWaterMovement;
 
+  private CheckViolationLevelDecrementer decrementer;
+
   public Physics(IntavePlugin plugin) {
     super("Physics", "physics");
     this.plugin = plugin;
     this.collisionRepository = new PhysicsCollisionRepository();
+    this.decrementer = new CheckViolationLevelDecrementer(this, VL_DECREMENT_PER_VALID_MOVE * 20);
     setupWaterMovement();
   }
 
@@ -729,6 +735,11 @@ public final class Physics extends IntaveCheck {
       if (setback) {
         plugin.eventService().emulationEngine().emulationSetBack(player, emulationMotion, 8);
       }
+    }
+
+    if(violationLevelIncrease == 0 && violationLevelData.physicsVL < 1) {
+//      player.sendMessage("Decremengin");
+      decrementer.decrement(user, VL_DECREMENT_PER_VALID_MOVE);
     }
 
     violationLevelData.physicsVL = Math.max(0, violationLevelData.physicsVL);
