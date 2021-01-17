@@ -17,10 +17,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 @SuppressWarnings({"UnusedReturnValue", "ResultOfMethodCallIgnored"})
 public final class CachedResource {
@@ -38,6 +35,17 @@ public final class CachedResource {
     this.uri = uri;
     this.expireDuration = expireDuration;
     this.prepareFile();
+  }
+
+  public boolean prepareFile() {
+    File file = fileStore();
+    long fileLastModified = AccessHelper.now() - file.lastModified();
+    boolean invalidFile = !file.exists() || fileLastModified > expireDuration;
+
+    if(invalidFile) {
+      refreshFile();
+    }
+    return file.exists();
   }
 
   public List<String> readLines() {
@@ -92,17 +100,6 @@ public final class CachedResource {
     }
   }
 
-  public boolean prepareFile() {
-    File file = fileStore();
-    long fileLastModified = AccessHelper.now() - file.lastModified();
-    boolean invalidFile = !file.exists() || fileLastModified > expireDuration;
-
-    if(invalidFile) {
-      refreshFile();
-    }
-    return file.exists();
-  }
-
   @Natify
   private boolean refreshFile() {
     File file = fileStore();
@@ -112,8 +109,8 @@ public final class CachedResource {
     try {
       file.createNewFile();
     } catch (IOException e) {
-//      throw new IllegalStateException(e);
-      return false;
+      throw new IllegalStateException(e);
+//      return false;
     }
     // try download
     try {
@@ -154,20 +151,22 @@ public final class CachedResource {
       file.setLastModified(AccessHelper.now());
       outputStream.close();
     } catch (Exception exception) {
-//      exception.printStackTrace();
+      exception.printStackTrace();
       return false;
     }
     return file.exists();
   }
 
   private File fileStore() {
+    String operatingSystem = System.getProperty("os.name").toLowerCase(Locale.ROOT);
     File workDirectory;
-    String operatingSystem = System.getProperty("os.name");
+    String filePath;
     if(operatingSystem.contains("win")) {
-      workDirectory = new File(System.getenv("APPDATA") + "/Intave");
+      filePath = System.getenv("APPDATA") + "/Intave/";
     } else {
-      workDirectory = new File("var/lib/intave");
+      filePath = "var/lib/intave/";
     }
+    workDirectory = new File(filePath);
     if(!workDirectory.exists()) {
       workDirectory.mkdir();
     }

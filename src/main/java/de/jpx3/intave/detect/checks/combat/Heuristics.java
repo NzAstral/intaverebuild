@@ -40,6 +40,7 @@ public final class Heuristics extends IntaveMetaCheck<Heuristics.HeuristicMeta> 
   public void setupSubChecks() {
     appendCheckPart(new ReshapedJumpHeuristic(this));
     appendCheckPart(new RotationAccuracyHeuristic(this));
+    appendCheckPart(new RotationGCDHeuristic(this));
     appendCheckPart(new RotationStandardDeviationHeuristic(this));
     appendCheckPart(new RotationModuloResetHeuristic(this));
     appendCheckPart(new PacketOrderSwingHeuristic(this));

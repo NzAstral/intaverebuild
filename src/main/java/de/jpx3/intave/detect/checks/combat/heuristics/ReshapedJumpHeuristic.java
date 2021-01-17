@@ -57,7 +57,7 @@ public final class ReshapedJumpHeuristic extends IntaveMetaCheckPart<Heuristics,
       if (abs < 1e-5) {
         if (heuristicMeta.balance++ > 2) {
           String description = "player performed rotation hop";
-          Anomaly anomaly = Anomaly.anomalyOf(Confidence.VERY_LIKELY, Anomaly.Type.KILL_AURA, description, Anomaly.AnomalyOption.LIMIT_2);
+          Anomaly anomaly = Anomaly.anomalyOf(Confidence.VERY_LIKELY, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
           parentCheck().saveAnomaly(player, anomaly);
         }
       } else {

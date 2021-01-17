@@ -49,7 +49,7 @@ public final class RotationAccuracyHeuristic extends IntaveMetaCheckPart<Heurist
         // Check perfect yaw
         if (distanceToPerfectYaw == 0) {
           String description = "rotated yaw too precisely (0.0)";
-          Anomaly anomaly = Anomaly.anomalyOf(Confidence.LIKELY, Anomaly.Type.KILL_AURA, description, Anomaly.AnomalyOption.LIMIT_2);
+          Anomaly anomaly = Anomaly.anomalyOf(Confidence.LIKELY, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
           parentCheck().saveAnomaly(player, anomaly);
         }
 
@@ -61,7 +61,7 @@ public final class RotationAccuracyHeuristic extends IntaveMetaCheckPart<Heurist
           int suspiciousLevel = (int) heuristicMeta.balanceYawAccuracy;
           if (suspiciousLevel > 8) {
             String description = "high accuracy rotation yaw vl:" + suspiciousLevel;
-            Anomaly anomaly = Anomaly.anomalyOf(Confidence.LIKELY, Anomaly.Type.KILL_AURA, description, Anomaly.AnomalyOption.LIMIT_2);
+            Anomaly anomaly = Anomaly.anomalyOf(Confidence.LIKELY, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
             parentCheck().saveAnomaly(player, anomaly);
           }
 
@@ -74,7 +74,7 @@ public final class RotationAccuracyHeuristic extends IntaveMetaCheckPart<Heurist
         } else if (heuristicMeta.balanceYawAccuracyOther++ > 50) {
 
           String description = "high accuracy rotation yaw (2) vl:" + heuristicMeta.balanceYawAccuracyOther;
-          Anomaly anomaly = Anomaly.anomalyOf(Confidence.MAYBE, Anomaly.Type.KILL_AURA, description, Anomaly.AnomalyOption.LIMIT_2);
+          Anomaly anomaly = Anomaly.anomalyOf(Confidence.MAYBE, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
           parentCheck().saveAnomaly(player, anomaly);
 
 
