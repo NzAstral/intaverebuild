@@ -89,7 +89,7 @@ public final class CheckService {
       }
       packetSubscriptionLinker.linkSubscriptionsIn(check);
       for (IntaveCheckPart checkPart : check.checkParts()) {
-        if(!checkPart.enabled()) {
+        if (!checkPart.enabled()) {
           continue;
         }
         packetSubscriptionLinker.linkSubscriptionsIn(checkPart);
@@ -105,7 +105,7 @@ public final class CheckService {
       }
       packetSubscriptionLinker.removeSubscriptionsOf(check);
       for (IntaveCheckPart checkPart : check.checkParts()) {
-        if(!checkPart.enabled()) {
+        if (!checkPart.enabled()) {
           continue;
         }
         packetSubscriptionLinker.removeSubscriptionsOf(checkPart);
@@ -121,7 +121,7 @@ public final class CheckService {
       }
       bukkitEventLinker.registerEventsIn(check);
       for (IntaveCheckPart checkPart : check.checkParts()) {
-        if(!checkPart.enabled()) {
+        if (!checkPart.enabled()) {
           continue;
         }
         bukkitEventLinker.registerEventsIn(checkPart);
@@ -137,7 +137,7 @@ public final class CheckService {
       }
       bukkitEventLinker.unregisterEventsIn(check);
       for (IntaveCheckPart checkPart : check.checkParts()) {
-        if(!checkPart.enabled()) {
+        if (!checkPart.enabled()) {
           continue;
         }
         bukkitEventLinker.unregisterEventsIn(checkPart);
@@ -147,7 +147,7 @@ public final class CheckService {
 
   public <T extends IntaveCheck> T searchCheck(Class<T> checkClass) {
     IntaveCheck check = requestCache.get(checkClass);
-    if(check == null) {
+    if (check == null) {
       throw new IllegalStateException("Unable to find check " + checkClass);
     }
     //noinspection unchecked
@@ -156,7 +156,7 @@ public final class CheckService {
 
   public <T extends IntaveCheck> T searchCheck(String checkName) {
     IntaveCheck check = nameRequestCache.get(checkName.toLowerCase());
-    if(check == null) {
+    if (check == null) {
       throw new IllegalStateException("Unable to find check " + checkName);
     }
     //noinspection unchecked

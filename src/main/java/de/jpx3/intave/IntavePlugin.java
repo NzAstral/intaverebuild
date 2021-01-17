@@ -18,11 +18,15 @@ import de.jpx3.intave.lib.asm.Frame;
 import de.jpx3.intave.logging.IntaveLogger;
 import de.jpx3.intave.security.HWIDVerification;
 import de.jpx3.intave.security.SSLConnectionVerifier;
+import de.jpx3.intave.tools.AccessHelper;
+import de.jpx3.intave.tools.DurationTranslator;
 import de.jpx3.intave.tools.annotate.Natify;
 import de.jpx3.intave.tools.client.SinusCache;
 import de.jpx3.intave.tools.items.InventoryUseItemHelper;
 import de.jpx3.intave.tools.sync.Synchronizer;
 import de.jpx3.intave.trustfactor.TrustFactorService;
+import de.jpx3.intave.update.VersionInformation;
+import de.jpx3.intave.update.VersionList;
 import de.jpx3.intave.world.BlockAccessor;
 import de.jpx3.intave.world.collision.patches.BoundingBoxPatcher;
 import de.jpx3.intave.world.permission.InteractionPermissionService;
@@ -62,6 +66,7 @@ public final class IntavePlugin extends JavaPlugin {
   private CheckService checkService;
   private InteractionPermissionService interactionPermissionService;
   private TrustFactorService trustFactorService;
+  private VersionList versionList;
 
   static {
     // stage 1
@@ -124,7 +129,6 @@ public final class IntavePlugin extends JavaPlugin {
       configurationService = new ConfigurationService(this);
       String configurationKey = configurationService.configurationKey();
       logger.info("Using the \"" + configurationKey + "\" configuration");
-
 
       // license check call
 
@@ -208,7 +212,7 @@ public final class IntavePlugin extends JavaPlugin {
             bad = true;
             break;
           case "expired":
-            message = "Unable to boot: Buy Intave for continued use :)";
+            message = "Unable to boot: Buy Intave for continued use";
             bad = true;
             break;
           case "timeout":
@@ -218,11 +222,9 @@ public final class IntavePlugin extends JavaPlugin {
             message = null;
             break;
         }
-
         if(message != null) {
           logger().error(message);
         }
-
         if(bad || response.length() < 2) {
           getCommand("intave").setExecutor((commandSender, command, s, strings) -> {
             commandSender.sendMessage(prefix() + ChatColor.RED + "Intave couldn't boot properly");
@@ -234,6 +236,7 @@ public final class IntavePlugin extends JavaPlugin {
 
         if(response.equals("timeout")) {
           System.setProperty("8ugyoiodfg", "~timeout");
+          offlineMode = true;
           requiredConfigurationHash = null;
         } else {
           // Intavede#key1=value1#key2=value2 ...
@@ -256,7 +259,7 @@ public final class IntavePlugin extends JavaPlugin {
         }
       }
 
-      if(requiredConfigurationHash == null && !configurationService.loader().configurationCacheExists()) {
+      if(offlineMode && !configurationService.loader().configurationCacheExists()) {
         logger().error("Unable to boot: Intave requires an internet connection for first-time startup");
         getCommand("intave").setExecutor((commandSender, command, s, strings) -> {
           commandSender.sendMessage(prefix() + ChatColor.RED + "Intave couldn't boot properly");
@@ -264,6 +267,40 @@ public final class IntavePlugin extends JavaPlugin {
         });
         performShutdown();
         return;
+      }
+
+      versionList = new VersionList();
+      versionList.setup();
+
+      VersionInformation versionInformation = versionList.versionInformation(version());
+
+      if(versionInformation == null) {
+        logger().info("This version of Intave is not listed in the official index");
+      } else {
+        long duration = AccessHelper.now() - versionInformation.release();
+        String durationAsString = DurationTranslator.translateDuration(duration);
+
+        String infoMessage = "";
+        switch (versionInformation.typeClassifier()) {
+          case LATEST:
+            infoMessage = "Using the latest version of Intave (" + durationAsString + " old)";
+            break;
+          case STABLE:
+            infoMessage = "Using a stable version of Intave (" + durationAsString + " old)";
+            break;
+          case OUTDATED:
+            infoMessage = "A newer version of Intave is available (this version is " + durationAsString + " old)";
+            break;
+          case INVALID:
+            logger().error("Unable to boot: This version has been deactivated");
+            getCommand("intave").setExecutor((commandSender, command, s, strings) -> {
+              commandSender.sendMessage(prefix() + ChatColor.RED + "This version has been deactivated. Please update Intave immediately");
+              return false;
+            });
+            performShutdown();
+            return;
+        }
+        logger().info(infoMessage);
       }
 
       // resolve config hash
@@ -365,6 +402,10 @@ public final class IntavePlugin extends JavaPlugin {
 
   public SibylIntegrationService sibylIntegrationService() {
     return sibylIntegrationService;
+  }
+
+  public VersionList versionList() {
+    return versionList;
   }
 
   public static String version() {

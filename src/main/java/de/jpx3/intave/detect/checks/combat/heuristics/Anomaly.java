@@ -55,8 +55,8 @@ public class Anomaly {
   }
 
   public enum Type {
-    KILL_AURA("killaura"),
-    AUTO_CLICKER("autoclicker");
+    KILLAURA("killaura"),
+    AUTOCLICKER("autoclicker");
 
     private final String details;
 

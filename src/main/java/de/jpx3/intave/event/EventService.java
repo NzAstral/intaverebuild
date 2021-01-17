@@ -1,14 +1,24 @@
 package de.jpx3.intave.event;
 
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.event.bukkit.BukkitEventSubscriber;
+import de.jpx3.intave.event.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.event.dispatch.*;
 import de.jpx3.intave.event.service.ConnectionHealthResolver;
 import de.jpx3.intave.event.service.MovementEmulationEngine;
 import de.jpx3.intave.event.service.TransactionFeedbackService;
 import de.jpx3.intave.event.service.entity.ClientSideEntityService;
+import de.jpx3.intave.permission.PermissionCheck;
+import de.jpx3.intave.tools.AccessHelper;
+import de.jpx3.intave.tools.DurationTranslator;
+import de.jpx3.intave.update.VersionInformation;
 import de.jpx3.intave.user.UserRepositoryEventListener;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerJoinEvent;
 
-public final class EventService {
+public final class EventService implements BukkitEventSubscriber {
   private final IntavePlugin plugin;
   private TransactionFeedbackService transactionFeedbackService;
   private MovementEmulationEngine emulationEngine;
@@ -29,8 +39,41 @@ public final class EventService {
     new PlayerInventoryEvaluator(plugin);
     new ClientSideEntityService(plugin);
     new ConnectionHealthResolver(plugin);
+
+    plugin.eventLinker().registerEventsIn(this);
   }
-  
+
+  @BukkitEventSubscription
+  public void on(PlayerJoinEvent event) {
+    Player player = event.getPlayer();
+
+    boolean hasNotificationPermission = PermissionCheck.permissionCheck(player, "intave.command");
+
+    if (!hasNotificationPermission) {
+      return;
+    }
+
+    String currentVersion = IntavePlugin.version();
+    VersionInformation versionInformation = plugin.versionList().versionInformation(currentVersion);
+
+    if(versionInformation == null) {
+      sendPrefixedMessage(ChatColor.YELLOW + "This server is running an experimental version of Intave (" + currentVersion + ")", player);
+      sendPrefixedMessage(ChatColor.YELLOW + "It is possible that bugs occur", player);
+    } else {
+      if(versionInformation.typeClassifier() == VersionInformation.VersionTypeClassifier.OUTDATED) {
+        long duration = AccessHelper.now() - versionInformation.release();
+        String durationAsString = DurationTranslator.translateDuration(duration);
+
+        sendPrefixedMessage(ChatColor.RED + "This server is running an outdated version of Intave ("+durationAsString+" old)", player);
+        sendPrefixedMessage(ChatColor.RED + "I hope you know why updating your *security* software might be important.", player);
+      }
+    }
+  }
+
+  public void sendPrefixedMessage(String message, CommandSender target) {
+    target.sendMessage(IntavePlugin.prefix() + message);
+  }
+
   public MovementEmulationEngine emulationEngine() {
     return emulationEngine;
   }

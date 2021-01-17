@@ -16,12 +16,9 @@ check:
 
   heuristics:
 
-    # DEBUG
-    thresholds:
-      50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is fighting suspiciously"
+    enabled: true
 
     confidence-thresholds:
-
       "!!":
         25:
           - "intave internals sendnotify &c{player}&7/{trust-color}&7 has been removed for attacking suspiciously (!!) (heuristics)"
@@ -40,6 +37,8 @@ check:
 
   attackRaytrace:
 
+    enabled: true
+
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (hitbox)"
       100:
@@ -47,6 +46,8 @@ check:
         - "kick {player} &cYou have been removed from the game based on data that was collected by the anti-cheat"
 
   interactionRaytrace:
+
+    enabled: true
 
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously"
@@ -64,8 +65,17 @@ check:
 
   abilitySpeedLimiter:
 
-  chat:
+    # nothing
 
+filter:
+
+  health: true
+
+  enchantments: true
+
+  chat-insults: true
+
+  chat-spam: true
 
 layout:
 
@@ -74,10 +84,3 @@ layout:
   notify: "{prefix} &c&lNotify&8: &7{text}"
 
   prefix: "&8[&c&lIntave&8]&7 "
-
-filter:
-
-  health: true
-
-  enchantments: true
-

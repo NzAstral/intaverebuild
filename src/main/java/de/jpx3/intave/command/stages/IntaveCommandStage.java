@@ -7,6 +7,10 @@ import de.jpx3.intave.command.Optional;
 import de.jpx3.intave.command.SubCommand;
 import de.jpx3.intave.permission.PermissionCheck;
 import de.jpx3.intave.security.LicenseVerification;
+import de.jpx3.intave.tools.AccessHelper;
+import de.jpx3.intave.tools.DurationTranslator;
+import de.jpx3.intave.tools.annotate.Natify;
+import de.jpx3.intave.update.VersionInformation;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserMessageChannel;
 import org.bukkit.ChatColor;
@@ -107,19 +111,39 @@ public final class IntaveCommandStage extends CommandStage {
     }
   }
 
+  @Natify
   private void sendVersionMessage(CommandSender player) {
     boolean hasVersionViewPermission = PermissionCheck.permissionCheck(player, "intave.command");
     boolean versionViewAllowed = false;
 
-    String version = hasVersionViewPermission ? IntavePlugin.version() + " (9 days old)" : "(version hidden)";
+    VersionInformation versionInformation = IntavePlugin.singletonInstance().versionList().versionInformation(IntavePlugin.version());
+
+    String version;
+
+    if(versionInformation != null) {
+      version = IntavePlugin.version() + " (" + DurationTranslator.translateDuration(AccessHelper.now() - versionInformation.release()) + " old)";
+    } else {
+      version = IntavePlugin.version() + " (experimental)";
+    }
+
+    if(!hasVersionViewPermission) {
+      version = "(version hidden)";
+    }
 
     String prefix = IntavePlugin.prefix();
     player.sendMessage(new String[]{
       prefix + "Running Intave " + version,
       prefix + "Made in Germany by the Intave development team",
-      prefix + "Visit our website for a full list of contributors",
-      prefix + (IntavePlugin.isInOfflineMode() ? "Unable to verify certificate " + LicenseVerification.licenseKey() + ". Intave servers down?" : "Certified for " + LicenseVerification.network() + " / " + LicenseVerification.licenseKey())
+      prefix + "Visit our website for a full list of contributors"
     });
+
+    if(IntavePlugin.isInOfflineMode()) {
+      player.sendMessage(prefix + "Unable to verify certificate " + LicenseVerification.licenseKey() + ". Intave servers down?");
+    } else if(LicenseVerification.network().equals("~bypass")){
+      player.sendMessage(prefix + "This self-issued version does not require certification");
+    } else {
+      player.sendMessage(prefix + "Certified for " + LicenseVerification.network() + " / " + LicenseVerification.licenseKey());
+    }
   }
 
   public static IntaveCommandStage singletonInstance() {

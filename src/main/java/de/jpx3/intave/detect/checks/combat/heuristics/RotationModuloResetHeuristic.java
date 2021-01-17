@@ -46,7 +46,7 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
         if (penaltyYaw != 0) {
 
           String description = "possible rotation modulo clamp";
-          Anomaly anomaly = Anomaly.anomalyOf(Confidence.PROBABLE, Anomaly.Type.KILL_AURA, description, Anomaly.AnomalyOption.LIMIT_2);
+          Anomaly anomaly = Anomaly.anomalyOf(Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
           parentCheck().saveAnomaly(player, anomaly);
 
         }
