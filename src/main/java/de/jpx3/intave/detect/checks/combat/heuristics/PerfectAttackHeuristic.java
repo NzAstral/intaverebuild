@@ -11,6 +11,7 @@ import de.jpx3.intave.event.packet.ListenerPriority;
 import de.jpx3.intave.event.packet.PacketDescriptor;
 import de.jpx3.intave.event.packet.PacketSubscription;
 import de.jpx3.intave.event.packet.Sender;
+import de.jpx3.intave.event.service.entity.WrappedEntity;
 import de.jpx3.intave.tools.MathHelper;
 import de.jpx3.intave.tools.RotationMathHelper;
 import de.jpx3.intave.user.User;
@@ -36,12 +37,15 @@ public final class PerfectAttackHeuristic extends IntaveMetaCheckPart<Heuristics
     Player player = event.getPlayer();
     User user = userOf(player);
     UserMetaAttackData attackData = user.meta().attackData();
-
     PerfectAttackMeta heuristicMeta = metaOf(user);
     PacketType packetType = event.getPacketType();
     PacketContainer packet = event.getPacket();
+    WrappedEntity attackedEntity = attackData.lastAttackedEntity();
 
-    if (!attackData.recentlyAttacked(500)) {
+    if (attackedEntity != null && !attackedEntity.moving(0.05)) {
+      return;
+    }
+    if (!attackData.recentlyAttacked(500) || attackData.recentlySwitchedEntity(1000)) {
       return;
     }
 
