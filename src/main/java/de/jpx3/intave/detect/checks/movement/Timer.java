@@ -98,8 +98,6 @@ public final class Timer extends IntaveMetaCheck<Timer.TimerData> {
       // leniency
       timerData.timerBalance -= 5.5;
     }
-
-    player.sendMessage("balance:" + timerData.timerBalance);
   }
 
   @PacketSubscription(
