@@ -19,6 +19,8 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.List;
+
 public final class UserMetaMovementData {
   private final Player player;
   private final User user;
@@ -80,6 +82,10 @@ public final class UserMetaMovementData {
   // To prevent a slot switch if the player changes his slot by itself we have to check if the movement is 2x wrong
   // If the player does not have an active use-item this field will be set to 0
   public int physicsEatingSlotSwitchVL;
+
+  // Phase prevention
+  public List<WrappedAxisAlignedBB> phaseIntersectingBoundingBoxes;
+  public boolean currentlyInBlock;
 
   public boolean isTeleportConfirmationPacket;
   public boolean willReceiveSetbackVelocity;

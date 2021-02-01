@@ -50,7 +50,7 @@ public final class MovementEmulationEngine {
       return;
     }
 
-    if(movementData.emulationVelocity != null) {
+    if (movementData.emulationVelocity != null) {
       motion = movementData.emulationVelocity;
 //      Bukkit.broadcastMessage(player.getName() + ": velocity start apply " + motion);
       movementData.emulationVelocity = null;
@@ -72,7 +72,7 @@ public final class MovementEmulationEngine {
     proceedEmulationTick(player, motion, ticks, ticks);
   }
 
-  public void emulationPushOutOfBlock(Player player) {
+  public void emulationPushOutOfBlock(Player player, WrappedAxisAlignedBB boundingBox) {
     User user = UserRepository.userOf(player);
     UserMetaViolationLevelData violationLevelData = user.meta().violationLevelData();
 
@@ -82,6 +82,7 @@ public final class MovementEmulationEngine {
 
     violationLevelData.isInActiveTeleportBundle = true;
 
+    user.meta().movementData().setBoundingBox(boundingBox);
     proceedPushOutOfBlockEmulationTick(player);
   }
 
@@ -107,28 +108,13 @@ public final class MovementEmulationEngine {
       double positionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
       Vector pushVector = resolvePushVector(player, positionX, positionY, positionZ);
 
-      if (isOpenBlockSpace(player, new WrappedBlockPosition(positionX, positionY, positionZ))) {
-        if (IntaveControl.DEBUG_EMULATION) {
-          player.sendMessage("[E-] Push vector cannot be applied (no open block space)");
-        }
-        violationLevelData.isInActiveTeleportBundle = false;
-        return;
-      }
+      Location location = movementData.verifiedLocation().clone().add(pushVector);
+      teleport(player, location);
 
-      if (pushVector.length() > 1e-3) {
-        Location location = movementData.verifiedLocation().clone().add(pushVector);
-        teleport(player, location);
-
-        if (IntaveControl.DEBUG_EMULATION) {
-          player.sendMessage("[E/] Push out of blocks emulation (? remaining) with " + MathHelper.formatMotion(pushVector));
-        }
-        Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 1);
-      } else {
-        if (IntaveControl.DEBUG_EMULATION) {
-          player.sendMessage("[E-] Push vector is too small");
-        }
-        violationLevelData.isInActiveTeleportBundle = false;
+      if (IntaveControl.DEBUG_EMULATION) {
+        player.sendMessage("[E/] Push out of blocks emulation (? remaining) with " + MathHelper.formatMotion(pushVector));
       }
+      Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 1);
     } else {
       if (IntaveControl.DEBUG_EMULATION) {
         player.sendMessage("[E-] Player does no longer intersect with their bounding-box");
@@ -297,7 +283,7 @@ public final class MovementEmulationEngine {
 
   private synchronized void rotationlessTeleport(Player player, Location to, float nativeYaw, float nativePitch) {
     PlayerTeleportEvent event = new PlayerTeleportEvent(player, player.getLocation().clone(), to.clone(), PlayerTeleportEvent.TeleportCause.SPECTATE);
-    IntavePlugin.singletonInstance().eventLinker().fireEvent(event);
+    plugin.eventLinker().fireEvent(event);
     if (player.isDead() || player.getHealth() <= 0 || player.getPassenger() != null || !player.isOnline() || !UserRepository.hasUser(player)) {
       return;
     }

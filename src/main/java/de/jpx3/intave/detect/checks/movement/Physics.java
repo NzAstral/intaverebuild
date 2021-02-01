@@ -1,6 +1,7 @@
 package de.jpx3.intave.detect.checks.movement;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
+import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
@@ -273,7 +274,6 @@ public final class Physics extends IntaveCheck {
       if (movedIntoBlock) {
         movementData.invalidMovement = true;
 
-        WrappedAxisAlignedBB playerBox = currentBoundingBox;//user.meta().movementData().boundingBox();
         WrappedAxisAlignedBB boundingBox = intersectionBoundingBoxesCurrent.get(0);
 
         double blockPositionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
@@ -282,9 +282,9 @@ public final class Physics extends IntaveCheck {
         Block block = BlockAccessor.blockAccess(player.getWorld(), blockPositionX, blockPositionY, blockPositionZ);
         boolean currentlyInOverride = user.boundingBoxAccess().currentlyInOverride(WrappedMathHelper.floor(blockPositionX), WrappedMathHelper.floor(blockPositionY), WrappedMathHelper.floor(blockPositionZ));
 
-        String message = "moved into "+(currentlyInOverride ? "<emulated>" : shortenTypeName(block.getType())) + " block";
+        String message = "moved into " + (currentlyInOverride ? "<emulated>" : shortenTypeName(block.getType())) + " block";
         boolean multipleBoxes = intersectionBoundingBoxesCurrent.size() > 1;
-        String details = (multipleBoxes ? intersectionBoundingBoxesCurrent.size() : "one") + " box" + (multipleBoxes ? "es" : "") + ": "+intersectionBoundingBoxesCurrent+", pb: " + playerBox;
+        String details = (multipleBoxes ? intersectionBoundingBoxesCurrent.size() : "one") + " box" + (multipleBoxes ? "es" : "");
 
         user.boundingBoxAccess().invalidate();
 
@@ -292,12 +292,52 @@ public final class Physics extends IntaveCheck {
         Vector emulationMotion = new Vector(predictedX, predictedY, predictedZ);
         plugin.eventService().emulationEngine().emulationSetBack(player, emulationMotion, 8);
       } else {
-        plugin.eventService().emulationEngine().emulationPushOutOfBlock(player);
+        // Phase Check
+        if (!movementData.currentlyInBlock) {
+          movementData.currentlyInBlock = true;
+          movementData.phaseIntersectingBoundingBoxes = ImmutableList.copyOf(intersectionBoundingBoxesCurrent);
+        }
+
+        List<WrappedAxisAlignedBB> phaseIntersectingBoundingBox = movementData.phaseIntersectingBoundingBoxes;
+
+        // Prevents players from walking in other blocks
+        boolean startBoundingBoxInList = false;
+        for (WrappedAxisAlignedBB intersectingBoundingBox : movementData.phaseIntersectingBoundingBoxes) {
+          boolean containsAny = containsBoundingBoxAny(intersectionBoundingBoxesCurrent, intersectingBoundingBox);
+          if (containsAny) {
+            startBoundingBoxInList = true;
+            break;
+          }
+        }
+
+        if (!startBoundingBoxInList) {
+          movementData.invalidMovement = true;
+          user.boundingBoxAccess().invalidate();
+
+          WrappedAxisAlignedBB boundingBox = intersectionBoundingBoxesCurrent.get(0);
+          double blockPositionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+          double blockPositionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
+          double blockPositionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+          Block block = BlockAccessor.blockAccess(player.getWorld(), blockPositionX, blockPositionY, blockPositionZ);
+
+          String message = "moved into " + shortenTypeName(block.getType()) + " block whilst moving in another block";
+          boolean multipleBoxes = intersectionBoundingBoxesCurrent.size() > 1;
+          String details = (multipleBoxes ? intersectionBoundingBoxesCurrent.size() : "one") + " box" + (multipleBoxes ? "es" : "");
+
+          plugin.retributionService().processViolation(player, 0, "Physics", message, details);
+          Location phaseStartLocation = new Location(player.getWorld(), blockPositionX, blockPositionY, blockPositionZ);
+          WrappedAxisAlignedBB startPhaseBoundingBox = CollisionHelper.boundingBoxOf(user, phaseStartLocation);
+          plugin.eventService().emulationEngine().emulationPushOutOfBlock(player, startPhaseBoundingBox);
+        }
       }
     }
 
+    if (!boundingBoxIntersectionCurrent && !boundingBoxIntersectionLast) {
+      movementData.currentlyInBlock = false;
+    }
+
     // Update the player's verified location
-    if (spectator || violationLevelIncrease == 0 && !movedIntoBlock) {
+    if (spectator || violationLevelIncrease == 0 && !boundingBoxIntersectionCurrent) {
       Location location = new Location(player.getWorld(), receivedPositionX, receivedPositionY, receivedPositionZ, movementData.rotationYaw, movementData.rotationPitch);
       movementData.setVerifiedLocation(location, "Movement validation (normal)");
     }
@@ -312,8 +352,7 @@ public final class Physics extends IntaveCheck {
       violationLevelData.physicsInvalidMovementsInRow = 0;
     }
 
-    if ((!spectator && !movedIntoBlock && violationLevelData.physicsVL > 20 && violationLevelIncrease > 0)) {
-//      movementData.invalidMovement = true;
+    if (!spectator && violationLevelData.physicsVL > 20 && violationLevelIncrease > 0) {
       String received = formatPosition(receivedMotionX, receivedMotionY, receivedMotionZ);
       String expected = formatPosition(predictedX, predictedY, predictedZ);
 
@@ -331,7 +370,6 @@ public final class Physics extends IntaveCheck {
     }
 
     if (violationLevelIncrease == 0 && violationLevelData.physicsVL < 1) {
-//      player.sendMessage("Decremengin");
       decrementer.decrement(user, VL_DECREMENT_PER_VALID_MOVE);
     }
 
@@ -382,6 +420,21 @@ public final class Physics extends IntaveCheck {
       player.sendMessage(finalDebug);
 //      Synchronizer.synchronize(() -> player.sendMessage(finalDebug));
     }
+  }
+
+  private boolean containsBoundingBoxAny(
+    List<WrappedAxisAlignedBB> intersectionBoundingBoxesCurrent,
+    WrappedAxisAlignedBB compareBoundingBox
+  ) {
+    for (WrappedAxisAlignedBB boundingBox : intersectionBoundingBoxesCurrent) {
+      boolean sameX = boundingBox.minX == compareBoundingBox.minX && boundingBox.maxX == compareBoundingBox.maxX;
+      boolean sameY = boundingBox.minY == compareBoundingBox.minY && boundingBox.maxY == compareBoundingBox.maxY;
+      boolean sameZ = boundingBox.minZ == compareBoundingBox.minZ && boundingBox.maxZ == compareBoundingBox.maxZ;
+      if (sameX && sameY && sameZ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String shortenTypeName(Material type) {
@@ -509,6 +562,10 @@ public final class Physics extends IntaveCheck {
 
     if (pushedByWaterFlow) {
       legitimateDeviation = 0.028;
+    }
+
+    if (movementData.currentlyInBlock && predictedDistanceMoved < distanceMoved * 1.3) {
+      legitimateDeviation = predictedDistanceMoved;
     }
 
     // Flying packet
