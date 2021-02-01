@@ -24,6 +24,7 @@ import de.jpx3.intave.tools.wrapper.WrappedAxisAlignedBB;
 import de.jpx3.intave.tools.wrapper.WrappedMathHelper;
 import de.jpx3.intave.user.*;
 import de.jpx3.intave.world.BlockAccessor;
+import de.jpx3.intave.world.BlockLiquidHelper;
 import de.jpx3.intave.world.collision.Collision;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -376,7 +377,12 @@ public final class Physics extends IntaveCheck {
     violationLevelData.physicsVL = Math.max(0, violationLevelData.physicsVL);
     violationLevelData.physicsVL = Math.min(100, violationLevelData.physicsVL);
 
-    if (movementData.inWater || movementData.onLadderLast) {
+    Material blockBelowPlayer = BlockAccessor.cacheAppliedTypeAccess(
+      user, player.getWorld(),
+      movementData.positionX, movementData.positionY, movementData.positionZ
+    );
+    boolean inWater = BlockLiquidHelper.isWater(blockBelowPlayer) || movementData.inWater;
+    if (inWater || movementData.onLadderLast) {
       movementData.artificialFallDistance = 0;
     }
 

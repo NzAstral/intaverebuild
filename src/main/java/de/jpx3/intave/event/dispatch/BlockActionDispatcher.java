@@ -8,6 +8,7 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.MultiBlockChangeInfo;
 import com.comphenix.protocol.wrappers.WrappedBlockData;
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.detect.EventProcessor;
 import de.jpx3.intave.event.bukkit.BukkitEventSubscription;
@@ -146,7 +147,9 @@ public final class BlockActionDispatcher implements EventProcessor {
         );
 
       if(access) {
-        player.sendMessage("Internal place emulation at " + MathHelper.formatPosition(blockPlacementLocation) + " with " + Material.getMaterial(id));
+        if (IntaveControl.DEBUG_BLOCK_CACHING) {
+          player.sendMessage("Internal place emulation at " + MathHelper.formatPosition(blockPlacementLocation) + " with " + Material.getMaterial(id));
+        }
 
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
         boundingBoxAccess.override(world, blockX, blockY, blockZ, id, shape);
@@ -260,7 +263,9 @@ public final class BlockActionDispatcher implements EventProcessor {
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(place.getPlayer()).boundingBoxAccess();
         boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
         boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
-        place.getPlayer().sendMessage("Reset place");
+        if (IntaveControl.DEBUG_BLOCK_CACHING) {
+          place.getPlayer().sendMessage("Reset place");
+        }
       }, 2);
     }
   }
@@ -273,7 +278,9 @@ public final class BlockActionDispatcher implements EventProcessor {
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(breeak.getPlayer()).boundingBoxAccess();
         boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
         boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
-        breeak.getPlayer().sendMessage("Reset break");
+        if (IntaveControl.DEBUG_BLOCK_CACHING) {
+          breeak.getPlayer().sendMessage("Reset break");
+        }
       }, 2);
     }
   }

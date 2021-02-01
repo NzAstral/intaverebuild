@@ -179,7 +179,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
 
     boolean onGround;
     Location location = new Location(player.getWorld(), positionX, positionY, positionZ);
-    double slipperiness = movementData.lastOnGround ? PlayerMovementHelper.resolveSlipperiness(location) : 0.91f;
+    double slipperiness = movementData.lastOnGround ? PlayerMovementHelper.resolveSlipperiness(user, location) : 0.91f;
     double resetMotion = movementData.resetMotion();
     double jumpUpwardsMotion = movementData.jumpUpwardsMotion();
 
@@ -300,7 +300,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
       double blockPositionY = WrappedMathHelper.floor(movementData.verifiedPositionY - 1.0);
       double blockPositionZ = WrappedMathHelper.floor(movementData.verifiedPositionZ);
       Location blockBelow = new Location(world, blockPositionX, blockPositionY, blockPositionZ);
-      slipperiness = PlayerMovementHelper.resolveSlipperiness(blockBelow);
+      slipperiness = PlayerMovementHelper.resolveSlipperiness(user, blockBelow);
     } else {
       slipperiness = 0.91f;
     }
@@ -368,22 +368,21 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     int blockCollisionPosX = WrappedMathHelper.floor(positionX);
     int blockCollisionPosY = WrappedMathHelper.floor(positionY - 0.20000000298023224D);
     int blockCollisionPosZ = WrappedMathHelper.floor(positionZ);
-    Block block = BlockAccessor.blockAccess(world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
+    Material block = BlockAccessor.cacheAppliedTypeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
 
-    if (block.getType() == Material.AIR) {
-      Block blockBelow = BlockAccessor.blockAccess(world, blockCollisionPosX, blockCollisionPosY - 1, blockCollisionPosZ);
-      Material material = blockBelow.getType();
-      if (material.name().contains("FENCE") || material.name().contains("WALL")) {
+    if (block == Material.AIR) {
+      Material blockBelow =  BlockAccessor.cacheAppliedTypeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
+      if (blockBelow.name().contains("FENCE") || blockBelow.name().contains("WALL")) {
         block = blockBelow;
       }
     }
 
-    blockCollisionRepository().fallenUpon(user, block.getType());
+    blockCollisionRepository().fallenUpon(user, block);
 
     // onLanded
     if (movementData.collidedVertically) {
       Vector collisionVector = blockCollisionRepository().blockLanded(
-        user, block.getType(),
+        user, block,
         context.motionX, movementData.physicsLastMotionY, context.motionZ
       );
       if (collisionVector != null) {
@@ -398,7 +397,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     // EntityCollidedWithBlock
     if (movementData.onGround && !movementData.sneaking) {
       Vector collisionVector = blockCollisionRepository().entityCollision(
-        user, block.getType(),
+        user, block,
         context.motionX, context.motionY, context.motionZ
       );
       if (collisionVector != null) {
@@ -421,7 +420,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
       for (int y = blockPositionStartY; y <= blockPositionEndY; y++) {
         for (int z = blockPositionStartZ; z <= blockPositionEndZ; z++) {
           Location location = new Location(world, x, y, z);
-          Material material = BlockAccessor.blockAccess(world, x, y, z).getType();
+          Material material = BlockAccessor.cacheAppliedTypeAccess(user, world, x, y, z);
           Vector collisionVector = blockCollisionRepository().entityCollision(
             user, material,
             location,

@@ -30,8 +30,8 @@ public final class PlayerMovementHelper {
     return motionY;
   }
 
-  public static float resolveSlipperiness(Location location) {
-    Material type = BlockAccessor.blockAccess(location).getType();
+  public static float resolveSlipperiness(User user, Location location) {
+    Material type = BlockAccessor.cacheAppliedTypeAccess(user, location);
     float blockSlipperiness;
     switch (type) {
       case PACKED_ICE:
@@ -61,7 +61,7 @@ public final class PlayerMovementHelper {
         WrappedMathHelper.floor(positionY - 1.0),
         WrappedMathHelper.floor(positionZ)
       );
-      float slipperiness = PlayerMovementHelper.resolveSlipperiness(location);
+      float slipperiness = PlayerMovementHelper.resolveSlipperiness(user, location);
       float var4 = 0.16277136f / (slipperiness * slipperiness * slipperiness);
       speed = movementData.aiMoveSpeed() * var4;
     } else {
@@ -126,14 +126,13 @@ public final class PlayerMovementHelper {
   public static boolean isOnLadder(User user, double positionX, double positionY, double positionZ) {
     Player player = user.player();
     UserMetaClientData clientData = user.meta().clientData();
-    Block block = BlockAccessor.blockAccess(
-      player.getWorld(),
+    Material type = BlockAccessor.cacheAppliedTypeAccess(
+      user, player.getWorld(),
       WrappedMathHelper.floor(positionX),
       WrappedMathHelper.floor(positionY),
       WrappedMathHelper.floor(positionZ)
     );
-    Material type = block.getType();
-    if (clientData.protocolVersion() > 47 && type.name().contains("TRAP_DOOR") && canGoThroughTrapDoorOnLadder(block)) {
+    if (clientData.protocolVersion() > 47 && type.name().contains("TRAP_DOOR")) {
       return true;
     }
     return type == Material.LADDER || type == Material.VINE;
