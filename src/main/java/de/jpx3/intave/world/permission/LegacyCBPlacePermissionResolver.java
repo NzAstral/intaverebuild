@@ -25,23 +25,38 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public final class LegacyCBPlacePermissionResolver implements BlockPlacePermissionCheck, BukkitEventSubscriber {
+  private ResolverMode resolverMode = ResolverMode.PREFETCH_DUMMY;
+
   @Override
   @PatchyAutoTranslation
-  public boolean hasPermission(Player player, World world, boolean mainHand, int blockX, int blockY, int blockZ, int typeId, byte data) {
-    if(world.isChunkLoaded(blockX >> 4, blockZ >> 4)) {
-      CraftChunk chunk = (CraftChunk) world.getChunkAt(blockX >> 4, blockZ >> 4);
-      CraftBlockState replacedBlockState = new CraftBlockState(new CustomCraftBlock(chunk, blockX, blockY, blockZ, typeId, data));
-      WorldServer worldServer = ((CraftWorld) world).getHandle();
-      CraftWorld craftWorld = worldServer.getWorld();
-      Block blockClicked = craftWorld.getBlockAt(blockX, blockY, blockZ);
-      Block placedBlock = replacedBlockState.getBlock();
-      boolean canBuild = canBuildReflectiveCall(craftWorld, player, placedBlock.getX(), placedBlock.getZ());
-      ItemStack item = UserRepository.userOf(player).meta().inventoryData().heldItem();//player.getInventory().getItemInHand();
-      BlockPlaceEvent event = new PermissionCheckBlockPlaceEvent(placedBlock, replacedBlockState, blockClicked, item, player, canBuild);
-      IntavePlugin.singletonInstance().eventLinker().fireExternalEvent(event);
-      return !event.isCancelled();
+  public boolean hasPermission(Player player, World world, boolean mainHand, int blockX, int blockY, int blockZ, int enumDirection, int typeId, byte data) {
+    if(resolverMode == ResolverMode.PREFETCH_DUMMY) {
+      if(world.isChunkLoaded(blockX >> 4, blockZ >> 4)) {
+        ItemStack item = UserRepository.userOf(player).meta().inventoryData().heldItem();//player.getInventory().getItemInHand();
+        CraftChunk chunk = (CraftChunk) world.getChunkAt(blockX >> 4, blockZ >> 4);
+        CustomCraftBlock placedBlock = new CustomCraftBlock(chunk, blockX, blockY, blockZ, typeId, data);
+        CraftBlockState placedBlockState = new CraftBlockState(placedBlock);
+        WorldServer worldServer = ((CraftWorld) world).getHandle();
+        CraftWorld craftWorld = worldServer.getWorld();
+        Block blockClicked = craftWorld.getBlockAt(blockX, blockY, blockZ);
+
+        boolean canBuild = canBuildReflectiveCall(craftWorld, player, placedBlock.getX(), placedBlock.getZ());
+        BlockPlaceEvent event = new PermissionCheckBlockPlaceEvent(placedBlock, placedBlockState, blockClicked, item, player, canBuild);
+
+        try {
+          IntavePlugin.singletonInstance().eventLinker().fireExternalEvent(event);
+        } catch (Exception exception) {
+          exception.printStackTrace();
+          IntavePlugin.singletonInstance().logger().error("Failed to prefetch block-permission, switching to allow-all permission strategy");
+          resolverMode = ResolverMode.PREALLOW_CNTX;
+          return true;
+        }
+        return !event.isCancelled();
+      }
+      return false;
+    } else {
+      return resolverMode == ResolverMode.PREALLOW_CNTX;
     }
-    return false;
   }
 
   private Method canBuildMethod;
@@ -78,14 +93,14 @@ public final class LegacyCBPlacePermissionResolver implements BlockPlacePermissi
 
   @BukkitEventSubscription(priority = EventPriority.LOWEST)
   public void onPre(BlockPlaceEvent place) {
-    if(!(place instanceof PermissionCheckBlockPlaceEvent)) {
+    if(!(place instanceof PermissionCheckBlockPlaceEvent) && resolverMode == ResolverMode.PREFETCH_DUMMY) {
       place.setCancelled(true);
     }
   }
 
   @BukkitEventSubscription(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onPost(BlockPlaceEvent place) {
-    if(!(place instanceof PermissionCheckBlockPlaceEvent)) {
+    if(!(place instanceof PermissionCheckBlockPlaceEvent) && resolverMode == ResolverMode.PREFETCH_DUMMY) {
       place.setCancelled(false);
     }
   }

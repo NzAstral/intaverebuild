@@ -28,7 +28,7 @@ import java.lang.reflect.Method;
 public final class DualHandCBPlacePermissionResolver implements BlockPlacePermissionCheck, BukkitEventSubscriber {
   @Override
   @PatchyAutoTranslation
-  public boolean hasPermission(Player player, World world, boolean mainHand, int blockX, int blockY, int blockZ, int typeId, byte data) {
+  public boolean hasPermission(Player player, World world, boolean mainHand, int blockX, int blockY, int blockZ, int enumDirection, int typeId, byte data) {
     if(world.isChunkLoaded(blockX >> 4, blockZ >> 4)) {
       CraftChunk chunk = (CraftChunk) world.getChunkAt(blockX >> 4, blockZ >> 4);
       CraftBlockState replacedBlockState = new CraftBlockState(new CustomCraftBlock(chunk, blockX, blockY, blockZ, typeId, data));

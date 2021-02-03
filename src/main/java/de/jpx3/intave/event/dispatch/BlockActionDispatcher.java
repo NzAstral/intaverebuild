@@ -142,20 +142,28 @@ public final class BlockActionDispatcher implements EventProcessor {
           world,
           hand == null || hand == EnumWrappers.Hand.MAIN_HAND,
           blockX, blockY, blockZ,
+          enumDirection,
           id,
           (byte) 0
         );
 
       if(access) {
         if (IntaveControl.DEBUG_BLOCK_CACHING) {
-          player.sendMessage("Internal place emulation at " + MathHelper.formatPosition(blockPlacementLocation) + " with " + Material.getMaterial(id));
+          Synchronizer.synchronize(() -> {
+            player.sendMessage("Internal place emulation at " + MathHelper.formatPosition(blockPlacementLocation) + " with " + Material.getMaterial(id));
+          });
         }
 
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
         boundingBoxAccess.override(world, blockX, blockY, blockZ, id, shape);
 //        boundingBoxAccess.invalidate(blockX, blockY, blockZ);
-
       } else {
+        if (IntaveControl.DEBUG_BLOCK_CACHING) {
+          Synchronizer.synchronize(() -> {
+            player.sendMessage("Internal place emulation denied at " + MathHelper.formatPosition(blockPlacementLocation) + " with " + Material.getMaterial(id));
+          });
+        }
+
         event.setCancelled(true);
         refreshBlocksAround(player, blockPlacementLocation);
       }
@@ -230,20 +238,26 @@ public final class BlockActionDispatcher implements EventProcessor {
         BlockAccessor.blockAccess(blockBreakLocation)
       );
 
+//    Synchronizer.synchronize(() -> {
+//      player.sendMessage("Internal break emulation at " + MathHelper.formatPosition(blockBreakLocation) + " " + access);
+//    });
+
+
     if(access) {
+      if (IntaveControl.DEBUG_BLOCK_CACHING) {
+        Synchronizer.synchronize(() -> {
+          player.sendMessage("Internal break emulation at " + MathHelper.formatPosition(blockBreakLocation));
+        });
+      }
       int blockX = blockBreakLocation.getBlockX();
       int blockY = blockBreakLocation.getBlockY();
       int blockZ = blockBreakLocation.getBlockZ();
 
-//      player.sendMessage("Internal break emulation at " + MathHelper.formatPosition(blockBreakLocation));
-//      Synchronizer.synchronize(() -> {
-//        Raytracer.ignoreBlock(player, blockBreakLocation);
-//      });
 
       // add to future bounding boxes
       BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
       boundingBoxAccess.override(world, blockX, blockY, blockZ, 0, (byte) 0);
-      boundingBoxAccess.invalidate(blockX, blockY, blockZ);
+//      boundingBoxAccess.invalidate(blockX, blockY, blockZ);
 
 //      Synchronizer.synchronizeDelayed(() -> {
 ////        boundingBoxAccess.invalidateOverride(world, blockX, blockY, blockZ);
@@ -263,9 +277,9 @@ public final class BlockActionDispatcher implements EventProcessor {
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(place.getPlayer()).boundingBoxAccess();
         boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
         boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
-        if (IntaveControl.DEBUG_BLOCK_CACHING) {
-          place.getPlayer().sendMessage("Reset place");
-        }
+//        if (IntaveControl.DEBUG_BLOCK_CACHING) {
+//          place.getPlayer().sendMessage("Reset place");
+//        }
       }, 2);
     }
   }
@@ -278,9 +292,9 @@ public final class BlockActionDispatcher implements EventProcessor {
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(breeak.getPlayer()).boundingBoxAccess();
         boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
         boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
-        if (IntaveControl.DEBUG_BLOCK_CACHING) {
-          breeak.getPlayer().sendMessage("Reset break");
-        }
+//        if (IntaveControl.DEBUG_BLOCK_CACHING) {
+//          breeak.getPlayer().sendMessage("Reset break");
+//        }
       }, 2);
     }
   }

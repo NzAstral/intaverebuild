@@ -107,8 +107,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       isPlacement ? InteractionType.PLACE : InteractionType.INTERACT, facing
     );
     interactionMeta.interactionList.add(interaction);
-//    if(!isPlacement) {
-//    }
+
     event.setCancelled(true);
   }
 
@@ -363,7 +362,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
         }
 //        boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
       } else {
-//        receiveExcludedPacket(player, interaction.thePacket);
+        receiveExcludedPacket(player, interaction.thePacket);
       }
       Synchronizer.packetSynchronize(() -> {
         boundingBoxAccess.invalidate(targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
@@ -604,6 +603,20 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 
     public boolean entered() {
       return entered;
+    }
+
+    @Override
+    public String toString() {
+      return "Interaction{" +
+        "world=" + world +
+        ", player=" + player +
+        ", targetBlock=" + targetBlock +
+        ", targetDirection=" + targetDirection +
+        ", thePacket=" + thePacket +
+        ", type=" + type +
+        ", facingVector=" + facingVector +
+        ", entered=" + entered +
+        '}';
     }
   }
 }

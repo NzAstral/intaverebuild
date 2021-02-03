@@ -64,8 +64,8 @@ public final class BukkitEventLinker {
       if (!pluginName.equalsIgnoreCase("Intave") && plugin.isEnabled()) {
         try {
           registration.callEvent(event);
-        } catch (AuthorNagException | EventException var10) {
-          var10.printStackTrace();
+        } catch (AuthorNagException | EventException exception) {
+          throw new IntaveInternalException(exception);
         }
       }
     }

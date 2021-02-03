@@ -287,7 +287,7 @@ public final class Physics extends IntaveCheck {
         boolean multipleBoxes = intersectionBoundingBoxesCurrent.size() > 1;
         String details = (multipleBoxes ? intersectionBoundingBoxesCurrent.size() : "one") + " box" + (multipleBoxes ? "es" : "");
 
-        user.boundingBoxAccess().invalidate();
+        user.boundingBoxAccess().identityInvalidate();
 
         plugin.retributionService().processViolation(player, 0, "Physics", message, details);
         Vector emulationMotion = new Vector(predictedX, predictedY, predictedZ);
@@ -313,7 +313,7 @@ public final class Physics extends IntaveCheck {
 
         if (!startBoundingBoxInList) {
           movementData.invalidMovement = true;
-          user.boundingBoxAccess().invalidate();
+          user.boundingBoxAccess().identityInvalidate();
 
           WrappedAxisAlignedBB boundingBox = intersectionBoundingBoxesCurrent.get(0);
           double blockPositionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
@@ -360,6 +360,8 @@ public final class Physics extends IntaveCheck {
       Vector emulationMotion = new Vector(predictedX, predictedY, predictedZ);
       String message = "moved incorrectly";
       String details = received + " e: " + expected;
+
+      user.boundingBoxAccess().identityInvalidate();
 
       boolean setback = plugin.retributionService().processViolation(player, violationLevelIncrease / 20d, "Physics", message, details) || violationLevelData.physicsVL >= 60;
       if (setback) {
