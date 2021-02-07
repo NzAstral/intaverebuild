@@ -34,17 +34,31 @@ public final class Synchronizer {
 
     try {
       minecraftServer = ReflectiveAccess.lookupServerClass("MinecraftServer").getMethod("getServer").invoke(null);
-      Method postToMainThreadMethod = minecraftServer.getClass().getMethod("postToMainThread", Runnable.class);
+      boolean useSuperClass = isDedicatedServer(minecraftServer.getClass());
+      Class<?> serverClass = useSuperClass ? minecraftServer.getClass().getSuperclass() : minecraftServer.getClass();
+      Method postToMainThreadMethod = serverClass.getDeclaredMethod("postToMainThread", Runnable.class);
+      if (!postToMainThreadMethod.isAccessible()) {
+        postToMainThreadMethod.setAccessible(true);
+      }
       postToMainThreadMethodHandle = MethodHandles.lookup().unreflect(postToMainThreadMethod);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
       throw new IllegalStateException(exception);
     }
   }
 
+  private static boolean isDedicatedServer(Class<?> clazz) {
+    String dedicatedServer = ReflectiveAccess.appendNMSPrefixToClass("DedicatedServer");
+    try {
+      return Class.forName(dedicatedServer) == clazz;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
   public static void synchronize(Runnable runnable) {
     runnable = bindToContext(runnable);
 
-    if(useScheduler) {
+    if (useScheduler) {
       scheduler.runTask(IntavePlugin.singletonInstance(), runnable);
     } else {
       cachedProcessQueue.add(runnable);
