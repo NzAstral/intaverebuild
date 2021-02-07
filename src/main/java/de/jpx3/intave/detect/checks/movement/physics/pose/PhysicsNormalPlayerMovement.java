@@ -340,8 +340,6 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
 
     updateAquatics(user);
 
-    movementData.lastSprinting = movementData.sprinting;
-    movementData.lastSneaking = movementData.sneaking;
     movementData.increaseFlyingPacket();
     movementData.pastPlayerAttackPhysics++;
     movementData.pastPushedByWaterFlow++;

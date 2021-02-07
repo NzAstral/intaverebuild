@@ -1,5 +1,7 @@
 package de.jpx3.intave.tools.wrapper;
 
+import de.jpx3.intave.tools.client.SinusCache;
+
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.IntPredicate;
@@ -8,13 +10,6 @@ import java.util.function.IntPredicate;
  * Represents the client's MathHelper.
  */
 public final class WrappedMathHelper {
-  public static final float SQRT_2 = sqrt_float(2.0F);
-
-  /**
-   * A table of sin values computed from 0 (inclusive) to 2*pi (exclusive), with steps of 2*PI / 65536.
-   */
-  private static final float[] SIN_TABLE = new float[65536];
-
   /**
    * Though it looks like an array, this is really more like a mapping.  Key (index of this array) is the upper 5 bits
    * of the result of multiplying a 32-bit unsigned integer by the B(2, 5) De Bruijn sequence 0x077CB531.  Value (value
@@ -22,10 +17,7 @@ public final class WrappedMathHelper {
    * can cause the upper 5 bits to get that value.  Used for highly optimized "find the log-base-2 of this number"
    * calculations.
    */
-  private static final int[] multiplyDeBruijnBitPosition;
-  private static final double field_181163_d;
-  private static final double[] field_181164_e;
-  private static final double[] field_181165_f;
+  private static final int[] multiplyDeBruijnBitPosition = new int[]{0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
 
   public static int binarySearch(int min, int max, IntPredicate isTargetBeforeOrAt) {
     int i = max - min;
@@ -47,15 +39,15 @@ public final class WrappedMathHelper {
   /**
    * sin looked up in a table
    */
-  public static float sin(float p_76126_0_) {
-    return SIN_TABLE[(int) (p_76126_0_ * 10430.378F) & 65535];
+  public static float sin(float value) {
+    return SinusCache.sin(value, false);
   }
 
   /**
    * cos looked up in the sin table with the appropriate offset
    */
   public static float cos(float value) {
-    return SIN_TABLE[(int) (value * 10430.378F + 16384.0F) & 65535];
+    return SinusCache.cos(value, false);
   }
 
   public static float sqrt_float(float value) {
@@ -366,60 +358,6 @@ public final class WrappedMathHelper {
     return (p_181160_0_ - p_181160_2_) / (p_181160_4_ - p_181160_2_);
   }
 
-  public static double func_181159_b(double p_181159_0_, double p_181159_2_) {
-    double d0 = p_181159_2_ * p_181159_2_ + p_181159_0_ * p_181159_0_;
-
-    if (Double.isNaN(d0)) {
-      return Double.NaN;
-    } else {
-      boolean flag = p_181159_0_ < 0.0D;
-
-      if (flag) {
-        p_181159_0_ = -p_181159_0_;
-      }
-
-      boolean flag1 = p_181159_2_ < 0.0D;
-
-      if (flag1) {
-        p_181159_2_ = -p_181159_2_;
-      }
-
-      boolean flag2 = p_181159_0_ > p_181159_2_;
-
-      if (flag2) {
-        double d1 = p_181159_2_;
-        p_181159_2_ = p_181159_0_;
-        p_181159_0_ = d1;
-      }
-
-      double d9 = func_181161_i(d0);
-      p_181159_2_ = p_181159_2_ * d9;
-      p_181159_0_ = p_181159_0_ * d9;
-      double d2 = field_181163_d + p_181159_0_;
-      int i = (int) Double.doubleToRawLongBits(d2);
-      double d3 = field_181164_e[i];
-      double d4 = field_181165_f[i];
-      double d5 = d2 - field_181163_d;
-      double d6 = p_181159_0_ * d4 - p_181159_2_ * d5;
-      double d7 = (6.0D + d6 * d6) * d6 * 0.16666666666666666D;
-      double d8 = d3 + d7;
-
-      if (flag2) {
-        d8 = (Math.PI / 2D) - d8;
-      }
-
-      if (flag1) {
-        d8 = Math.PI - d8;
-      }
-
-      if (flag) {
-        d8 = -d8;
-      }
-
-      return d8;
-    }
-  }
-
   public static double func_181161_i(double p_181161_0_) {
     double d0 = 0.5D * p_181161_0_;
     long i = Double.doubleToRawLongBits(p_181161_0_);
@@ -486,25 +424,7 @@ public final class WrappedMathHelper {
     return j << 16 | k << 8 | l;
   }
 
-  static {
-    for (int i = 0; i < 65536; ++i) {
-      SIN_TABLE[i] = (float) Math.sin((double) i * Math.PI * 2.0D / 65536.0D);
-    }
-
-    multiplyDeBruijnBitPosition = new int[]{0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
-    field_181163_d = Double.longBitsToDouble(4805340802404319232L);
-    field_181164_e = new double[257];
-    field_181165_f = new double[257];
-
-    for (int j = 0; j < 257; ++j) {
-      double d0 = (double) j / 256.0D;
-      double d1 = Math.asin(d0);
-      field_181165_f[j] = Math.cos(d1);
-      field_181164_e[j] = d1;
-    }
-  }
-
-	public static float toRadians(float value) {
+  public static float toRadians(float value) {
 		return value * (float) Math.PI / 180f;
 	}
 }

@@ -44,6 +44,27 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
       if (yawSpeed > 1.0) {
         float distanceToPerfectYaw = MathHelper.distanceInDegrees(attackData.perfectYaw(), movementData.rotationYaw);
 
+        if (yawSpeed > 3.0 && attackedEntity.moving(0.4)) {
+          double increase = MathHelper.minmax(-0.5, (2 - distanceToPerfectYaw) * Math.min(6, yawSpeed), 2);
+
+          heuristicMeta.followBalance += increase;
+
+          if (heuristicMeta.followBalance < 0) {
+            heuristicMeta.followBalance = 0;
+          }
+
+          if (heuristicMeta.followBalance > 25) {
+            String description = "follows entity movement too precisely";
+            int options = Anomaly.AnomalyOption.LIMIT_4  | Anomaly.AnomalyOption.SUGGEST_MINING;
+            Anomaly anomaly = Anomaly.anomalyOf("20/1", Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, options);
+            parentCheck().saveAnomaly(player, anomaly);
+            heuristicMeta.followBalance -= 10;
+          }
+
+//          player.sendMessage("balance:" + MathHelper.formatDouble(heuristicMeta.balanceYawStable, 5));
+        }
+//        player.sendMessage("" + Math.abs(heuristicMeta.lastDistance - distanceToPerfectYaw));
+
         // Check perfect yaw
         if (distanceToPerfectYaw == 0) {
           String description = "rotated yaw too precisely (0.0)";
@@ -90,5 +111,6 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
     private double balanceYawAccuracy;
     private double balanceYawAccuracyOther;
     private double rotationAccuracyVL;
+    private double followBalance;
   }
 }

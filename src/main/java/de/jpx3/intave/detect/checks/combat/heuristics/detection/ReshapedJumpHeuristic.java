@@ -57,9 +57,9 @@ public final class ReshapedJumpHeuristic extends IntaveMetaCheckPart<Heuristics,
       double abs = Math.abs(distance - 0.2);
 
       if (abs < 1e-5) {
-        if (heuristicMeta.balance++ > 2) {
+        if (heuristicMeta.balance++ >= 1) {
           String description = "player performed rotation hop";
-          int options = Anomaly.AnomalyOption.LIMIT_2 | Anomaly.AnomalyOption.DELAY_128s | Anomaly.AnomalyOption.SUGGEST_MINING;
+          int options = Anomaly.AnomalyOption.LIMIT_2 | Anomaly.AnomalyOption.DELAY_32s | Anomaly.AnomalyOption.SUGGEST_MINING;
           Anomaly anomaly = Anomaly.anomalyOf("31", Confidence.VERY_LIKELY, Anomaly.Type.KILLAURA, description, options);
           parentCheck().saveAnomaly(player, anomaly);
         }
@@ -72,7 +72,7 @@ public final class ReshapedJumpHeuristic extends IntaveMetaCheckPart<Heuristics,
   private boolean checkable(User user) {
     UserMetaAttackData attackData = user.meta().attackData();
     Heuristics.HeuristicMeta heuristicMeta = parentCheck().metaOf(user);
-    return heuristicMeta.overallAttacks > 50 && attackData.recentlyAttacked(1000) && AccessHelper.now() - heuristicMeta.firstAttack > 20_000;
+    return heuristicMeta.overallAttacks > 20 && attackData.recentlyAttacked(1000) && AccessHelper.now() - heuristicMeta.firstAttack > 10_000;
   }
 
   private void physicsCalculateRelativeMovement(

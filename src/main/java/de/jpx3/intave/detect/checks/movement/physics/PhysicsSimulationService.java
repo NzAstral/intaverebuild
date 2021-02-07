@@ -11,10 +11,7 @@ import de.jpx3.intave.tools.client.PlayerMovementHelper;
 import de.jpx3.intave.tools.client.SinusCache;
 import de.jpx3.intave.tools.items.InventoryUseItemHelper;
 import de.jpx3.intave.tools.sync.Synchronizer;
-import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.UserMetaClientData;
-import de.jpx3.intave.user.UserMetaInventoryData;
-import de.jpx3.intave.user.UserMetaMovementData;
+import de.jpx3.intave.user.*;
 import org.bukkit.inventory.ItemStack;
 
 import static de.jpx3.intave.reflect.ReflectiveDataWatcherAccess.DATA_WATCHER_BLOCKING_ID;
@@ -127,7 +124,7 @@ public final class PhysicsSimulationService {
     int keyStrafe = movementData.keyStrafe;
 
     boolean handActive = inventoryData.handActive();
-    boolean attackReduce = sprinting && movementData.pastPlayerAttackPhysics == 0;
+    boolean attackReduce = sprinting && user.meta().movementData().pastPlayerAttackPhysics == 0;
 
     boolean jumped = false;
     if (movementData.lastOnGround && !movementData.exceededJumpPrevention()) {
@@ -175,6 +172,8 @@ public final class PhysicsSimulationService {
     int bestStrafeKey = 0;
     boolean jumpedOnBestSimulation = false;
     double mostAccurateDistance = Integer.MAX_VALUE;
+    boolean reduceOnPlayerAttack = false;
+
     Physics.PhysicsProcessorContext context = movementData.physicsProcessorContext;
     EntityCollisionResult predictedMovement = null;
 
@@ -223,6 +222,7 @@ public final class PhysicsSimulationService {
               bestForwardKey = keyForward;
               bestStrafeKey = keyStrafe;
               jumpedOnBestSimulation = jumped;
+              reduceOnPlayerAttack = attackReduce;
             }
             boolean fastMovementProcess = (!inWater && inLava) || elytraFlying;
             if (distance < 5e-4 && fastMovementProcess) {
@@ -235,6 +235,11 @@ public final class PhysicsSimulationService {
         }
       }
     }
+
+    if (movementData.pastPlayerAttackPhysics == 0 && movementData.sprinting && !reduceOnPlayerAttack) {
+      movementData.ignoredAttackReduce = true;
+    }
+
     movementData.keyForward = bestForwardKey;
     movementData.keyStrafe = bestStrafeKey;
     movementData.physicsJumped = jumpedOnBestSimulation;
