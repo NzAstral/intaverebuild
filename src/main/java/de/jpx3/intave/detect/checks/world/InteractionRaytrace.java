@@ -112,7 +112,6 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       isPlacement ? InteractionType.PLACE : InteractionType.INTERACT, facing
     );
     interactionMeta.interactionList.add(interaction);
-
     event.setCancelled(true);
   }
 
@@ -316,8 +315,8 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 //        player.sendMessage("Emulation " + raycastLocation + " " + targetLocation);
         if (canRefreshBlocks) {
           refreshBlocksAround(player, targetLocation);
+          boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
         }
-        boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
       } else {
         // check if player collides with placement location
         if (canRefreshBlocks) {

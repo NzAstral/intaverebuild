@@ -151,9 +151,9 @@ public final class BlockActionDispatcher implements EventProcessor {
 
       if(access) {
         if (IntaveControl.DEBUG_BLOCK_CACHING) {
-          Synchronizer.synchronize(() -> {
+//          Synchronizer.synchronize(() -> {
             player.sendMessage("Internal place emulation at " + MathHelper.formatPosition(blockPlacementLocation) + " with " + Material.getMaterial(id));
-          });
+//          });
         }
 
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
@@ -189,9 +189,9 @@ public final class BlockActionDispatcher implements EventProcessor {
       } else {
         BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
 
-        Synchronizer.synchronizeDelayed(() ->
-          boundingBoxAccess.invalidate(finalBlockLocation.getBlockX(), finalBlockLocation.getBlockY(), finalBlockLocation.getBlockZ()),
-        2);
+//        Synchronizer.synchronizeDelayed(() ->
+//          boundingBoxAccess.invalidateInteraction(finalBlockLocation.getBlockX(), finalBlockLocation.getBlockY(), finalBlockLocation.getBlockZ()),
+//        30);
       }
     }
   }
@@ -240,31 +240,25 @@ public final class BlockActionDispatcher implements EventProcessor {
         BlockAccessor.blockAccess(blockBreakLocation)
       );
 
-//    Synchronizer.synchronize(() -> {
-//      player.sendMessage("Internal break emulation at " + MathHelper.formatPosition(blockBreakLocation) + " " + access);
-//    });
-
+    if (user.boundingBoxAccess().currentlyInOverride(blockPosition.getX(), blockPosition.getY(), blockPosition.getZ())) {
+      if (IntaveControl.DEBUG_BLOCK_CACHING) {
+        player.sendMessage("Block break deny on client-side block");
+      }
+      return;
+    }
 
     if(access) {
       if (IntaveControl.DEBUG_BLOCK_CACHING) {
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("Internal break emulation at " + MathHelper.formatPosition(blockBreakLocation));
-        });
+        player.sendMessage("Internal break emulation at " + MathHelper.formatPosition(blockBreakLocation));
       }
+
       int blockX = blockBreakLocation.getBlockX();
       int blockY = blockBreakLocation.getBlockY();
       int blockZ = blockBreakLocation.getBlockZ();
 
-
       // add to future bounding boxes
       BoundingBoxAccess boundingBoxAccess = UserRepository.userOf(player).boundingBoxAccess();
       boundingBoxAccess.override(world, blockX, blockY, blockZ, 0, (byte) 0);
-//      boundingBoxAccess.invalidate(blockX, blockY, blockZ);
-
-//      Synchronizer.synchronizeDelayed(() -> {
-////        boundingBoxAccess.invalidateOverride(world, blockX, blockY, blockZ);
-//        boundingBoxAccess.invalidate(blockX, blockY, blockZ);
-//      }, 2);
     } else {
       refreshBlocksAround(player, blockBreakLocation);
       event.setCancelled(true);
