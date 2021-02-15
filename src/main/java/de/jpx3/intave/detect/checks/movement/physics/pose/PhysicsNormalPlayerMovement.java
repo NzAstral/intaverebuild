@@ -208,7 +208,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
 
       if (!flyingPacket(diffX, diffY, diffZ) && !jump) {
         break;
-      } else if (jump && flyingPacket(diffX, 0.0, diffZ)) {
+      } else if (jump && flyingPacket(diffX * 0.15, 0.0, diffZ * 0.15)) {
         context.motionY = jumpUpwardsMotion;
         movementData.physicsPacketRelinkFlyVL = 0;
         break;
