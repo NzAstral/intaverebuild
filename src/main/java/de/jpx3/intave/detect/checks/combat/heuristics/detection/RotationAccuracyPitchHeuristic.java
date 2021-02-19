@@ -36,6 +36,10 @@ public final class RotationAccuracyPitchHeuristic extends IntaveMetaCheckPart<He
     UserMetaAttackData attackData = meta.attackData();
     WrappedEntity attackedEntity = attackData.lastAttackedEntity();
 
+    if (movementData.lastTeleport < 20) {
+      return;
+    }
+
     if (attackedEntity != null && attackedEntity.moving(0.2) && attackData.recentlyAttacked(1000)) {
       float pitchSpeed = Math.abs(movementData.rotationPitch - movementData.lastRotationPitch);
       float distanceToPerfectPitch = Math.abs(movementData.rotationPitch - attackData.perfectPitch());
