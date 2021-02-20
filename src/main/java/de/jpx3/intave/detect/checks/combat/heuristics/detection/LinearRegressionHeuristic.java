@@ -81,12 +81,12 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
     double x = MathHelper.distanceInDegrees(attackData.perfectYaw(), movementData.rotationYaw);
     double y = MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw);//Math.abs(movementData.rotationPitch - attackData.perfectPitch());
 
-    if (x < 15 && y < 50) {
-      if (x > meta.width)
-        meta.width = x;
+    if (x > 0 && y > 0 && x < 15 && y < 15) {
+      if (x > meta.highestVectorX)
+        meta.highestVectorX = x;
 
-      if (y > meta.height)
-        meta.height = y;
+      if (y > meta.highestVectorY)
+        meta.highestVectorY = y;
 
       Vector vector = new Vector(x, y);
       meta.vectorList.add(vector);
@@ -128,7 +128,7 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
   private void createNewWindow(Player player) {
     executorService.execute(() -> {
       LinearRegressionHeuristicMeta meta = metaOf(player);
-      final int pointRadius = 2;
+      final int radius = 2;
 
       JFrame window = new JFrame();
       window.setSize(800, 800);
@@ -143,33 +143,35 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
           for(int i = newTitle.length(); i < 30; i++)
             newTitle += " ";
           window.setTitle(newTitle + " b: " + meta.b);
+
           Graphics2D g2d = ((Graphics2D) g);
           g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-          g.setColor(Color.blue);
+          g.setColor(Color.orange);
           for (Vector vector : meta.vectorList) {
-            int x = (int) map(vector.x, 0, meta.width, 0, getWidth());
-            int y = (int) map(vector.y, 0, meta.height, 0, getHeight());
+            int x = (int) map(vector.x, 0, meta.highestVectorX, 0, getWidth());
+            int y = (int) map(vector.y, 0, meta.highestVectorY, 0, getHeight());
 
-            g.fillOval(x - pointRadius, y - pointRadius, pointRadius * 2, pointRadius * 2);
+            g.fillOval(x - radius, y - radius, radius * 2, radius * 2);
           }
 
           double x1 = 0;
           double y1 = meta.m * x1 + meta.b;
-          double x2 = meta.width;
+          double x2 = meta.highestVectorX;
           double y2 = meta.m * x2 + meta.b;
 
           g2d.setStroke(new BasicStroke(4f));
-          g.setColor(Color.black);
+          g.setColor(Color.white);
 
-          x1 = map(x1, 0, meta.width, 0, getWidth());
-          y1 = map(y1, 0, meta.height, getHeight(), 0);
-          x2 = map(x2, 0, meta.width, 0, getWidth());
-          y2 = map(y2, 0, meta.height, getHeight(), 0);
+          x1 = map(x1, 0, meta.highestVectorX, 0, getWidth());
+          y1 = map(y1, 0, meta.highestVectorY, getHeight(), 0);
+          x2 = map(x2, 0, meta.highestVectorX, 0, getWidth());
+          y2 = map(y2, 0, meta.highestVectorY, getHeight(), 0);
 
           g.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
         }
       };
+      panel.setBackground(new Color(51, 51, 51));
       meta.panel = panel;
       window.add(panel);
       window.setVisible(true);
@@ -185,8 +187,8 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
     public double b;
     public double m;
     List<Vector> vectorList = new ArrayList<>();
-    double width;
-    double height;
+    double highestVectorX;
+    double highestVectorY;
   }
 }
 
