@@ -43,7 +43,7 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
 
     EnumWrappers.PlayerAction action = event.getPacket().getPlayerActions().read(0);
 
-    if(action == EnumWrappers.PlayerAction.START_SNEAKING) {
+    if (action == EnumWrappers.PlayerAction.START_SNEAKING) {
       linearRegression(player, meta, true);
     }
   }
@@ -63,7 +63,7 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
 
     boolean updated = addValuesToList(user);
 
-    if(updated) {
+    if (updated) {
       linearRegression(player, meta, false);
     }
   }
@@ -81,13 +81,13 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
     float yawDiff = MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw);
 
     double x = MathHelper.distanceInDegrees(attackData.perfectYaw(), movementData.rotationYaw);
-    double y = yawDiff;
+    double y = yawDiff;//Math.abs(movementData.rotationPitch - attackData.perfectPitch());
 
-    if(y > 1) {
-      if(x > meta.width)
+    if (x < 15 && y < 50) {
+      if (x > meta.width)
         meta.width = x;
 
-      if(y > meta.height)
+      if (y > meta.height)
         meta.height = y;
 
 //      player.sendMessage("" + x + " " + y);
@@ -104,35 +104,40 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
     double xSum = 0;
     double ySum = 0;
 
-    for(Vector vector : meta.vectorList) {
+    for (Vector vector : meta.vectorList) {
       xSum += vector.x;
       ySum += vector.y;
     }
 
-    double xAverage = xSum /  meta.vectorList.size();
-    double yAverage = ySum /  meta.vectorList.size();
+    double xAverage = xSum / meta.vectorList.size();
+    double yAverage = ySum / meta.vectorList.size();
 
     double nummerator = 0;
     double denominator = 0;
 
-    for(Vector vector :  meta.vectorList) {
+    for (Vector vector : meta.vectorList) {
       nummerator += (vector.x - xAverage) * (vector.y - yAverage);
       denominator += (vector.x - xAverage) * (vector.x - xAverage);
     }
 
     double m = nummerator / denominator;
-    double b = yAverage -  m * xAverage;
+    double b = yAverage - m * xAverage;
 
-    if(showAsWindow) {
-      drawWindow(player, m, b);
+    meta.m = m;
+    meta.b = b;
+
+    if (showAsWindow) {
+      drawWindow(player);
+    }
+    if (meta.panel != null) {
+      meta.panel.repaint();
     }
 
-    player.sendMessage( b + " " + denominator);
+    player.sendMessage(b + " " + denominator);
   }
 
-  private void drawWindow(Player player, double m, double b) {
-    executorService.execute(()->{
-      User user = userOf(player);
+  private void drawWindow(Player player) {
+    executorService.execute(() -> {
       LinearRegressionHeuristicMeta meta = metaOf(player);
       final int pointRadius = 2;
       final int width = 800;
@@ -140,11 +145,13 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
 
       JFrame window = new JFrame();
       window.setSize(width, height);
+      window.setFocusable(true);
       window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
       JPanel panel = new JPanel() {
         @Override
         public void paint(Graphics g) {
+          g.clearRect(0, 0, width, height);
           ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
           g.setColor(Color.blue);
@@ -156,9 +163,9 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
           }
 
           double x1 = 0;
-          double y1 = m * x1 + b;
+          double y1 = meta.m * x1 + meta.b;
           double x2 = meta.width;
-          double y2 = m * x2 + b;
+          double y2 = meta.m * x2 + meta.b;
 
           ((Graphics2D) g).setStroke(new BasicStroke(4f));
           g.setColor(Color.black);
@@ -171,6 +178,7 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
           g.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
         }
       };
+      meta.panel = panel;
       window.add(panel);
       window.setVisible(true);
     });
@@ -181,6 +189,9 @@ public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, L
   }
 
   public static class LinearRegressionHeuristicMeta extends UserCustomCheckMeta {
+    public JPanel panel;
+    public double b;
+    public double m;
     List<Vector> vectorList = new ArrayList<>();
     double width;
     double height;
