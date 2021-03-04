@@ -4,18 +4,20 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.reflect.StructureModifier;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.detect.checks.movement.Physics;
-import de.jpx3.intave.detect.checks.movement.physics.CollisionHelper;
-import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsMovementPoseType;
+import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsMovementPose;
 import de.jpx3.intave.reflect.ReflectiveHandleAccess;
 import de.jpx3.intave.tools.client.*;
 import de.jpx3.intave.tools.wrapper.WrappedAxisAlignedBB;
 import de.jpx3.intave.trustfactor.TrustFactorService;
+import de.jpx3.intave.world.collision.Collision;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+
+import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_BEE_UPDATE;
 
 public final class UserMetaMovementData {
   private final Player player;
@@ -25,6 +27,7 @@ public final class UserMetaMovementData {
   public boolean disabledFlying;
   public float width = 0.6f, height = 1.8f;
   public double widthRounded, heightRounded;
+  private double resetMotion, frictionPosSubtraction;
 
   public boolean swimming, elytraFlying;
 
@@ -44,14 +47,13 @@ public final class UserMetaMovementData {
   private float yawSine, yawCosine, friction;
   public float rotationYaw, rotationPitch;
   public float lastRotationYaw, lastRotationPitch;
-  private PhysicsMovementPoseType movementPoseType = PhysicsMovementPoseType.PHYSICS_NORMAL_MOVEMENT;
+  private PhysicsMovementPose movementPoseType = PhysicsMovementPose.PHYSICS_NORMAL_MOVEMENT;
 
   private volatile WrappedAxisAlignedBB boundingBox;
   public Vector emulationVelocity;
   public Vector setbackOverrideVelocity = new Vector(0,0,0);
   public Vector lastVelocity = new Vector();
   public boolean canResetMotion;
-  private double resetMotion;
   private double jumpUpwardsMotion;
   private int pastClientFlyingPacket, pastFlyingPacketAccurate;
   private float aiMoveSpeed, jumpMovementFactor;
@@ -103,11 +105,12 @@ public final class UserMetaMovementData {
     applySizeUpdate();
   }
 
-  private void initializeBoundingBox() {
+  private void setupDefaults() {
     UserMetaClientData clientData = user.meta().clientData();
     this.resetMotion = clientData.protocolVersion() <= 47 ? 0.005 : 0.003;
+    this.frictionPosSubtraction = clientData.protocolVersion() <= PROTOCOL_VERSION_BEE_UPDATE ? 1.0 : 0.5000001;
     Location location = player.getLocation();
-    boundingBox = CollisionHelper.boundingBoxOf(user, location.getX(), location.getY(), location.getZ());
+    boundingBox = Collision.boundingBoxOf(user, location.getX(), location.getY(), location.getZ());
   }
 
   private void applyPlayerLocation() {
@@ -153,7 +156,7 @@ public final class UserMetaMovementData {
     boolean hasMovement, boolean hasRotation
   ) {
     if (boundingBox == null) {
-      initializeBoundingBox();
+      setupDefaults();
     }
 
     jumpUpwardsMotion = PlayerMovementHelper.jumpMotionFor(player);
@@ -266,7 +269,11 @@ public final class UserMetaMovementData {
     }
   }
 
-  public boolean exceededJumpPrevention() {
+  public boolean denyJump() {
+    UserMetaInventoryData inventoryData = user.meta().inventoryData();
+    if (inventoryData.inventoryOpen()) {
+      return true;
+    }
     IntavePlugin plugin = IntavePlugin.singletonInstance();
     TrustFactorService trustFactorService = plugin.trustFactorService();
     int trustFactorSetting = trustFactorService.trustFactorSetting("physics.joap-limit", player);
@@ -343,7 +350,7 @@ public final class UserMetaMovementData {
     return pastFlyingPacketAccurate;
   }
 
-  public PhysicsMovementPoseType movementPoseType() {
+  public PhysicsMovementPose movementPoseType() {
     return movementPoseType;
   }
 
@@ -367,22 +374,26 @@ public final class UserMetaMovementData {
     return yawCosine;
   }
 
+  public double frictionPosSubtraction() {
+    return frictionPosSubtraction;
+  }
+
   public void setBoundingBox(WrappedAxisAlignedBB entityBoundingBox) {
     if (this.boundingBox == null) {
-      initializeBoundingBox();
+      setupDefaults();
     }
     this.boundingBox = entityBoundingBox;
   }
 
   public void setVerifiedLocation(Location verifiedLocation, @SuppressWarnings("unused") String reason) {
-/*    boolean boundingBoxIntersection = CollisionHelper.checkBoundingBoxIntersection(user, CollisionHelper.boundingBoxOf(user, verifiedLocation));
+/*    boolean boundingBoxIntersection = Collision.checkBoundingBoxIntersection(user, Collision.boundingBoxOf(user, verifiedLocation));
     if (boundingBoxIntersection) {
       Bukkit.broadcastMessage(ChatColor.DARK_RED + "Position was set into a block: " + reason);
     }*/
     this.verifiedLocation = verifiedLocation;
   }
 
-  public void setMovementPoseType(PhysicsMovementPoseType movementPoseType) {
+  public void setMovementPoseType(PhysicsMovementPose movementPoseType) {
     this.movementPoseType = movementPoseType;
   }
 

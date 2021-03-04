@@ -7,20 +7,18 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.detect.CheckViolationLevelDecrementer;
 import de.jpx3.intave.detect.IntaveCheck;
-import de.jpx3.intave.detect.checks.movement.physics.CollisionHelper;
 import de.jpx3.intave.detect.checks.movement.physics.PhysicsSimulator;
 import de.jpx3.intave.detect.checks.movement.physics.collision.block.BlockCollisionRepository;
 import de.jpx3.intave.detect.checks.movement.physics.collision.entity.EntityCollisionRepository;
-import de.jpx3.intave.detect.checks.movement.physics.collision.entity.EntityCollisionResult;
+import de.jpx3.intave.detect.checks.movement.physics.collision.entity.SimulationResult;
 import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsCalculationPart;
-import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsMovementPoseType;
+import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsMovementPose;
 import de.jpx3.intave.detect.checks.movement.physics.water.AquaticWaterMovementBase;
 import de.jpx3.intave.detect.checks.movement.physics.water.WaterMovementLegacyResolver;
 import de.jpx3.intave.detect.checks.movement.physics.water.aquatics.*;
 import de.jpx3.intave.diagnostics.timings.Timings;
 import de.jpx3.intave.reflect.ReflectiveAccess;
 import de.jpx3.intave.tools.MathHelper;
-import de.jpx3.intave.tools.annotate.DispatchCrossCall;
 import de.jpx3.intave.tools.client.PlayerMovementHelper;
 import de.jpx3.intave.tools.client.PlayerMovementPoseHelper;
 import de.jpx3.intave.tools.wrapper.WrappedAxisAlignedBB;
@@ -81,15 +79,15 @@ public final class Physics extends IntaveCheck {
     try {
       fallDamageInvokeMethod =
         MethodHandles
-        .publicLookup()
-        .findVirtual(entityLivingClass, methodName, MethodType.methodType(Void.TYPE, Float.TYPE, Float.TYPE));
+          .publicLookup()
+          .findVirtual(entityLivingClass, methodName, MethodType.methodType(Void.TYPE, Float.TYPE, Float.TYPE));
     } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new IllegalStateException(e);
     }
   }
 
   private void setupPoseTypes() {
-    for (PhysicsMovementPoseType pose : PhysicsMovementPoseType.values()) {
+    for (PhysicsMovementPose pose : PhysicsMovementPose.values()) {
       setupPose(pose.calculationPart());
     }
   }
@@ -123,34 +121,30 @@ public final class Physics extends IntaveCheck {
     }
   }
 
-  @DispatchCrossCall
-  public void receiveMovement(User user, boolean hasMovement) {
+  public void receiveMovement(User user) {
     UserMetaMovementData movementData = user.meta().movementData();
-    if (hasMovement) {
-      PhysicsMovementPoseType movementPoseType = resolveMovementType(user);
-      movementData.setMovementPoseType(movementPoseType);
-      processMovement(user);
-    }
+    PhysicsMovementPose movementPoseType = resolveMovementPose(user);
+    movementData.setMovementPoseType(movementPoseType);
+    processMovement(user);
   }
 
-  private PhysicsMovementPoseType resolveMovementType(User user) {
+  private PhysicsMovementPose resolveMovementPose(User user) {
     Player player = user.player();
     if (player.getVehicle() != null) {
-      return PhysicsMovementPoseType.PHYSICS_VEHICLE_MOVEMENT;
+      return PhysicsMovementPose.PHYSICS_VEHICLE_MOVEMENT;
     } else if (PlayerMovementPoseHelper.flyingWithElytra(player)) {
-      return PhysicsMovementPoseType.PHYSICS_ELYTRA_MOVEMENT;
+      return PhysicsMovementPose.PHYSICS_ELYTRA_MOVEMENT;
     }
-    return PhysicsMovementPoseType.PHYSICS_NORMAL_MOVEMENT;
+    return PhysicsMovementPose.PHYSICS_NORMAL_MOVEMENT;
   }
 
-  @DispatchCrossCall
   public void endMovement(User user, boolean hasMovement) {
     UserMetaMovementData movementData = user.meta().movementData();
     double motionX = movementData.motionX();
     double motionY = movementData.motionY();
     double motionZ = movementData.motionZ();
     if (hasMovement) {
-      PhysicsMovementPoseType movementPoseType = movementData.movementPoseType();
+      PhysicsMovementPose movementPoseType = movementData.movementPoseType();
       PhysicsCalculationPart calculationPart = movementPoseType.calculationPart();
 
       if (movementData.pastVelocity == 0) {
@@ -172,33 +166,9 @@ public final class Physics extends IntaveCheck {
     simulateMotionClamp(user);
 
     Timings.CHECK_PHYSICS_PROC_TOT.start();
+    predictFlyingPacketBeforeVelocity(user);
 
-    if (movementData.pastVelocity == 0) {
-      double motionX = movementData.physicsMotionXBeforeVelocity * 0.91f;
-      double motionY = (movementData.physicsMotionYBeforeVelocity - 0.08) * 0.98f;
-      double motionZ = movementData.physicsMotionZBeforeVelocity * 0.91f;
-
-      if (motionX != 0 && motionY != 0 && motionZ != 0) {
-        CollisionHelper.CollisionResult collisionResult = CollisionHelper.resolveQuickCollisions(
-          user.player(),
-          movementData.verifiedPositionX, movementData.verifiedPositionY, movementData.verifiedPositionZ,
-          motionX, motionY, motionZ
-        );
-        motionX = collisionResult.motionX();
-        motionY = collisionResult.motionY();
-        motionZ = collisionResult.motionZ();
-
-        if (collisionResult.onGround() || movementData.onGround) {
-          double distance = motionX * motionX + motionY * motionY + motionZ * motionZ;
-          if (distance < 0.009) {
-            movementData.physicsUnpredictableVelocityExpected = true;
-            movementData.setPastFlyingPacketAccurate(0);
-          }
-        }
-      }
-    }
-
-    EntityCollisionResult predictedMovement = simulationService.simulate(user, movementData.movementPoseType());
+    SimulationResult predictedMovement = simulationService.simulate(user, movementData.movementPoseType());
     movementData.onGround = predictedMovement.onGround();
     movementData.collidedHorizontally = predictedMovement.collidedHorizontally();
     movementData.collidedVertically = predictedMovement.collidedVertically();
@@ -210,6 +180,34 @@ public final class Physics extends IntaveCheck {
     evaluateBestSimulation(user, predictedMovement);
     Timings.CHECK_PHYSICS_EVAL.stop();
     movementData.pastRiptideSpin++;
+  }
+
+  private void predictFlyingPacketBeforeVelocity(User user) {
+    UserMetaMovementData movementData = user.meta().movementData();
+    if (movementData.pastVelocity != 0) {
+      return;
+    }
+    double motionX = movementData.physicsMotionXBeforeVelocity * 0.91f;
+    double motionY = (movementData.physicsMotionYBeforeVelocity - 0.08) * 0.98f;
+    double motionZ = movementData.physicsMotionZBeforeVelocity * 0.91f;
+    if (motionX != 0 && motionY != 0 && motionZ != 0) {
+      Collision.CollisionResult collisionResult = Collision.resolveQuickCollisions(
+        user.player(),
+        movementData.verifiedPositionX, movementData.verifiedPositionY, movementData.verifiedPositionZ,
+        motionX, motionY, motionZ
+      );
+      motionX = collisionResult.motionX();
+      motionY = collisionResult.motionY();
+      motionZ = collisionResult.motionZ();
+
+      if (collisionResult.onGround() || movementData.onGround) {
+        double distance = motionX * motionX + motionY * motionY + motionZ * motionZ;
+        if (distance < 0.009) {
+          movementData.physicsUnpredictableVelocityExpected = true;
+          movementData.setPastFlyingPacketAccurate(0);
+        }
+      }
+    }
   }
 
   public void updateAquatics(User user) {
@@ -241,13 +239,14 @@ public final class Physics extends IntaveCheck {
     }
   }
 
-  private void evaluateBestSimulation(User user, EntityCollisionResult expectedMovement) {
+  private void evaluateBestSimulation(User user, SimulationResult expectedMovement) {
     Player player = user.player();
     User.UserMeta meta = user.meta();
     boolean spectator = player.getGameMode() == GameMode.SPECTATOR;
 
     UserMetaMovementData movementData = meta.movementData();
     UserMetaViolationLevelData violationLevelData = meta.violationLevelData();
+    UserMetaInventoryData inventoryData = meta.inventoryData();
     UserMetaAbilityData abilityData = meta.abilityData();
     PhysicsProcessorContext context = expectedMovement.context();
 
@@ -302,7 +301,7 @@ public final class Physics extends IntaveCheck {
 
     if (distance > 1e-3) {
       movementData.suspiciousMovement = true;
-      EntityCollisionResult entityCollisionResult = simulationService.simulateMovementWithoutKeyPress(user);
+      SimulationResult entityCollisionResult = simulationService.simulateMovementWithoutKeyPress(user);
       PhysicsProcessorContext setbackContext = entityCollisionResult.context();
       predictedX = setbackContext.motionX;
       predictedY = setbackContext.motionY;
@@ -320,8 +319,8 @@ public final class Physics extends IntaveCheck {
 
     Location verifiedLocation = movementData.verifiedLocation();
 
-    List<WrappedAxisAlignedBB> intersectionBoundingBoxesLast = Collision.resolve(user.player(), CollisionHelper.boundingBoxOf(user, verifiedLocation.getX(), verifiedLocation.getY(), verifiedLocation.getZ()));
-    WrappedAxisAlignedBB currentBoundingBox = CollisionHelper.boundingBoxOf(user, receivedPositionX, receivedPositionY, receivedPositionZ);
+    List<WrappedAxisAlignedBB> intersectionBoundingBoxesLast = Collision.resolve(user.player(), Collision.boundingBoxOf(user, verifiedLocation.getX(), verifiedLocation.getY(), verifiedLocation.getZ()));
+    WrappedAxisAlignedBB currentBoundingBox = Collision.boundingBoxOf(user, receivedPositionX, receivedPositionY, receivedPositionZ);
     List<WrappedAxisAlignedBB> intersectionBoundingBoxesCurrent = Collision.resolve(user.player(), currentBoundingBox);
 
     boolean boundingBoxIntersectionLast = !intersectionBoundingBoxesLast.isEmpty();
@@ -383,7 +382,7 @@ public final class Physics extends IntaveCheck {
 
           plugin.violationProcessor().processViolation(player, 0, "Physics", message, details);
           Location phaseStartLocation = new Location(player.getWorld(), blockPositionX, blockPositionY, blockPositionZ);
-          WrappedAxisAlignedBB startPhaseBoundingBox = CollisionHelper.boundingBoxOf(user, phaseStartLocation);
+          WrappedAxisAlignedBB startPhaseBoundingBox = Collision.boundingBoxOf(user, phaseStartLocation);
           plugin.eventService().emulationEngine().emulationPushOutOfBlock(player, startPhaseBoundingBox);
         }
       }
@@ -563,7 +562,7 @@ public final class Physics extends IntaveCheck {
     // Jump out of water
     if (movementData.inWater && abuseVertically > 1e-5 && receivedMotionY > 0.0 && receivedMotionY < 0.35) {
       Location location = new Location(player.getWorld(), movementData.positionX, movementData.positionY, movementData.positionZ);
-      if (CollisionHelper.nearBySolidBlock(location, 0.4)) {
+      if (Collision.nearBySolidBlock(location, 0.4)) {
         boolean airAbove = !PlayerMovementHelper.isAllLiquid(player.getWorld(), movementData.boundingBox());
         if (airAbove) {
           abuseVertically = 0;
@@ -588,7 +587,7 @@ public final class Physics extends IntaveCheck {
     UserMetaViolationLevelData violationLevelData = meta.violationLevelData();
     UserMetaMovementData movementData = meta.movementData();
 
-    PhysicsMovementPoseType movementPoseType = movementData.movementPoseType();
+    PhysicsMovementPose movementPoseType = movementData.movementPoseType();
     double motionX = movementData.motionX();
     double motionZ = movementData.motionZ();
     double distanceMoved = MathHelper.resolveHorizontalDistance(
@@ -597,7 +596,7 @@ public final class Physics extends IntaveCheck {
     );
     double predictedDistanceMoved = Math.hypot(predictedX, predictedZ);
 
-    if (movementPoseType == PhysicsMovementPoseType.PHYSICS_VEHICLE_MOVEMENT) {
+    if (movementPoseType == PhysicsMovementPose.PHYSICS_VEHICLE_MOVEMENT) {
 
 //      user.player().sendMessage(distanceMoved + " " + predictedDistanceMoved);
 

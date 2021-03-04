@@ -1,8 +1,7 @@
 package de.jpx3.intave.detect.checks.movement.physics.pose;
 
 import de.jpx3.intave.detect.checks.movement.Physics;
-import de.jpx3.intave.detect.checks.movement.physics.CollisionHelper;
-import de.jpx3.intave.detect.checks.movement.physics.collision.entity.EntityCollisionResult;
+import de.jpx3.intave.detect.checks.movement.physics.collision.entity.SimulationResult;
 import de.jpx3.intave.tools.client.PlayerEffectHelper;
 import de.jpx3.intave.tools.client.PlayerMovementHelper;
 import de.jpx3.intave.tools.client.PlayerMovementPoseHelper;
@@ -15,6 +14,7 @@ import de.jpx3.intave.user.UserMetaClientData;
 import de.jpx3.intave.user.UserMetaMovementData;
 import de.jpx3.intave.user.UserMetaViolationLevelData;
 import de.jpx3.intave.world.BlockAccessor;
+import de.jpx3.intave.world.collision.Collision;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -26,7 +26,7 @@ import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_VILLAGE_UP
 
 public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
   @Override
-  public EntityCollisionResult performSimulation(
+  public SimulationResult performSimulation(
     User user, Physics.PhysicsProcessorContext context,
     float forward, float strafe,
     boolean attackReduce, boolean jumped, boolean handActive
@@ -93,7 +93,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
       tryRelinkFlyingPosition(user, context);
     }
 
-    EntityCollisionResult collisionResult = entityCollisionRepository().resolveEntityCollisionOf(
+    SimulationResult collisionResult = entityCollisionRepository().resolveEntityCollisionOf(
       user, context, movementData.inWeb,
       positionX, positionY, positionZ
     );
@@ -187,7 +187,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     double interpolateZ = context.motionZ;
 
     for (; interpolations <= 2; interpolations++) {
-      CollisionHelper.CollisionResult collisionResult = CollisionHelper.resolveQuickCollisions(
+      Collision.CollisionResult collisionResult = Collision.resolveQuickCollisions(
         player, positionX, positionY, positionZ,
         interpolateX, interpolateY, interpolateZ
       );
@@ -206,7 +206,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
 
       if (!flyingPacket(diffX, diffY, diffZ) && !jump) {
         break;
-      } else if (jump && flyingPacket(diffX * 0.15, 0.0, diffZ * 0.15)) {
+      } else if (jump && flyingPacket(diffX * 0.15, 0.0, diffZ * 0.15) && !movementData.denyJump()) {
         context.motionY = jumpUpwardsMotion;
         movementData.physicsPacketRelinkFlyVL = 0;
         break;
@@ -256,13 +256,13 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     double positionX, double positionY, double positionZ,
     double motionX, double motionY, double motionZ
   ) {
-    CollisionHelper.CollisionResult result = CollisionHelper.resolveQuickCollisions(player, positionX, positionY, positionZ, motionX, motionY, motionZ);
+    Collision.CollisionResult result = Collision.resolveQuickCollisions(player, positionX, positionY, positionZ, motionX, motionY, motionZ);
     context.motionX = result.motionX();
     context.motionY = result.motionY();
     context.motionZ = result.motionZ();
   }
 
-  public void notePossibleFlyingPacket(User user, EntityCollisionResult collisionResult) {
+  public void notePossibleFlyingPacket(User user, SimulationResult collisionResult) {
     UserMetaMovementData movementData = user.meta().movementData();
     Physics.PhysicsProcessorContext context = collisionResult.context();
     if (flyingPacket(context.motionX, context.motionY, context.motionZ)) {
@@ -299,7 +299,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     double slipperiness;
     if (movementData.lastOnGround) {
       double blockPositionX = WrappedMathHelper.floor(movementData.verifiedPositionX);
-      double blockPositionY = WrappedMathHelper.floor(movementData.verifiedPositionY - 1.0);
+      double blockPositionY = WrappedMathHelper.floor(movementData.verifiedPositionY - movementData.frictionPosSubtraction());
       double blockPositionZ = WrappedMathHelper.floor(movementData.verifiedPositionZ);
       Location blockBelow = new Location(world, blockPositionX, blockPositionY, blockPositionZ);
       slipperiness = PlayerMovementHelper.resolveSlipperiness(user, blockBelow);
@@ -307,7 +307,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
       slipperiness = 0.91f;
     }
 
-    WrappedAxisAlignedBB boundingBox = CollisionHelper.boundingBoxOf(user, positionX, positionY, positionZ);
+    WrappedAxisAlignedBB boundingBox = Collision.boundingBoxOf(user, positionX, positionY, positionZ);
     movementData.setBoundingBox(boundingBox);
 
     if (movementData.inWeb) {
@@ -385,7 +385,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     double positionZ = movementData.positionZ;
 
     int blockCollisionPosX = WrappedMathHelper.floor(positionX);
-    int blockCollisionPosY = WrappedMathHelper.floor(positionY - 0.20000000298023224D);
+    int blockCollisionPosY = WrappedMathHelper.floor(positionY - 0.2f);
     int blockCollisionPosZ = WrappedMathHelper.floor(positionZ);
     Material block = BlockAccessor.cacheAppliedTypeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
 
@@ -458,7 +458,7 @@ public class PhysicsNormalPlayerMovement extends PhysicsCalculationPart {
     if (clientData.protocolVersion() >= PROTOCOL_VERSION_VILLAGE_UPDATE) {
       int soulSandModifier = PlayerEnchantmentHelper.resolveSoulSpeedModifier(player);
       if (soulSandModifier == 0) {
-        Block blockAccess = BlockAccessor.blockAccess(world, positionX, positionY - 0.6, positionZ);
+        Block blockAccess = BlockAccessor.blockAccess(world, positionX, positionY - 0.5000001, positionZ);
         Material material = blockAccess.getType();
         Vector speedFactor = blockCollisionRepository().speedFactor(user, material, context.motionX, context.motionY, context.motionZ);
         if (speedFactor != null) {
