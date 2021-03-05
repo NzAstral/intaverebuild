@@ -646,7 +646,7 @@ public final class Physics extends IntaveCheck {
 
     if (recentlySentFlying) {
       boolean lessThanExpected = distanceMoved <= predictedDistanceMoved;
-      if (lessThanExpected || distanceMoved < baseMoveSpeed * 0.7) {
+      if (lessThanExpected || ((distanceMoved < baseMoveSpeed * 0.7) && movementData.pastWaterMovement > 20)) {
         legitimateDeviation = Math.max(legitimateDeviation, baseMoveSpeed * 0.7);
       }
     }
