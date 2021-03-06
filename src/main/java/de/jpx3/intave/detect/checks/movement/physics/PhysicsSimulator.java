@@ -5,6 +5,7 @@ import de.jpx3.intave.detect.checks.movement.physics.collision.entity.Simulation
 import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsCalculationPart;
 import de.jpx3.intave.detect.checks.movement.physics.pose.PhysicsMovementPose;
 import de.jpx3.intave.diagnostics.timings.Timings;
+import de.jpx3.intave.event.dispatch.AttackDispatcher;
 import de.jpx3.intave.reflect.ReflectiveDataWatcherAccess;
 import de.jpx3.intave.tools.MathHelper;
 import de.jpx3.intave.tools.items.InventoryUseItemHelper;
@@ -143,6 +144,9 @@ public final class PhysicsSimulator {
     for (int attackState = 0; attackState <= 1; attackState++) {
       boolean attackReduce = attackState == 1;
       if (attackReduce && movementData.pastPlayerAttackPhysics >= 1) {
+        continue;
+      }
+      if (attackReduce && AttackDispatcher.REDUCING_DISABLED) {
         continue;
       }
 
