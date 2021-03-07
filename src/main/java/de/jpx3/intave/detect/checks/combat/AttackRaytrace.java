@@ -208,10 +208,13 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
         details = displayReach + " blocks";
         thresholdKey = "applicable-thresholds.reach";
         vl = 20;
+        if(expandHitbox != 0.1f)
+          vl = 10;
 
         Synchronizer.synchronize(() -> {
+          String standing = expandHitbox == 0.1f ? "standing" : "";
           String sibylMessage = ChatColor.RED + "[R] " + player.getName() + " attacked " + entityName.toLowerCase() +
-            " from " + displayReach + " blocks (" + clientData.versionAsString() + ")";
+            " from " + displayReach + " blocks (" + clientData.versionAsString() + ") " + standing;
           for (Player authenticatedPlayer : Bukkit.getOnlinePlayers()) {
             if (plugin.sibylIntegrationService().isAuthenticated(authenticatedPlayer)) {
               authenticatedPlayer.sendMessage(sibylMessage);
