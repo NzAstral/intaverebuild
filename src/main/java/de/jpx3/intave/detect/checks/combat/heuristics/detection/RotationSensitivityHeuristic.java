@@ -114,7 +114,7 @@ public final class RotationSensitivityHeuristic extends IntaveMetaCheckPart<Heur
       if (pitchDifference > 1.0) {
         heuristicMeta.sensitivityVL += pitchDifference > 5 ? 10 : 5;
       }
-      if (heuristicMeta.sensitivityVL % 100 == 0) {
+      if (heuristicMeta.sensitivityVL % 100 == 0 && heuristicMeta.sensitivityVL > 0) {
         parentCheck().saveAnomaly(
           player,
           Anomaly.anomalyOf(
