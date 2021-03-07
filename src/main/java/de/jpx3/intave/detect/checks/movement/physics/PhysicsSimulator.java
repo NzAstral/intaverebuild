@@ -143,10 +143,7 @@ public final class PhysicsSimulator {
     LOOP:
     for (int attackState = 0; attackState <= 1; attackState++) {
       boolean attackReduce = attackState == 1;
-      if (attackReduce && movementData.pastPlayerAttackPhysics >= 1) {
-        continue;
-      }
-      if (attackReduce && AttackDispatcher.REDUCING_DISABLED) {
+      if (attackReduce && (movementData.pastPlayerAttackPhysics >= 1 || AttackDispatcher.REDUCING_DISABLED)) {
         continue;
       }
 
