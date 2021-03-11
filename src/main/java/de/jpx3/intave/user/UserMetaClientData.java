@@ -22,8 +22,8 @@ public final class UserMetaClientData {
     return protocolVersion;
   }
 
-  public double cameraSneakOffset() {
-    return protocolVersion >= SOMETHING_BETWEEN ? 0.35 : 0.08;
+  public float cameraSneakOffset() {
+    return protocolVersion >= SOMETHING_BETWEEN ? 0.35f : 0.08f;
   }
 
   public boolean hitBoxSneakAffected() {
