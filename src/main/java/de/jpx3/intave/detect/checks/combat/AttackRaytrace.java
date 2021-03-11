@@ -23,6 +23,7 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static de.jpx3.intave.event.service.entity.ClientSideEntityService.entityByIdentifier;
 import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_BOUNTIFUL_UPDATE;
@@ -203,12 +204,13 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
         thresholdKey = "applicable-thresholds.hitbox";
         vl = 2;
         Synchronizer.synchronize(() -> {
-          String standing = "";
-          if(expandHitbox > 0.1f) {
-            standing = "standing";
+          String sibylMessage = ChatColor.RED + "[R] " + player.getName() + " attacked " + entityName.toLowerCase();
+          Player p = playerByWrappedEntity(user, entity);
+          if(p != null) {
+            int lastTeleport = userOf(p).meta().movementData().lastTeleport;
+            sibylMessage += " last enemy TP " + (lastTeleport > 99 ? ">99" : lastTeleport);
           }
-          String sibylMessage = ChatColor.RED + "[R] " + player.getName() + " attacked " + entityName.toLowerCase() +
-            " out of sight " + standing;
+
           for (Player authenticatedPlayer : Bukkit.getOnlinePlayers()) {
             if (plugin.sibylIntegrationService().isAuthenticated(authenticatedPlayer)) {
               authenticatedPlayer.sendMessage(sibylMessage);
@@ -232,12 +234,13 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
         }
 
         Synchronizer.synchronize(() -> {
-          String standing = "";
-          if(expandHitbox > 0.1f) {
-            standing = "standing";
-          }
           String sibylMessage = ChatColor.RED + "[R] " + player.getName() + " attacked " + entityName.toLowerCase() +
-            " from " + displayReach + " " + standing;
+            " from " + displayReach;
+          Player p = playerByWrappedEntity(user, entity);
+          if(p != null) {
+            int lastTeleport = userOf(p).meta().movementData().lastTeleport;
+            sibylMessage += " last enemy TP " + (lastTeleport > 99 ? ">99" : lastTeleport);
+          }
           for (Player authenticatedPlayer : Bukkit.getOnlinePlayers()) {
             if (plugin.sibylIntegrationService().isAuthenticated(authenticatedPlayer)) {
               authenticatedPlayer.sendMessage(sibylMessage);
@@ -261,6 +264,19 @@ public class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackRaytrac
    plugin.violationProcessor().processViolation(player, vl, "AttackRaytrace", message, details, thresholdKey);
 //    player.sendMessage("§6s:" + reach);
     return true;
+  }
+
+  private Player playerByWrappedEntity(User user, WrappedEntity wrappedEntity) {
+    for(Map.Entry<Integer, WrappedEntity> entry : user.meta().synchronizeData().synchronizedEntityMap().entrySet()) {
+      if(entry.getValue() == wrappedEntity) {
+        for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+          if (p.getEntityId() == entry.getKey()) {
+            return p;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   private boolean processIterativeReachCheck(Player player, WrappedEntity attackedEntity) {
