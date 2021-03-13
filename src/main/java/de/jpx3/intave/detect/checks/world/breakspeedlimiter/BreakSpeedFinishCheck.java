@@ -120,9 +120,13 @@ public final class BreakSpeedFinishCheck extends IntaveMetaCheckPart<BreakSpeedL
     }
     long time = 0;
     float curBlockDamageMP = 0f;
+    int iterationCountdown = 100;
     while (curBlockDamageMP < 1f) {
       curBlockDamageMP += blockDamage;
       time += 50;
+      if (--iterationCountdown < 0) {
+        break;
+      }
     }
     return time;
   }
