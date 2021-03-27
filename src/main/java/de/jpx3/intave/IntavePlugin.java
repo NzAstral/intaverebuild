@@ -36,6 +36,7 @@ import de.jpx3.intave.trustfactor.TrustFactorService;
 import de.jpx3.intave.update.VersionInformation;
 import de.jpx3.intave.update.VersionList;
 import de.jpx3.intave.user.UserRepository;
+import de.jpx3.intave.warning.ClientWarningService;
 import de.jpx3.intave.world.blockaccess.BlockDataAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import de.jpx3.intave.world.blockphysics.BlockPhysics;
@@ -45,6 +46,7 @@ import de.jpx3.intave.world.collision.patches.BoundingBoxPatcher;
 import de.jpx3.intave.world.permission.WorldPermission;
 import de.jpx3.intave.world.raytrace.Raytracer;
 import de.jpx3.intave.world.waterflow.Waterflow;
+import org.apache.commons.io.FileUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -55,6 +57,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -89,6 +93,7 @@ public final class IntavePlugin extends JavaPlugin {
   private TrustFactorService trustFactorService;
   private VersionList versionList;
   private LabymodShadowIntegration shadowIntegration;
+  private ClientWarningService clientWarningService;
   private IntaveAccessService accessService;
   private IntaveAccess access;
   private Metrics metrics;
@@ -416,6 +421,9 @@ public final class IntavePlugin extends JavaPlugin {
       accessService = new IntaveAccessService(this);
       accessService.setup();
 
+      clientWarningService = new ClientWarningService(this);
+      clientWarningService.setup();
+
       customEventService = new CustomEventService(this);
       checkService = new CheckService(this);
       violationService = new ViolationService(this);
@@ -455,13 +463,39 @@ public final class IntavePlugin extends JavaPlugin {
       }
     });*/
 
+    BackgroundExecutor.execute(this::clearIntegrityGarbage);
     packetSubscriptionLinker.refreshInternalSubscriptions();
     logger.info("Intave booted successfully");
+  }
+
+  public final static long INTEGRITY_ERASE_BUFFER = TimeUnit.MINUTES.toMillis(1);
+
+  @Native
+  public void clearIntegrityGarbage() {
+    File tempDir = new File(System.getProperty("java.io.tmpdir"));
+    try {
+      Files.walk(tempDir.toPath())
+        .filter(Files::isRegularFile)
+        .map(Path::toFile)
+        .filter(file -> file.getName().equalsIgnoreCase("deleteme") && file.getParentFile().getName().toLowerCase(Locale.ROOT).contains("intave"))
+        .filter(file -> (AccessHelper.now() - file.lastModified()) > INTEGRITY_ERASE_BUFFER)
+        .map(File::getParentFile)
+        .forEach(file -> {
+          try {
+            FileUtils.deleteDirectory(file);
+          } catch (IOException exception) {
+            exception.printStackTrace();
+          }
+        });
+    } catch (IOException exception) {
+      exception.printStackTrace();
+    }
   }
 
   @Native
   public void clearCacheFiles() {
     configurationService.deleteCache();
+    clearIntegrityGarbage();
   }
 
   @Native
@@ -496,6 +530,11 @@ public final class IntavePlugin extends JavaPlugin {
     if(accessService != null) {
       accessService.serverAccessor().pluginShutdown();
     }
+    try {
+      // mark caches as deletable
+      Class<?> relocator = Class.forName("de.jpx3.relocator.Relocator");
+      relocator.getMethod("i").invoke(null);
+    } catch (Exception exception) {}
     logger().info("Intave offline");
     logger.shutdown();
   }
@@ -558,6 +597,10 @@ public final class IntavePlugin extends JavaPlugin {
 
   public SibylIntegrationService sibylIntegrationService() {
     return sibylIntegrationService;
+  }
+
+  public ClientWarningService clientWarningService() {
+    return clientWarningService;
   }
 
   public VersionList versionList() {
