@@ -16,6 +16,7 @@ import de.jpx3.intave.user.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.util.Vector;
@@ -33,7 +34,7 @@ public final class Timer extends IntaveMetaCheck<Timer.TimerData> {
     this.plugin = plugin;
     this.decrementer = new CheckViolationLevelDecrementer(this, 0.2);
     highToleranceMode = configuration().settings().boolBy("high-tolerance", false);
-    if(highToleranceMode) {
+    if (highToleranceMode) {
       IntaveLogger.logger().info("Enabled high ping tolerance");
     }
   }
@@ -89,7 +90,7 @@ public final class Timer extends IntaveMetaCheck<Timer.TimerData> {
 
     int allowedLagInSeconds = trustFactorSetting("buffer-size", player);
 
-    if(AccessHelper.now() - timerData.lastRespawn < 6000) {
+    if (AccessHelper.now() - timerData.lastRespawn < 6000) {
       allowedLagInSeconds = Math.max(allowedLagInSeconds, 8);
     }
 
@@ -145,17 +146,24 @@ public final class Timer extends IntaveMetaCheck<Timer.TimerData> {
   }
 
   @BukkitEventSubscription
-  public void consumeItem(PlayerItemConsumeEvent event) {
+  public void receiveItemConsume(PlayerItemConsumeEvent event) {
     Player player = event.getPlayer();
     cancelOnPacketOverflow(player, event);
   }
 
   @BukkitEventSubscription
-  public void shootBow(EntityShootBowEvent event) {
+  public void receiveBowShoot(EntityShootBowEvent event) {
     Entity entity = event.getEntity();
-    if(entity instanceof Player) {
-      Player player = (Player) entity;
-      cancelOnPacketOverflow(player, event);
+    if (entity instanceof Player) {
+      cancelOnPacketOverflow((Player) entity, event);
+    }
+  }
+
+  @BukkitEventSubscription
+  public void receiveHealthUpdate(EntityRegainHealthEvent event) {
+    Entity entity = event.getEntity();
+    if (entity instanceof Player) {
+      cancelOnPacketOverflow((Player) entity, event);
     }
   }
 
@@ -167,11 +175,11 @@ public final class Timer extends IntaveMetaCheck<Timer.TimerData> {
     UserMetaViolationLevelData violationLevelData = user.meta().violationLevelData();
     Map<String, Map<String, Double>> violationLevel = violationLevelData.violationLevel;
     String name = name().toLowerCase();
-    if(!violationLevel.containsKey(name)) {
+    if (!violationLevel.containsKey(name)) {
       return;
     }
     Map<String, Double> stringDoubleMap = violationLevel.get(name);
-    if(stringDoubleMap.get("thresholds") > 5 && msSinceFlag < 2000) {
+    if (stringDoubleMap.get("thresholds") > 5 && msSinceFlag < 2000) {
       cancellable.setCancelled(true);
       player.updateInventory();
     }
