@@ -11,6 +11,7 @@ import de.jpx3.intave.diagnostics.timings.Timings;
 import de.jpx3.intave.tools.MathHelper;
 import de.jpx3.intave.tools.annotate.Native;
 import de.jpx3.intave.user.User;
+import de.jpx3.intave.world.collision.BoundingBoxAccess;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -149,6 +150,19 @@ public final class IntaveRootStage extends CommandStage {
       }
     }
     return sortedMap;
+  }
+
+  @SubCommand(
+    selectors = "replacements",
+    usage = "",
+    description = "",
+    permission = "sibyl"
+  )
+  @Native
+  public void outputReplacements(User user) {
+    Player player = user.player();
+    BoundingBoxAccess bba = user.boundingBoxAccess();
+    player.sendMessage(ChatColor.RED + "You have " + bba.locatedReplacements().size() + "/"+bba.indexedReplacements().size()+" replacements");
   }
 
   public static IntaveRootStage singletonInstance() {

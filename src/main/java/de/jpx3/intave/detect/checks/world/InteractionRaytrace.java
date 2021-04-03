@@ -369,7 +369,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       boundingBoxAccess.override(world, blockX, blockY, blockZ, replacementId, shape);
       // enforce block reset later
       Synchronizer.packetSynchronize(() -> {
-        Synchronizer.synchronize(() -> boundingBoxAccess.invalidateOverride(world, blockX, blockY, blockZ));
+        Synchronizer.synchronize(() -> boundingBoxAccess.invalidateOverride(blockX, blockY, blockZ));
       });
     } else {
       return false;
@@ -383,7 +383,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       Block block = place.getBlock();
       BoundingBoxAccess boundingBoxAccess = userOf(place.getPlayer()).boundingBoxAccess();
       boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
-      boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
+      boundingBoxAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
     }
   }
 
@@ -426,7 +426,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       boundingBoxAccess.override(world, clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ(), id, newData);
 
       Synchronizer.packetSynchronize(() ->
-        boundingBoxAccess.invalidateOverride(world, clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ()));
+        boundingBoxAccess.invalidateOverride(clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ()));
     }
     return true;
   }
@@ -438,7 +438,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 
     BoundingBoxAccess boundingBoxAccess = userOf(player).boundingBoxAccess();
     boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
-    boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
+    boundingBoxAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
   }
 
   @BukkitEventSubscription
@@ -448,7 +448,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
 
     BoundingBoxAccess boundingBoxAccess = userOf(player).boundingBoxAccess();
     boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
-    boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
+    boundingBoxAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
   }
 
   private boolean emulateBreak(Player player, Interaction interaction) {
@@ -477,7 +477,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
     Block block = breeak.getBlock();
     BoundingBoxAccess boundingBoxAccess = userOf(breeak.getPlayer()).boundingBoxAccess();
     boundingBoxAccess.invalidate(block.getX(), block.getY(), block.getZ());
-    boundingBoxAccess.invalidateOverride(block.getWorld(), block.getX(), block.getY(), block.getZ());
+    boundingBoxAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
 
 //    Thread.dumpStack();
   }
@@ -531,7 +531,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
       if (hitMiss || raycastResult == null) {
         if (canRefreshBlocks) {
           refreshBlocksAround(player, targetLocation);
-          boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
+          boundingBoxAccess.invalidateOverride(targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
         }
       } else {
         // check if player collides with placement location
@@ -548,7 +548,7 @@ public final class InteractionRaytrace extends IntaveMetaCheck<InteractionRaytra
           );
           if (raytraceCollidesWithPosition) {
             refreshBlocksAround(player, targetLocation);
-            boundingBoxAccess.invalidateOverride(interaction.world, targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
+            boundingBoxAccess.invalidateOverride(targetLocation.getBlockX(), targetLocation.getBlockY(), targetLocation.getBlockZ());
             return;
           }
         }

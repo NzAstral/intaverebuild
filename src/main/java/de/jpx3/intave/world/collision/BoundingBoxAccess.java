@@ -5,6 +5,7 @@ import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.patchy.PatchyLoadingInjector;
 import de.jpx3.intave.reflect.ReflectiveMaterialAccess;
+import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.wrapper.WrappedAxisAlignedBB;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import de.jpx3.intave.world.collision.patches.BoundingBoxPatcher;
@@ -62,8 +63,8 @@ public final class BoundingBoxAccess {
 
   private final Player player;
   private final Map<Integer, CacheEntry> blockCache = new ConcurrentHashMap<>(4096);
-  private final Map<Long, CacheEntry> frequencyCache = new ConcurrentHashMap<>(256);
-  private final Map<Location, CacheEntry> globalReplacements = new ConcurrentHashMap<>(64);
+  private final Map<Location, CacheEntry> locatedReplacements = new ConcurrentHashMap<>(64);
+  private final Map<Long, CacheEntry> indexedReplacements = new ConcurrentHashMap<>(64);
 
   private int chunkXPos;
   private int chunkX;
@@ -85,37 +86,30 @@ public final class BoundingBoxAccess {
       this.chunkX = chunkX;
       this.chunkZ = chunkZ;
       blockCache.clear();
+      purgeOverrides();
     }
 
     byte dx = (byte) (this.chunkXPos - posX), dz = (byte) (this.chunkZPos - posZ);
     int blockPositionKey = (posY & 0x1FF) << 16 | (dx & 0x0FF) << 8 | (dz & 0x0FF);
 
-    // global replacements (escape current-chunk constrain)
-    if (!globalReplacements.isEmpty()) {
-      for (Location location : globalReplacements.keySet()) {
-        if (location.getX() == posX && location.getZ() == posZ && location.getY() == posY) {
-          CacheEntry cacheEntry = globalReplacements.get(location);
-          if(cacheEntry != null) {
-            return cacheEntry.boundingBoxes();
-          }
-        }
+    if(!indexedReplacements.isEmpty()) {
+      long key = bigKey(posX, posY, posZ);
+      CacheEntry entry = indexedReplacements.get(key);
+      if(entry != null) {
+        return entry.boundingBoxes();
       }
     }
 
     CacheEntry cacheEntry = blockCache.get(blockPositionKey);
     if (cacheEntry == null) {
-      List<WrappedAxisAlignedBB> boundingBoxes;
       World world = player.getWorld();
       Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
       Material type = block.getType();
       if(type == Material.AIR) {
         cacheEntry = EMPTY_CACHE_ENTRY;
       } else {
-        boundingBoxes = BoundingBoxPatcher.patch(
-          world, player,
-          block,
-          globalBoundingBoxResolver.resolve(world, posX, posY, posZ)
-        );
+        List<WrappedAxisAlignedBB> boundingBoxes = globalBoundingBoxResolver.resolve(world, posX, posY, posZ);
+        boundingBoxes = BoundingBoxPatcher.patch(world, player, block, boundingBoxes);
         cacheEntry = new CacheEntry(boundingBoxes, type, block.getData());
       }
       if (!DISABLE_BLOCK_CACHING_ENTIRELY) {
@@ -136,37 +130,30 @@ public final class BoundingBoxAccess {
       this.chunkX = chunkX;
       this.chunkZ = chunkZ;
       blockCache.clear();
+      purgeOverrides();
     }
 
     byte dx = (byte) (this.chunkXPos - posX), dz = (byte) (this.chunkZPos - posZ);
     int blockPositionKey = (posY & 0x1FF) << 16 | (dx & 0x0FF) << 8 | (dz & 0x0FF);
 
-    // global replacements (escape current-chunk constrain)
-    if (!globalReplacements.isEmpty()) {
-      for (Location location : globalReplacements.keySet()) {
-        if (location.getX() == posX && location.getZ() == posZ && location.getY() == posY) {
-          CacheEntry cacheEntry = globalReplacements.get(location);
-          if(cacheEntry != null) {
-            return cacheEntry.type();
-          }
-        }
+    if(!indexedReplacements.isEmpty()) {
+      long key = bigKey(posX, posY, posZ);
+      CacheEntry entry = indexedReplacements.get(key);
+      if(entry != null) {
+        return entry.type();
       }
     }
 
     CacheEntry cacheEntry = blockCache.get(blockPositionKey);
     if (cacheEntry == null) {
-      List<WrappedAxisAlignedBB> boundingBoxes;
       World world = player.getWorld();
       Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
       Material type = block.getType();
       if(type == Material.AIR) {
         cacheEntry = EMPTY_CACHE_ENTRY;
       } else {
-        boundingBoxes = BoundingBoxPatcher.patch(
-          world, player,
-          block,
-          globalBoundingBoxResolver.resolve(world, posX, posY, posZ)
-        );
+        List<WrappedAxisAlignedBB> boundingBoxes = globalBoundingBoxResolver.resolve(world, posX, posY, posZ);
+        boundingBoxes = BoundingBoxPatcher.patch(world, player, block, boundingBoxes);
         cacheEntry = new CacheEntry(boundingBoxes, type, block.getData());
       }
       if (!DISABLE_BLOCK_CACHING_ENTIRELY) {
@@ -187,37 +174,30 @@ public final class BoundingBoxAccess {
       this.chunkX = chunkX;
       this.chunkZ = chunkZ;
       blockCache.clear();
+      purgeOverrides();
     }
 
     byte dx = (byte) (this.chunkXPos - posX), dz = (byte) (this.chunkZPos - posZ);
     int blockPositionKey = (posY & 0x1FF) << 16 | (dx & 0x0FF) << 8 | (dz & 0x0FF);
 
-    // global replacements (escape current-chunk constrain)
-    if (!globalReplacements.isEmpty()) {
-      for (Location location : globalReplacements.keySet()) {
-        if (location.getX() == posX && location.getZ() == posZ && location.getY() == posY) {
-          CacheEntry cacheEntry = globalReplacements.get(location);
-          if(cacheEntry != null) {
-            return cacheEntry.data();
-          }
-        }
+    if(!indexedReplacements.isEmpty()) {
+      long key = bigKey(posX, posY, posZ);
+      CacheEntry entry = indexedReplacements.get(key);
+      if(entry != null) {
+        return entry.data();
       }
     }
 
     CacheEntry cacheEntry = blockCache.get(blockPositionKey);
     if (cacheEntry == null) {
-      List<WrappedAxisAlignedBB> boundingBoxes;
       World world = player.getWorld();
       Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
       Material type = block.getType();
       if(type == Material.AIR) {
         cacheEntry = EMPTY_CACHE_ENTRY;
       } else {
-        boundingBoxes = BoundingBoxPatcher.patch(
-          world, player,
-          block,
-          globalBoundingBoxResolver.resolve(world, posX, posY, posZ)
-        );
+        List<WrappedAxisAlignedBB> boundingBoxes = globalBoundingBoxResolver.resolve(world, posX, posY, posZ);
+        boundingBoxes = BoundingBoxPatcher.patch(world, player, block, boundingBoxes);
         cacheEntry = new CacheEntry(boundingBoxes, type, block.getData());
       }
       if (!DISABLE_BLOCK_CACHING_ENTIRELY) {
@@ -229,12 +209,12 @@ public final class BoundingBoxAccess {
 
   public void identityInvalidate() {
     invalidate();
-    globalReplacements.clear();
+    locatedReplacements.clear();
+    indexedReplacements.clear();
   }
 
   public void invalidate() {
     blockCache.clear();
-    frequencyCache.clear();
   }
 
   public void invalidate(int posX, int posY, int posZ) {
@@ -259,7 +239,7 @@ public final class BoundingBoxAccess {
   }
 
   public void override(World world, int posX, int posY, int posZ, int typeId, int blockState) {
-    invalidateOverride(world, posX, posY, posZ);
+    invalidateOverride(posX, posY, posZ);
     CacheEntry cacheEntry;
     if(typeId == 0) {
       cacheEntry = EMPTY_CACHE_ENTRY;
@@ -270,42 +250,32 @@ public final class BoundingBoxAccess {
         blockState
       );
     }
-    globalReplacements.put(new Location(world, posX, posY, posZ), cacheEntry);
+    long key = bigKey(posX, posY, posZ);
+    indexedReplacements.put(key, cacheEntry);
+    locatedReplacements.put(new Location(world, posX, posY, posZ), cacheEntry);
   }
 
   public void invalidateOverridesInBounds(int chunkXMinPos, int chunkXMaxPos, int chunkZMinPos, int chunkZMaxPos) {
-    for (Location location : globalReplacements.keySet()) {
+    for (Location location : locatedReplacements.keySet()) {
       if(
         location.getX() >= chunkXMinPos && location.getX() < chunkXMaxPos &&
         location.getZ() >= chunkZMinPos && location.getZ() < chunkZMaxPos
       ) {
-        globalReplacements.remove(location);
+        long key = bigKey(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        locatedReplacements.remove(location);
+        indexedReplacements.remove(key);
       }
     }
   }
 
   public boolean currentlyInOverride(int posX, int posY, int posZ) {
-    // global replacements (escape current-chunk constrain)
-    if (!globalReplacements.isEmpty()) {
-      for (Location location : globalReplacements.keySet()) {
-        if (location.getBlockX() == posX && location.getBlockZ() == posZ && location.getBlockY() == posY) {
-          return true;
-        }
-      }
-    }
-    return false;
+    long key = bigKey(posX, posY, posZ);
+    return indexedReplacements.containsKey(key);
   }
 
   public CacheEntry overrideOf(int posX, int posY, int posZ) {
-    if (!globalReplacements.isEmpty()) {
-      for (Map.Entry<Location, CacheEntry> entry : globalReplacements.entrySet()) {
-        Location location = entry.getKey();
-        if (location.getBlockX() == posX && location.getBlockZ() == posZ && location.getBlockY() == posY) {
-          return entry.getValue();
-        }
-      }
-    }
-    return null;
+    long key = bigKey(posX, posY, posZ);
+    return indexedReplacements.get(key);
   }
 
   public List<WrappedAxisAlignedBB> constructBlock(World world, int posX, int posY, int posZ, int typeId, int blockState) {
@@ -317,8 +287,25 @@ public final class BoundingBoxAccess {
     );
   }
 
-  public void invalidateOverride(World world, int posX, int posY, int posZ) {
-    globalReplacements.remove(new Location(world, posX, posY, posZ));
+  public void invalidateOverride(int posX, int posY, int posZ) {
+    long key = bigKey(posX, posY, posZ);
+    indexedReplacements.remove(key);
+  }
+
+  public void purgeOverrides() {
+    if(indexedReplacements.isEmpty()) {
+      return;
+    }
+    indexedReplacements.values().removeIf(CacheEntry::expired);
+    locatedReplacements.values().removeIf(CacheEntry::expired);
+  }
+
+  public Map<Location, CacheEntry> locatedReplacements() {
+    return locatedReplacements;
+  }
+
+  public Map<Long, CacheEntry> indexedReplacements() {
+    return indexedReplacements;
   }
 
   private int chunkConstraintKey(int posX, int posY, int posZ) {
@@ -338,6 +325,7 @@ public final class BoundingBoxAccess {
     private final List<WrappedAxisAlignedBB> boundingBoxes;
     private final Material type;
     private final int data;
+    private final long creation = AccessHelper.now();
 
     public CacheEntry(List<WrappedAxisAlignedBB> boundingBoxes, Material type, int data) {
       this.boundingBoxes = boundingBoxes;
@@ -355,6 +343,10 @@ public final class BoundingBoxAccess {
 
     public int data() {
       return data;
+    }
+
+    public boolean expired() {
+      return AccessHelper.now() - creation > 10000;
     }
   }
 }

@@ -141,7 +141,7 @@ public final class BlockActionDispatcher implements EventProcessor {
 
         // enforce block reset later
         Synchronizer.packetSynchronize(() -> {
-          Synchronizer.synchronize(() -> boundingBoxAccess.invalidateOverride(world, blockX, blockY, blockZ));
+          Synchronizer.synchronize(() -> boundingBoxAccess.invalidateOverride(blockX, blockY, blockZ));
         });
       } else {
         if (IntaveControl.DEBUG_BLOCK_CACHING) {
@@ -169,7 +169,7 @@ public final class BlockActionDispatcher implements EventProcessor {
         boundingBoxAccess.override(world, clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ(), id, newData);
 
         Synchronizer.packetSynchronize(() ->
-          boundingBoxAccess.invalidateOverride(world, clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ()));
+          boundingBoxAccess.invalidateOverride(clickedBlock.getX(), clickedBlock.getY(), clickedBlock.getZ()));
       }
     }
   }
