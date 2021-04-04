@@ -102,10 +102,10 @@ public final class RotationStandardDeviationHeuristic extends IntaveMetaCheckPar
     if (standardDeviation < 3.0) {
       if (heuristicMeta.rotationBalancePitch++ >= 4) {
         String description = "standard deviation (pitch) (" + standardDeviation + ")";
-        Anomaly anomaly = Anomaly.anomalyOf("122", Confidence.NONE, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
+        Anomaly anomaly = Anomaly.anomalyOf("122", Confidence.MAYBE, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.LIMIT_2);
         parentCheck().saveAnomaly(player, anomaly);
-        heuristicMeta.rotationBalancePitch--;
-//        plugin.eventService().attackCancelService().requestDamageCancel(user, AttackCancelType.DCRM);
+        heuristicMeta.rotationBalancePitch -= 2;
+        plugin.eventService().attackCancelService().requestDamageCancel(user, AttackCancelType.LIGHT);
       }
     } else {
       heuristicMeta.rotationBalancePitch -= heuristicMeta.rotationBalancePitch > 0 ? 0.2 : 0;
