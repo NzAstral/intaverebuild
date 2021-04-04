@@ -18,6 +18,7 @@ import de.jpx3.intave.event.packet.PacketSubscriptionLinker;
 import de.jpx3.intave.event.service.CustomEventService;
 import de.jpx3.intave.event.service.ViolationService;
 import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.fakeplayer.event.FakePlayerEventService;
 import de.jpx3.intave.filter.Filters;
 import de.jpx3.intave.lib.asm.Frame;
 import de.jpx3.intave.logging.IntaveLogger;
@@ -88,6 +89,7 @@ public final class IntavePlugin extends JavaPlugin {
   private BukkitEventLinker eventLinker;
   private PacketSubscriptionLinker packetSubscriptionLinker;
   private EventService eventService;
+  private FakePlayerEventService fakePlayerEventService;
   private CustomEventService customEventService;
   private ViolationService violationService;
   private CheckService checkService;
@@ -440,6 +442,7 @@ public final class IntavePlugin extends JavaPlugin {
       checkService = new CheckService(this);
       violationService = new ViolationService(this);
       eventService = new EventService(this);
+      fakePlayerEventService = new FakePlayerEventService(this);
       proxyMessenger = new ProxyMessenger(this);
       sibylIntegrationService = new SibylIntegrationService(this);
 
@@ -456,6 +459,7 @@ public final class IntavePlugin extends JavaPlugin {
       checkService.setup();
       customEventService.setup();
       eventService.setup();
+      fakePlayerEventService.setup();
     } catch (Exception exception) {
       logger.error("Unable to boot: " + exception.getMessage());
       exception.printStackTrace();
@@ -618,6 +622,10 @@ public final class IntavePlugin extends JavaPlugin {
 
   public EventService eventService() {
     return eventService;
+  }
+
+  public FakePlayerEventService fakePlayerEventService() {
+    return fakePlayerEventService;
   }
 
   public BukkitEventLinker eventLinker() {

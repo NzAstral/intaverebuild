@@ -45,11 +45,13 @@ public final class FakePlayer implements TickTaskScheduler {
   private int taskId;
   private int previousLatency = 0, ticks = 0;
 
+  private final EnumWrappers.NativeGameMode gameMode;
   private final boolean invisible;
   private final boolean visibleInTablist;
   private final boolean equipArmor;
   private final boolean equipHeldItem;
   private final FakePlayerAttackSubscriber attackSubscriber;
+  public long lastPingPacketSent;
 
   FakePlayer(
     Movement movement,
@@ -79,6 +81,7 @@ public final class FakePlayer implements TickTaskScheduler {
     this.invisible = invisible;
     this.visibleInTablist = visibleInTablist;
     this.attackSubscriber = attackSubscriber;
+    this.gameMode = EnumWrappers.NativeGameMode.SURVIVAL;
     user.meta().attackData().setFakePlayer(this);
   }
 
@@ -183,11 +186,6 @@ public final class FakePlayer implements TickTaskScheduler {
     FakePlayerNameHelper.sendScoreboard(parentPlayer, teamName, wrappedGameProfile);
   }
 
-  public void updateLatency() {
-    int latency = nextLatency();
-    sendLatency(latency);
-  }
-
   private void sendLatency(int latency) {
     PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.PLAYER_INFO);
     WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromText(prefix);
@@ -211,14 +209,16 @@ public final class FakePlayer implements TickTaskScheduler {
 
   private final static int LATENCY_BOUND = 25;
 
-  private int nextLatency() {
+  public int nextLatency() {
     if (previousLatency == 0) {
       int latency = ThreadLocalRandom.current().nextInt(20, 250);
       this.previousLatency = latency;
       return latency;
     }
-    int boundingLatency = ThreadLocalRandom.current().nextInt(previousLatency - LATENCY_BOUND,
-                                                              previousLatency + LATENCY_BOUND);
+    int boundingLatency = ThreadLocalRandom.current().nextInt(
+      previousLatency - LATENCY_BOUND,
+      previousLatency + LATENCY_BOUND
+    );
     int nextLatency = Math.max(LATENCY_BOUND, boundingLatency);
     previousLatency = nextLatency;
     return nextLatency;
@@ -448,6 +448,14 @@ public final class FakePlayer implements TickTaskScheduler {
 
   public FakePlayerAttackSubscriber attackSubscriber() {
     return attackSubscriber;
+  }
+
+  public WrappedGameProfile wrappedGameProfile() {
+    return wrappedGameProfile;
+  }
+
+  public EnumWrappers.NativeGameMode gameMode() {
+    return gameMode;
   }
 
   @Override

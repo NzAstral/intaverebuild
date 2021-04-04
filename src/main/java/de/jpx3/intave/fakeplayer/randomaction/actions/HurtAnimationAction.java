@@ -1,16 +1,14 @@
 package de.jpx3.intave.fakeplayer.randomaction.actions;
 
 import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.google.common.collect.Lists;
+import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.fakeplayer.FakePlayer;
 import de.jpx3.intave.fakeplayer.FakePlayerMetaDataHelper;
+import de.jpx3.intave.fakeplayer.event.EntityVelocityCache;
 import de.jpx3.intave.fakeplayer.randomaction.ActionType;
 import de.jpx3.intave.fakeplayer.randomaction.RandomAction;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -19,10 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static de.jpx3.intave.fakeplayer.FakePlayer.SPAWN_HEALTH_STATE;
 
 public final class HurtAnimationAction extends RandomAction {
-  private final static byte DAMAGE_ANIMATION = 1;
-  private final static double VELOCITY_CONVERT_FACTOR = 8000.0D;
-  private final static List<Double> horizontalVelocities = Lists.newArrayList();
-  private final static List<Double> verticalVelocities = Lists.newArrayList();
+  private final static EntityVelocityCache entityVelocityCache = IntavePlugin.singletonInstance().fakePlayerEventService().entityVelocityCache();
   private float currentHealthState = SPAWN_HEALTH_STATE;
   private long lastNaturalHealthUpdate = System.currentTimeMillis();
 
@@ -47,6 +42,8 @@ public final class HurtAnimationAction extends RandomAction {
     }
   }
 
+  private final static byte DAMAGE_ANIMATION = 1;
+
   private void sendHurtAnimation() {
     PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.ANIMATION);
     packet.getIntegers().writeSafely(0, this.fakePlayer.fakePlayerEntityId());
@@ -58,6 +55,8 @@ public final class HurtAnimationAction extends RandomAction {
     }
     sendHealthUpdate(Math.max(1, currentHealthState - ThreadLocalRandom.current().nextInt(1, 4)));
   }
+
+  private final static double VELOCITY_CONVERT_FACTOR = 8000.0D;
 
   private void sendEntityVelocity() {
     PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.ENTITY_VELOCITY);
@@ -84,6 +83,7 @@ public final class HurtAnimationAction extends RandomAction {
   }
 
   private double randomHorizontalVelocity() {
+    List<Double> horizontalVelocities = entityVelocityCache.horizontalVelocities();
     if (horizontalVelocities.size() <= 2) {
       return ThreadLocalRandom.current().nextDouble(-0.5, 0.5);
     }
@@ -92,39 +92,11 @@ public final class HurtAnimationAction extends RandomAction {
   }
 
   private double randomVerticalVelocity() {
+    List<Double> verticalVelocities = entityVelocityCache.verticalVelocities();
     if (verticalVelocities.size() <= 2) {
       return ThreadLocalRandom.current().nextDouble(0.0, 0.4);
     }
     int position = ThreadLocalRandom.current().nextInt(0, verticalVelocities.size() - 1);
     return verticalVelocities.get(position);
-  }
-
-  public static class VelocityListener extends PacketAdapter {
-    public VelocityListener(Plugin plugin) {
-      super(plugin, PacketType.Play.Server.ENTITY_VELOCITY);
-    }
-
-    @Override
-    public void onPacketSending(PacketEvent event) {
-      PacketContainer packet = event.getPacket();
-      double motionX = packet.getIntegers().readSafely(1) / VELOCITY_CONVERT_FACTOR;
-      double motionY = packet.getIntegers().readSafely(2) / VELOCITY_CONVERT_FACTOR;
-      double motionZ = packet.getIntegers().readSafely(3) / VELOCITY_CONVERT_FACTOR;
-      registerHorizontalVelocity(motionX);
-      registerVerticalVelocity(motionY);
-      registerHorizontalVelocity(motionZ);
-    }
-
-    private void registerHorizontalVelocity(double velocity) {
-      if (!horizontalVelocities.contains(velocity)) {
-        horizontalVelocities.add(velocity);
-      }
-    }
-
-    private void registerVerticalVelocity(double velocity) {
-      if (!verticalVelocities.contains(velocity)) {
-        verticalVelocities.add(velocity);
-      }
-    }
   }
 }
