@@ -183,7 +183,7 @@ public final class FakePlayer implements TickTaskScheduler {
     } catch (InvocationTargetException e) {
       e.printStackTrace();
     }
-    FakePlayerNameHelper.sendScoreboard(parentPlayer, teamName, wrappedGameProfile);
+    FakePlayerScoreboardAccessor.sendScoreboard(parentPlayer, teamName, wrappedGameProfile, invisible);
   }
 
   private void sendLatency(int latency) {

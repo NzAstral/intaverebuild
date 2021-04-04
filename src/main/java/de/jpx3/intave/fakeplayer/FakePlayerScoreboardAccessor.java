@@ -2,23 +2,25 @@ package de.jpx3.intave.fakeplayer;
 
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.google.common.collect.ImmutableList;
-import net.minecraft.server.v1_8_R3.PacketPlayOutScoreboardTeam;
-import net.minecraft.server.v1_8_R3.PlayerConnection;
-import net.minecraft.server.v1_8_R3.Scoreboard;
-import net.minecraft.server.v1_8_R3.ScoreboardTeam;
+import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-public final class FakePlayerNameHelper {
+public final class FakePlayerScoreboardAccessor {
   public static void sendScoreboard(
     Player player,
     String teamName,
-    WrappedGameProfile fakePlayerProfile
+    WrappedGameProfile fakePlayerProfile,
+    boolean hideNameTag
   ) {
     PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
     ImmutableList<String> teamList = ImmutableList.of(fakePlayerProfile.getName());
     ScoreboardTeam scoreboardTeam = new ScoreboardTeam(new Scoreboard(), teamName);
     PacketPlayOutScoreboardTeam packet = new PacketPlayOutScoreboardTeam(scoreboardTeam, teamList, 3);
     connection.sendPacket(packet);
+    if (hideNameTag) {
+      scoreboardTeam.setNameTagVisibility(ScoreboardTeamBase.EnumNameTagVisibility.NEVER);
+      connection.sendPacket(new PacketPlayOutScoreboardTeam(scoreboardTeam, 2));
+    }
   }
 }
