@@ -11,6 +11,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
+import org.bukkit.material.Attachable;
 import org.bukkit.material.Directional;
 import org.bukkit.material.MaterialData;
 import org.bukkit.material.Openable;
@@ -144,13 +145,14 @@ public final class MovementContextHelper {
   public static boolean isOnLadder(User user, double positionX, double positionY, double positionZ) {
     Player player = user.player();
     UserMetaClientData clientData = user.meta().clientData();
-    Material type = BukkitBlockAccess.cacheAppliedTypeAccess(
-      user, player.getWorld(),
+    Block block = BukkitBlockAccess.blockAccess(
+      player.getWorld(),
       WrappedMathHelper.floor(positionX),
       WrappedMathHelper.floor(positionY),
       WrappedMathHelper.floor(positionZ)
     );
-    if (clientData.protocolVersion() > 47 && type.name().contains("TRAP_DOOR")) {
+    Material type = block.getType();
+    if (clientData.combatUpdate() && type.name().contains("TRAP_DOOR") && canGoThroughTrapDoorOnLadder(block)) {
       return true;
     }
     return type == Material.LADDER || type == Material.VINE;
@@ -161,10 +163,10 @@ public final class MovementContextHelper {
     BlockState blockState = block.getState();
     MaterialData data = blockState.getData();
     if (data instanceof Openable && (((Openable) data).isOpen())) {
-      Directional directional = (Directional) blockState.getData();
-      Location downLocation = location.clone().add(0.0, -1.0, 0.0);
+      Attachable directional = (Attachable) blockState.getData();
+      Location downLocation = location.clone().add(0.0, -1, 0.0);
       Block downBlock = BukkitBlockAccess.blockAccess(downLocation);
-      if (!(downBlock instanceof Directional)) {
+      if (!(data instanceof Directional)) {
         return false;
       }
       Directional downBlockDirectional = (Directional) downBlock.getState().getData();

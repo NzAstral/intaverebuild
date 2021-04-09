@@ -28,10 +28,7 @@ import de.jpx3.intave.world.collider.result.ComplexColliderSimulationResult;
 import de.jpx3.intave.world.collider.result.QuickColliderSimulationResult;
 import de.jpx3.intave.world.collision.Collision;
 import de.jpx3.intave.world.waterflow.Waterflow;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -288,18 +285,19 @@ public final class Physics extends IntaveCheck {
     double differenceZ = predictedZ - receivedMotionZ;
     double distance = MathHelper.resolveDistance(differenceX, differenceY, differenceZ);
 
-    boolean onLadder = MovementContextHelper.isOnLadder(user, positionX, positionY + 1.5, positionZ);
-    onLadder |= MovementContextHelper.isOnLadder(user, positionX, positionY - 0.5, positionZ);
-    onLadder |= MovementContextHelper.isOnLadder(user, positionX, positionY, positionZ);
-    boolean onLadderLast = movementData.onLadderLast;
-    movementData.onLadderLast = onLadder;
-    onLadder = movementData.onLadderLast || onLadderLast;
+    boolean onLadderCurrent = MovementContextHelper.isOnLadder(user, positionX, positionY, positionZ);
+    boolean onLadder = onLadderCurrent | movementData.onLadderLast;
+    movementData.onLadderLast = onLadderCurrent;
 
     boolean skipVLCalculation = distance <= 1e-5;
     double verticalViolationIncrease = skipVLCalculation ? 0 : calculateVerticalViolationLevelIncrease(user, predictedY, onLadder);
     double horizontalViolationIncrease = skipVLCalculation ? 0 : calculateHorizontalViolationIncrease(user, predictedX, predictedZ, onLadder);
 
-    if (!skipVLCalculation && movementData.pastVelocity < 10) {
+    if (onLadder) {
+      movementData.artificialFallDistance = 0;
+    }
+
+    if (!skipVLCalculation && movementData.pastExternalVelocity < 10) {
       if (horizontalViolationIncrease > 0) {
         horizontalViolationIncrease = Math.max(horizontalViolationIncrease, 1.0);
       }

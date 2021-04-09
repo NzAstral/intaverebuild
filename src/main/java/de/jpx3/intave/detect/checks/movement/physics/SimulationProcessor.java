@@ -148,7 +148,6 @@ public final class SimulationProcessor {
     int direction = directionFrom(differenceX, differenceZ, yaw);
     int keyForward = forwardKeyFrom(direction);
     int keyStrafe = strafeKeyFrom(direction);
-//    user.player().sendMessage(forwardKeyFrom(direction) + ", " + strafeKeyFrom(direction) + " DIRECTION=" + direction + " " + yaw);
     boolean handActive = inventoryData.handActive();
     boolean attackReduce = !AttackDispatcher.REDUCING_DISABLED && movementData.sprintingAllowed() && user.meta().movementData().pastPlayerAttackPhysics == 0;
     if (movementData.sprinting && keyForward != 1) {
