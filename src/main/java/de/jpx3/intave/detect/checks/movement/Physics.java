@@ -28,10 +28,7 @@ import de.jpx3.intave.world.collider.result.ComplexColliderSimulationResult;
 import de.jpx3.intave.world.collider.result.QuickColliderSimulationResult;
 import de.jpx3.intave.world.collision.Collision;
 import de.jpx3.intave.world.waterflow.Waterflow;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -648,18 +645,20 @@ public final class Physics extends IntaveCheck {
     }
 
     // Jump out of water
-    double liquidPositionY;
-    if (clientData.waterUpdate()) {
-      liquidPositionY = receivedMotionY + 0.6f - movementData.positionY + movementData.verifiedPositionY;
-    } else {
-      liquidPositionY = receivedMotionY + 0.6f;
-    }
-    boolean offsetPositionInLiquid = MovementContextHelper.isOffsetPositionInLiquid(
-      player, movementData.boundingBox(), receivedMotionX, liquidPositionY, receivedMotionZ
-    );
-    boolean maybeCollidedHorizontally = Collision.nearBySolidBlock(player.getWorld(), movementData.boundingBox().grow(0.2));
-    if (maybeCollidedHorizontally && offsetPositionInLiquid && receivedMotionY < 0.4) {
-      legitimateDeviation = Math.max(legitimateDeviation, 0.7f);
+    if (movementData.pastWaterMovement <= 3) {
+      double liquidPositionY;
+      if (clientData.waterUpdate()) {
+        liquidPositionY = receivedMotionY + 0.6f - movementData.positionY + movementData.verifiedPositionY;
+      } else {
+        liquidPositionY = receivedMotionY + 0.6f;
+      }
+      boolean offsetPositionInLiquid = MovementContextHelper.isOffsetPositionInLiquid(
+        player, movementData.boundingBox(), receivedMotionX, liquidPositionY, receivedMotionZ
+      );
+      boolean maybeCollidedHorizontally = Collision.nearBySolidBlock(player.getWorld(), movementData.boundingBox().grow(0.2));
+      if (maybeCollidedHorizontally && offsetPositionInLiquid && receivedMotionY < 0.4) {
+        legitimateDeviation = Math.max(legitimateDeviation, 0.7f);
+      }
     }
 
     double abuseVertically = Math.max(0, differenceY - legitimateDeviation);
