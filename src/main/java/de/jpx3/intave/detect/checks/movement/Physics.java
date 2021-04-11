@@ -576,6 +576,7 @@ public final class Physics extends IntaveCheck {
   ) {
     Player player = user.player();
     User.UserMeta meta = user.meta();
+    UserMetaClientData clientData = meta.clientData();
     UserMetaMovementData movementData = meta.movementData();
     double distanceMoved = MathHelper.resolveHorizontalDistance(
       movementData.positionX, movementData.positionZ,
@@ -583,7 +584,9 @@ public final class Physics extends IntaveCheck {
     );
     boolean swimming = movementData.swimming;
     boolean elytraFlying = movementData.elytraFlying;
+    double receivedMotionX = movementData.motionX();
     double receivedMotionY = movementData.motionY();
+    double receivedMotionZ = movementData.motionZ();
     double differenceY = Math.abs(receivedMotionY - predictedY);
     boolean accountedSkippedMovement = movementData.recentlyEncounteredFlyingPacket(2);
     double legitimateDeviation = accountedSkippedMovement ? 1e-2 : 1e-5;
@@ -644,17 +647,22 @@ public final class Physics extends IntaveCheck {
       legitimateDeviation = 0.03;
     }
 
-    double abuseVertically = Math.max(0, differenceY - legitimateDeviation);
-
     // Jump out of water
-    if (movementData.inWater && abuseVertically > 1e-5 && receivedMotionY > 0.0 && receivedMotionY < 0.35) {
-      if (Collision.nearBySolidBlock(player.getWorld(), movementData.boundingBox().grow(0.2))) {
-        boolean airAbove = !MovementContextHelper.isAllLiquid(player.getWorld(), movementData.boundingBox());
-        if (airAbove) {
-          abuseVertically = 0;
-        }
-      }
+    double liquidPositionY;
+    if (clientData.waterUpdate()) {
+      liquidPositionY = receivedMotionY + 0.6f - movementData.positionY + movementData.verifiedPositionY;
+    } else {
+      liquidPositionY = receivedMotionY + 0.6f;
     }
+    boolean offsetPositionInLiquid = MovementContextHelper.isOffsetPositionInLiquid(
+      player, movementData.boundingBox(), receivedMotionX, liquidPositionY, receivedMotionZ
+    );
+    boolean maybeCollidedHorizontally = Collision.nearBySolidBlock(player.getWorld(), movementData.boundingBox().grow(0.2));
+    if (maybeCollidedHorizontally && offsetPositionInLiquid && receivedMotionY < 0.4) {
+      legitimateDeviation = Math.max(legitimateDeviation, 0.7f);
+    }
+
+    double abuseVertically = Math.max(0, differenceY - legitimateDeviation);
 
     double multiplier = abuseVertically > 0.009 ? 205.0 : 10.0;
     if (criticalWeb) {
@@ -667,7 +675,7 @@ public final class Physics extends IntaveCheck {
 
     // Long teleport
     if (movementData.pastLongTeleport <= 10 && movementData.motionY() < -0.097 && movementData.motionY() > -0.099) {
-      double horizontalDistance = Math.hypot(movementData.motionX(), movementData.motionZ());
+      double horizontalDistance = Math.hypot(receivedMotionX, receivedMotionZ);
       if (horizontalDistance < 0.2) {
         abuseVertically = 0;
       }

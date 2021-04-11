@@ -519,18 +519,6 @@ public class DefaultPoseSimulator extends PoseSimulator {
         motionVector.motionY -= gravity / 16.0D;
       }
     }
-    double liquidPositionY;
-    if (clientData.waterUpdate()) {
-      liquidPositionY = motionVector.motionY + 0.6f - positionY + movementData.verifiedPositionY;
-    } else {
-      liquidPositionY = motionVector.motionY + 0.6f;
-    }
-    boolean offsetPositionInLiquid = MovementContextHelper.isOffsetPositionInLiquid(
-      player, entityBoundingBox, motionVector.motionX, liquidPositionY, motionVector.motionZ
-    );
-    if (collidedHorizontally && offsetPositionInLiquid) {
-      motionVector.motionY = 0.3f;
-    }
   }
 
   private void simulateLavaAfter(
