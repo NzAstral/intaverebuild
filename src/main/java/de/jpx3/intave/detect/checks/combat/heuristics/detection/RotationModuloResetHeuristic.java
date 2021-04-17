@@ -2,6 +2,7 @@ package de.jpx3.intave.detect.checks.combat.heuristics.detection;
 
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.detect.IntaveMetaCheckPart;
 import de.jpx3.intave.detect.checks.combat.Heuristics;
 import de.jpx3.intave.detect.checks.combat.heuristics.Anomaly;
@@ -118,6 +119,9 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
     if(movementData.lastTeleport == 0) {
       return;
     }
+    if (ProtocolLibAdapter.serverVersion().isAtLeast(ProtocolLibAdapter.COMBAT_UPDATE)) {
+      return;
+    }
 
     double yawMotion = Math.abs(movementData.lastRotationYaw - movementData.rotationYaw);
 
@@ -125,6 +129,7 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
 //      player.sendMessage("n " + meta.lastLastYawMotion + " " + meta.lastYawMotion + " " + yawMotion + " " + meta.lastSwing);
 
     if(meta.lastLastYawMotion < 6 && meta.lastYawMotion > 50 && yawMotion < 3) {
+      // lastLastYawMotion < 7 lastYawMotion > 50 yawMotion < 7 lastSwing <= 3
       String description = "rotation hop (lastMotion:" +
         MathHelper.formatDouble(meta.lastYawMotion, 2)
         + " currentMotion:" + MathHelper.formatDouble(yawMotion, 2) + " swing:" + meta.lastSwing + ")";
