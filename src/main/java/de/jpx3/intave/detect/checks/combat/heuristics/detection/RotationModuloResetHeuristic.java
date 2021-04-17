@@ -129,7 +129,7 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
             + MathHelper.formatDouble(meta.lastLastYawMotion, 2)
             + " lMotion:" +  MathHelper.formatDouble(meta.lastYawMotion, 2)
             + " curMotion:" + MathHelper.formatDouble(yawMotion, 2)
-            + " swing:" + meta.lastSwing
+            + " swing:" + Math.max(meta.lastSwing,99)
             + " attack:" + meta.lastAttack
             + " tp:" + movementData.lastTeleport
             + ")";
