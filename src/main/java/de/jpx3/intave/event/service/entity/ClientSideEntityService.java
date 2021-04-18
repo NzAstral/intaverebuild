@@ -385,7 +385,6 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     entity.serverPosZ = WrappedEntity.getPositionLong(posZ);
     entity.setPositionAndRotationSpawnMob(posX, posY, posZ, posY);
     synchronizedEntityMap.put(entityId, entity);
-    Bukkit.broadcastMessage("" + posX + " " + posY + " " + posZ);
   }
 
   private void processEntitySpawn(
