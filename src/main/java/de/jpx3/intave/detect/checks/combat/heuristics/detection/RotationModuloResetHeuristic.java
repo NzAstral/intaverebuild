@@ -183,7 +183,7 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
     String out = "[";
     for(int i = 0; i < meta.rotationMotions.length; i++) {
       double value = meta.rotationMotions[Math.floorMod(i + meta.index - 3, meta.rotationMotions.length)];
-      out += MathHelper.formatDouble(value, 2) + ",";
+      out += MathHelper.formatDouble(value, 2) + "/";
     }
     out += MathHelper.formatDouble(yawMotion, 2);
     out += "]";
