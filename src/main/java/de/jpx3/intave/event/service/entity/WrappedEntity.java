@@ -183,7 +183,6 @@ public class WrappedEntity implements Cloneable {
       newPosY = (double) serverPosY / 4096d;
       alternativeNewPosY = newPosY;
       newPosZ = (double) serverPosZ / 4096d;
-
     } else {
       this.serverPosX += packet.getBytes().readSafely(0);
       this.serverPosY += packet.getBytes().readSafely(1);

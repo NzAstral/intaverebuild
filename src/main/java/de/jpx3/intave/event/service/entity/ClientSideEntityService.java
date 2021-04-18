@@ -332,14 +332,11 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     Integer entityID = packet.getIntegers().read(0);
 
     if (NEW_POSITION_PROCESSING) {
-      // 1.9+
-      // TODO: Das spawnen von entities auf 1.9+ komplett nochmal überprüfen da posX/Y/Z statt serverPosX/Y/Z genutzt wird
-      // TODO: Ich hatte auf 1.9.4 noch false positives für hitbox wenn sich zwei spieler bewegt hatten (vielleicht teleport packets)
       double posX = packet.getDoubles().read(0);
       double posY = packet.getDoubles().read(1);
       double posZ = packet.getDoubles().read(2);
 
-      processEntitySpawn(
+      processEntitySpawnNewVersion(
         user, entityName, isEntityLiving, entityID,
         posX, posY, posZ,
         boundaries
@@ -374,7 +371,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     }
   }
 
-  private void processEntitySpawn(
+  private void processEntitySpawnNewVersion(
     User user, String entityName,
     boolean isEntityLiving, int entityId,
     double posX, double posY, double posZ,
@@ -383,11 +380,12 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     UserMetaSynchronizeData synchronizeData = user.meta().synchronizeData();
     Map<Integer, WrappedEntity> synchronizedEntityMap = synchronizeData.synchronizedEntityMap();
     WrappedEntity entity = new WrappedEntity(entityName, entityId, isEntityLiving, boundaries);
-    entity.serverPosX = WrappedMathHelper.floor(posX * 32d);
-    entity.serverPosY = WrappedMathHelper.floor(posY * 32d);
-    entity.serverPosZ = WrappedMathHelper.floor(posZ * 32d);
+    entity.serverPosX = WrappedEntity.getPositionLong(posX);
+    entity.serverPosY = WrappedEntity.getPositionLong(posY);
+    entity.serverPosZ = WrappedEntity.getPositionLong(posZ);
     entity.setPositionAndRotationSpawnMob(posX, posY, posZ, posY);
     synchronizedEntityMap.put(entityId, entity);
+    Bukkit.broadcastMessage("" + posX + " " + posY + " " + posZ);
   }
 
   private void processEntitySpawn(
