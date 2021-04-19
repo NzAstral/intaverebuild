@@ -260,7 +260,7 @@ public final class MovementEmulationEngine {
     if (applyPhysics) {
       if (movementData.inWeb) {
         motionX *= 0.25D;
-        motionY *= 0.05f;
+        motionY *= 0.25f;
         motionZ *= 0.25D;
       }
       movementData.lastOnGround = movementData.onGround;
