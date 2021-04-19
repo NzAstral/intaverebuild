@@ -35,6 +35,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
   private final IntavePlugin plugin;
   private String dataWatcherEntityFieldName;
   private final static boolean NEW_POSITION_PROCESSING = ProtocolLibAdapter.serverVersion().isAtLeast(ProtocolLibAdapter.COMBAT_UPDATE);
+  private final static boolean HEALTH_PROCESSING_1_10 = ProtocolLibAdapter.serverVersion().isAtLeast(ProtocolLibAdapter.FROSTBURN_UPDATE);
 
   public ClientSideEntityService(IntavePlugin plugin) {
     this.plugin = plugin;
@@ -464,8 +465,15 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
   private Float readHealthOf(List<WrappedWatchableObject> watchableObjects) {
     for (WrappedWatchableObject watchableObject : watchableObjects) {
       int index = watchableObject.getIndex();
-      if (index == 6) {
-        return (Float) watchableObject.getRawValue();
+
+      if(HEALTH_PROCESSING_1_10) {
+        if (index == 7) {
+          return (Float) watchableObject.getRawValue();
+        }
+      }else {
+        if (index == 6) {
+          return (Float) watchableObject.getRawValue();
+        }
       }
     }
     return null;
