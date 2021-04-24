@@ -25,6 +25,7 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Condition;
 
 public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heuristics, RotationModuloResetHeuristic.RotationModuloResetHeuristicMeta> {
   private final IntavePlugin plugin;
@@ -227,13 +228,21 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
           double maxValue = Math.max(values[0], values[1]);
           if(minValue < 10 && maxValue > 65) {
             addedViolation = 6;
-            confidence = Confidence.LIKELY;
+            if(valueOfSnap > 90) {
+              confidence = Confidence.LIKELY;
+            }
             description += " pYaw:" + MathHelper.formatDouble(meta.perfectRotations[Math.floorMod(meta.index - 2, meta.perfectRotations.length)], 2)
               + "/" + MathHelper.formatDouble(meta.perfectRotations[Math.floorMod(meta.index - 1, meta.perfectRotations.length)], 2);
           }
         }
       }
-      meta.violationLevel += addedViolation;
+
+      if(valueOfSnap > 190) {
+        addedViolation = 9;
+        confidence = Confidence.VERY_LIKELY;
+      }
+
+        meta.violationLevel += addedViolation;
       description += ") vl:" + meta.violationLevel;
 
       int options = Anomaly.AnomalyOption.DELAY_128s;
