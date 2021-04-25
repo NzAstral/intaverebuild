@@ -58,16 +58,10 @@ public final class EntityIdentifierPrefetch {
   }
 
   private static int[] reserveEntityIds(int amount) {
-    if (!Bukkit.isPrimaryThread()) {
-      throw new IntaveInternalException("Cannot reserve entity id off main thread");
-    }
     return IntStream.range(0, amount).map(i -> reserveEntityId()).toArray();
   }
 
   private static int reserveEntityId() {
-    if (!Bukkit.isPrimaryThread()) {
-      throw new IntaveInternalException("Cannot reserve entity id off main thread");
-    }
     int newId = 0;
     try {
       newId = ENTITY_COUNT_FIELD.getInt(null);

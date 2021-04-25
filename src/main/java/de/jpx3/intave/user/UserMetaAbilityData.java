@@ -25,9 +25,11 @@ public final class UserMetaAbilityData {
     if(hasPlayer) {
       this.allowFlying = player.getAllowFlight();
       this.flying = player.isFlying();
+      this.health = (float) player.getHealth();
       setupDefaultGameMode(player.getGameMode());
     } else {
       this.allowFlying = this.flying = false;
+      this.health = 20.0f;
     }
   }
 
