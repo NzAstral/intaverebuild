@@ -457,6 +457,10 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     User user = UserRepository.userOf(player);
     PacketContainer packet = event.getPacket();
     Integer entityID = packet.getIntegers().read(0);
+    if (player.getEntityId() == entityID) {
+      synchronizePlayerHealth(user, packet);
+      return;
+    }
     WrappedEntity entity = entityByIdentifier(user, entityID);
     if (entity == null) {
       return;
@@ -469,6 +473,15 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       } else {
         updateHealthState(entity, health);
       }
+    }
+  }
+
+  private void synchronizePlayerHealth(User user, PacketContainer packet) {
+    Float health = readHealthOf(packet.getWatchableCollectionModifier().read(0));
+    if (health != null) {
+      UserMetaAbilityData abilityData = user.meta().abilityData();
+      abilityData.health = health;
+      abilityData.ticksToLastHealthUpdate = 0;
     }
   }
 

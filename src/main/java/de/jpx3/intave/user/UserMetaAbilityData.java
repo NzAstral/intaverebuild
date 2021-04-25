@@ -17,6 +17,8 @@ public final class UserMetaAbilityData {
 
   private float flySpeed = 0.05f;
   private float walkSpeed = 0.1f;
+  public float health;
+  public int ticksToLastHealthUpdate;
 
   public UserMetaAbilityData(Player player) {
     boolean hasPlayer = (player != null);

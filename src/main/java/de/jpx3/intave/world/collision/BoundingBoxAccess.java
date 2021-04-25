@@ -34,7 +34,7 @@ public final class BoundingBoxAccess {
 
     if(ProtocolLibAdapter.AQUATIC_UPDATE.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v13BoundingBoxResolver";
-      acClass = "de.jpx3.intave.world.collision.resolver.ac.v13AlwaysCollidingBoundingBox";
+//      acClass = "de.jpx3.intave.world.collision.resolver.ac.v13AlwaysCollidingBoundingBox";
     } else if(ProtocolLibAdapter.COLOR_UPDATE.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v12BoundingBoxResolver";
       acClass = "de.jpx3.intave.world.collision.resolver.ac.v12AlwaysCollidingBoundingBox";
