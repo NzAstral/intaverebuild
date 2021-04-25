@@ -222,7 +222,7 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
           if(minValue < 10 && maxValue > 65) {
             if(valueOfSnap > 360) {
               confidence = Confidence.LIKELY;
-            } else if(valueOfSnap > 90) {
+            } else if(valueOfSnap > 80) {
               confidence = Confidence.PROBABLE;
             } else {
               confidence = Confidence.MAYBE;
@@ -244,12 +244,6 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
         Anomaly anomaly = Anomaly.anomalyOf("102", confidence, Anomaly.Type.KILLAURA, description, options);
         parentCheck().saveAnomaly(player, anomaly);
       }
-    }
-
-    if(System.currentTimeMillis() - meta.lastViolationTimeStamp > 15000 && (movementData.motionX() + movementData.motionZ() != 0)) {
-      if(meta.violationLevel > 0)
-        meta.violationLevel--;
-      meta.lastViolationTimeStamp = System.currentTimeMillis();
     }
 
     prepareNextTick(meta, yawMotion);
@@ -283,8 +277,6 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
 
 
   public static final class RotationModuloResetHeuristicMeta extends UserCustomCheckMeta {
-    private int violationLevel;
-    private long lastViolationTimeStamp;
     // used to disable the check on startup
     private int rotationPacketCounter;
     private double[] rotationMotions = new double[2];
