@@ -167,13 +167,10 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
         double diff = Math.abs(WrappedMathHelper.wrapAngleTo180_double(attackData.perfectYaw() - movementData.rotationYaw));
         meta.perfectRotations[meta.index] = diff;
       }
-    } else {
-      meta.perfectRotations[meta.index] = Double.NaN;
     }
 
-    if (movementData.lastTeleport <= 5) {
-      meta.rotationMotions = new double[meta.rotationMotions.length];
-      return;
+    if(meta.lastAttack > 3) {
+      meta.perfectRotations[meta.index] = Double.POSITIVE_INFINITY;
     }
 
     boolean isLegit = false;
@@ -191,69 +188,63 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
       }
     }
 
-    if (yawMotion > 12) {
+    if (yawMotion > 9) {
       isLegit = true;
     }
 
-    if (!isLegit && (meta.lastSwing <= 5 || meta.lastAttack <= 5) && meta.rotationPacketCounter > 10) {
-      int addedViolation = 1;
-      Confidence confidence = Confidence.MAYBE;
+    if (!isLegit && (meta.lastSwing <= 3 || meta.lastAttack <= 3) && meta.rotationPacketCounter > 10 && movementData.lastTeleport > 7) {
+      Confidence confidence = Confidence.NONE;
       String description = "rotation snap ("
         + getArrayAsString(meta.rotationMotions, yawMotion, meta.index)
         + " s:" + Math.min(meta.lastSwing, 99)
         + "/" + Math.min(meta.lastAttack, 99);
 
       double valueOfSnap = meta.rotationMotions[getHopIndex(meta)];
-      if(valueOfSnap > 90) {
-        if(meta.lastAttack <= 5) {
-          confidence = Confidence.PROBABLE;
-          addedViolation = 3;
-        } else {
-          addedViolation = 2;
-        }
+      if(valueOfSnap > 90 && meta.lastAttack <= 3) {
+        confidence = Confidence.COULDBE;
       }
 
       UserMetaAttackData attackData = user.meta().attackData();
       if(attackData.lastAttackedEntity() != null) {
-        double[] values = new double[] { meta.perfectRotations[Math.floorMod(meta.index - 2, meta.perfectRotations.length)],
-          meta.perfectRotations[Math.floorMod(meta.index - 1, meta.perfectRotations.length)]};
-        if(!Double.isNaN(values[0]) && !Double.isNaN(values[1])) {
+        double values[] = new double[] {
+          meta.perfectRotations[Math.floorMod(getHopIndex(meta) - 1, meta.perfectRotations.length)],
+          meta.perfectRotations[Math.floorMod(getHopIndex(meta), meta.perfectRotations.length)]};
+
+        if(values[1] == Double.POSITIVE_INFINITY) {
+          values[1] = Math.abs(WrappedMathHelper.wrapAngleTo180_double(attackData.perfectYaw() - movementData.rotationYaw));
+        }
+
+        if(values[0] != Double.POSITIVE_INFINITY && values[1] != Double.POSITIVE_INFINITY)
+        {
           double minValue = Math.min(values[0], values[1]);
           double maxValue = Math.max(values[0], values[1]);
-          if(minValue < 10 && maxValue > 65) {
-            addedViolation = 6;
-            if(valueOfSnap > 90) {
+
+          if(minValue < 10 && maxValue > 50) {
+            if(valueOfSnap > 360) {
               confidence = Confidence.LIKELY;
+            } else if(valueOfSnap > 80) {
+              confidence = Confidence.PROBABLE;
+            } else {
+              confidence = Confidence.MAYBE;
             }
-            description += " pYaw:" + MathHelper.formatDouble(meta.perfectRotations[Math.floorMod(meta.index - 2, meta.perfectRotations.length)], 2)
-              + "/" + MathHelper.formatDouble(meta.perfectRotations[Math.floorMod(meta.index - 1, meta.perfectRotations.length)], 2);
+            description += " pYaw:" + MathHelper.formatDouble(minValue, 2)
+              + "/" + MathHelper.formatDouble(maxValue, 2);
           }
         }
       }
 
-      if(valueOfSnap > 190) {
-        addedViolation = 9;
-        confidence = Confidence.VERY_LIKELY;
+      if(valueOfSnap >= 178 && confidence.level() < Confidence.LIKELY.level()) {
+        confidence = Confidence.PROBABLE;
       }
 
-        meta.violationLevel += addedViolation;
-      description += ") vl:" + meta.violationLevel;
+      description += " con:" + confidence.level();
 
-      int options = Anomaly.AnomalyOption.DELAY_128s;
-      Anomaly anomaly = Anomaly.anomalyOf("102", confidence, Anomaly.Type.KILLAURA, description, options);
-      parentCheck().saveAnomaly(player, anomaly);
+      if(confidence.level() != 0) {
+        int options = Anomaly.AnomalyOption.DELAY_128s;
+        Anomaly anomaly = Anomaly.anomalyOf("102", confidence, Anomaly.Type.KILLAURA, description, options);
+        parentCheck().saveAnomaly(player, anomaly);
+      }
     }
-
-    if(System.currentTimeMillis() - meta.lastViolationTimeStamp > 15000 && (movementData.motionX() + movementData.motionZ() != 0)) {
-      player.sendMessage("substraced " + meta.violationLevel);
-      if(meta.violationLevel > 0)
-        meta.violationLevel--;
-      meta.lastViolationTimeStamp = System.currentTimeMillis();
-    }
-
-//    if (meta.lastLastYawMotion < 7 && meta.lastYawMotion > 50 && yawMotion < 6) {
-
-//    }
 
     prepareNextTick(meta, yawMotion);
   }
@@ -270,7 +261,7 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
   }
 
   private int getHopIndex(RotationModuloResetHeuristicMeta meta) {
-    return Math.floorMod(meta.index - 1, meta.rotationMotions.length);
+    return Math.floorMod(meta.index , meta.rotationMotions.length);
   }
 
   private void prepareNextTick(RotationModuloResetHeuristicMeta meta, double yawMotion) {
@@ -286,12 +277,10 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
 
 
   public static final class RotationModuloResetHeuristicMeta extends UserCustomCheckMeta {
-    private int violationLevel;
-    private long lastViolationTimeStamp;
     // used to disable the check on startup
     private int rotationPacketCounter;
-    private double[] rotationMotions = new double[4];
-    private double[] perfectRotations = new double[4];
+    private double[] rotationMotions = new double[2];
+    private double[] perfectRotations = new double[2];
     private int index;
     private int lastSwing;
     private int lastAttack;

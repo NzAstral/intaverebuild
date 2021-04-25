@@ -12,17 +12,14 @@ import de.jpx3.intave.event.packet.PacketDescriptor;
 import de.jpx3.intave.event.packet.PacketSubscription;
 import de.jpx3.intave.event.packet.Sender;
 import de.jpx3.intave.event.service.entity.WrappedEntity;
-import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.UserMetaAttackData;
-import de.jpx3.intave.user.UserMetaClientData;
-import de.jpx3.intave.user.UserRepository;
+import de.jpx3.intave.user.*;
 import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_BOUNTIFUL_UPDATE;
 
-public final class AttackDeadEntityHeuristic extends IntaveCheckPart<Heuristics> {
-  public AttackDeadEntityHeuristic(Heuristics parentCheck) {
-    super(parentCheck);
+public final class AttackInInvalidStateHeuristic extends IntaveCheckPart<Heuristics> {
+  public AttackInInvalidStateHeuristic(Heuristics heuristics) {
+    super(heuristics);
   }
 
   @PacketSubscription(
@@ -33,6 +30,25 @@ public final class AttackDeadEntityHeuristic extends IntaveCheckPart<Heuristics>
   )
   public void receiveAttack(PacketEvent event) {
     Player player = event.getPlayer();
+    PacketContainer packet = event.getPacket();
+    checkGUIScreen(player);
+    checkDeadEntity(player, packet);
+  }
+
+  private void checkGUIScreen(Player player) {
+    User user = userOf(player);
+    UserMetaClientData clientData = user.meta().clientData();
+    UserMetaAbilityData abilityData = user.meta().abilityData();
+    float health = abilityData.health;
+    if (health <= 0f) {
+      int ticksAgo = abilityData.ticksToLastHealthUpdate;
+      String description = "attacked in gui screen (version " + clientData.versionString() + ") | " + ticksAgo;
+      Anomaly anomaly = Anomaly.anomalyOf("161", Confidence.NONE, Anomaly.Type.KILLAURA, description);
+      parentCheck().saveAnomaly(player, anomaly);
+    }
+  }
+
+  private void checkDeadEntity(Player player, PacketContainer packet) {
     User user = UserRepository.userOf(player);
     UserMetaAttackData attackData = user.meta().attackData();
     UserMetaClientData clientData = user.meta().clientData();
@@ -43,10 +59,10 @@ public final class AttackDeadEntityHeuristic extends IntaveCheckPart<Heuristics>
     if (clientData.protocolVersion() != PROTOCOL_VERSION_BOUNTIFUL_UPDATE) {
       return;
     }
-    PacketContainer packet = event.getPacket();
     EnumWrappers.EntityUseAction action = packet.getEntityUseActions().read(0);
     if (action == EnumWrappers.EntityUseAction.ATTACK && entity.dead) {
-      Anomaly anomaly = Anomaly.anomalyOf("161", Confidence.NONE, Anomaly.Type.KILLAURA, "attacked a dead entity");
+      String description = "attacked a dead entity";
+      Anomaly anomaly = Anomaly.anomalyOf("161", Confidence.NONE, Anomaly.Type.KILLAURA, description);
       parentCheck().saveAnomaly(player, anomaly);
     }
   }

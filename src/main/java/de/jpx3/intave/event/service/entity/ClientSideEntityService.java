@@ -153,9 +153,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       FakePlayer fakePlayer = attackData.fakePlayer();
       String entityNameOfDataWatcher = entityNameOf(entity);
       if (fakePlayer != null && fakePlayer.fakePlayerEntityId() == entityID) {
-        entityName = "<Intave-Bot>";
-      } else if (!entityNameOfDataWatcher.equals("Player")) {
-        entityName = "<Simulated-Player>";
+        entityName = "Intave-Bot";
       } else {
         entityName = entityNameOfDataWatcher;
       }
@@ -457,6 +455,10 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     User user = UserRepository.userOf(player);
     PacketContainer packet = event.getPacket();
     Integer entityID = packet.getIntegers().read(0);
+    if (player.getEntityId() == entityID) {
+      synchronizePlayerHealth(player, packet);
+      return;
+    }
     WrappedEntity entity = entityByIdentifier(user, entityID);
     if (entity == null) {
       return;
@@ -469,6 +471,17 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       } else {
         updateHealthState(entity, health);
       }
+    }
+  }
+
+  private void synchronizePlayerHealth(Player player, PacketContainer packet) {
+    Float health = readHealthOf(packet.getWatchableCollectionModifier().read(0));
+    if (health != null) {
+      plugin.eventService().transactionFeedbackService().requestPong(player, health, (p, retrievedHealth) -> {
+        UserMetaAbilityData abilityData = UserRepository.userOf(p).meta().abilityData();
+        abilityData.health = retrievedHealth;
+        abilityData.ticksToLastHealthUpdate = 0;
+      });
     }
   }
 

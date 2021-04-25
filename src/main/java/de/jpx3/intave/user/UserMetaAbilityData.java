@@ -17,15 +17,19 @@ public final class UserMetaAbilityData {
 
   private float flySpeed = 0.05f;
   private float walkSpeed = 0.1f;
+  public float health;
+  public int ticksToLastHealthUpdate;
 
   public UserMetaAbilityData(Player player) {
     boolean hasPlayer = (player != null);
     if(hasPlayer) {
       this.allowFlying = player.getAllowFlight();
       this.flying = player.isFlying();
+      this.health = (float) player.getHealth();
       setupDefaultGameMode(player.getGameMode());
     } else {
       this.allowFlying = this.flying = false;
+      this.health = 20.0f;
     }
   }
 
