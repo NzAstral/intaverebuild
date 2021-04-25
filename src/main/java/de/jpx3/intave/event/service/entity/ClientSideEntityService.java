@@ -153,9 +153,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       FakePlayer fakePlayer = attackData.fakePlayer();
       String entityNameOfDataWatcher = entityNameOf(entity);
       if (fakePlayer != null && fakePlayer.fakePlayerEntityId() == entityID) {
-        entityName = "<Intave-Bot>";
-      } else if (!entityNameOfDataWatcher.equals("Player")) {
-        entityName = "<Simulated-Player>";
+        entityName = "Intave-Bot";
       } else {
         entityName = entityNameOfDataWatcher;
       }
