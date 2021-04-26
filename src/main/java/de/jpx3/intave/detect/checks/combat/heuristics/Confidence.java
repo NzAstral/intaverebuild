@@ -7,7 +7,7 @@ public enum Confidence {
   CERTAIN("!!", 10000),
   VERY_LIKELY("!", 80),
   LIKELY("?!", 40),
-  LESSLIKELY("?!", 30),
+  LESS_LIKELY("?!", 30),
   PROBABLE("?", 20),
   MAYBE("??", 10),
   LOW("???", 5),
