@@ -222,8 +222,6 @@ public final class RotationModuloResetHeuristic extends IntaveMetaCheckPart<Heur
           if(minValue < 10 && maxValue > 50) {
             if(valueOfSnap > 360) {
               confidence = Confidence.LIKELY;
-            } else if(valueOfSnap > 80) {
-              confidence = Confidence.LOW;
             } else {
               confidence = Confidence.MAYBE;
             }

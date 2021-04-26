@@ -191,8 +191,6 @@ public final class Heuristics extends IntaveMetaCheck<Heuristics.HeuristicMeta> 
         return "probable (?)";
       case MAYBE:
         return "maybe (??)";
-      case LOW:
-        return "low (???)";
       default:
         return "none";
     }
