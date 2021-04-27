@@ -9,9 +9,11 @@ import de.jpx3.intave.detect.checks.combat.ClickSpeedLimiter;
 import de.jpx3.intave.detect.checks.combat.Heuristics;
 import de.jpx3.intave.detect.checks.movement.Physics;
 import de.jpx3.intave.detect.checks.movement.Timer;
+import de.jpx3.intave.detect.checks.other.InventoryClickAnalysis;
 import de.jpx3.intave.detect.checks.other.ProtocolScanner;
 import de.jpx3.intave.detect.checks.world.BreakSpeedLimiter;
 import de.jpx3.intave.detect.checks.world.InteractionRaytrace;
+import de.jpx3.intave.detect.checks.world.PlacementAnalysis;
 import de.jpx3.intave.event.bukkit.BukkitEventLinker;
 import de.jpx3.intave.event.packet.PacketSubscriptionLinker;
 import de.jpx3.intave.tools.annotate.Relocate;
@@ -40,8 +42,8 @@ public final class CheckService {
     addCheck(Timer.class);
     addCheck(BreakSpeedLimiter.class);
     addCheck(ProtocolScanner.class);
-//    addCheck(PlacementAnalysis.class);
-//    addCheck(InventoryClickAnalysis.class);
+    addCheck(PlacementAnalysis.class);
+    addCheck(InventoryClickAnalysis.class);
     addCheck(ClickSpeedLimiter.class);
 //    addCheck(WorkspaceCheck.class);
 
