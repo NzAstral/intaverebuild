@@ -3,11 +3,11 @@ package de.jpx3.intave.detect.checks.other;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
+import de.jpx3.intave.detect.CheckViolationLevelDecrementer;
 import de.jpx3.intave.detect.IntaveMetaCheck;
 import de.jpx3.intave.event.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.event.punishment.AttackCancelType;
 import de.jpx3.intave.event.service.violation.Violation;
-import de.jpx3.intave.event.service.violation.ViolationContext;
 import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.MathHelper;
 import de.jpx3.intave.user.User;
@@ -25,12 +25,16 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 public final class InventoryClickAnalysis extends IntaveMetaCheck<InventoryClickAnalysis.ICAData> {
   private final IntavePlugin plugin;
 
+  private final static double MAX_VL_DECREMENT_PER_SECOND = 1;
+
+  private final CheckViolationLevelDecrementer decrementer;
   private final boolean invalidVersion;
 
   public InventoryClickAnalysis(IntavePlugin plugin) {
     super("InventoryClickAnalysis", "inventoryclickanalysis", ICAData.class);
     this.plugin = plugin;
 
+    decrementer = new CheckViolationLevelDecrementer(this, MAX_VL_DECREMENT_PER_SECOND);
     invalidVersion = ProtocolLibAdapter.serverVersion().isAtLeast(ProtocolLibAdapter.EXPLORATION_UPDATE);
   }
 
@@ -55,7 +59,7 @@ public final class InventoryClickAnalysis extends IntaveMetaCheck<InventoryClick
       String message = "insufficient inventory-click (inventory not open)";
       Violation violation = Violation.fromType(InventoryClickAnalysis.class)
         .withPlayer(player).withMessage(message)
-        .withVL(1)
+        .withVL(5)
         .build();
       plugin.violationProcessor().processViolation(violation);
       event.setCancelled(true);
@@ -90,21 +94,21 @@ public final class InventoryClickAnalysis extends IntaveMetaCheck<InventoryClick
     if (distance > 2 && flag && (flag2 || AccessHelper.now() - meta.lastTimeEstimatedMousePositonMovedTooQuickly < 5000)) {
       Violation violation = Violation.fromType(InventoryClickAnalysis.class)
         .withPlayer(player).withDefaultThreshold()
-        .withMessage("is moving estimated mouse position too quickly between item slots")
-        .withDetails(MathHelper.formatDouble(distance, 3) + " slots in " + MathHelper.formatDouble(time, 3) + " seconds")
-        .withVL(1).build();
+        .withMessage("is switching too quickly between item slots")
+        .withDetails("moved from slot "+lastSlot+" to slot "+slot+" in " + MathHelper.formatDouble(time, 3) + " seconds")
+        .withVL(time > 0.01 ? 10 : 5).build();
 
-      ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
-
-//      if(violationContext.shouldCounterThreat()) {
-//        event.setCancelled(true);
-//      }
+      plugin.violationProcessor().processViolation(violation);
 
       if(IntaveControl.GOMME_MODE) {
         if(distance > 0) {
           plugin.eventService().attackCancelService().requestDamageCancel(userOf(player), AttackCancelType.MEDIUM);
         }
       }
+    }
+
+    if(speedAttr < 10) {
+      decrementer.decrement(userOf(player), MAX_VL_DECREMENT_PER_SECOND);
     }
 
     if (flag) {
@@ -119,7 +123,6 @@ public final class InventoryClickAnalysis extends IntaveMetaCheck<InventoryClick
   private double distanceBetween(int slot1, int slot2) {
     int[] slot1XZ = translatePosition(slot1);
     int[] slot2XZ = translatePosition(slot2);
-
     return Math.sqrt((slot1XZ[0] - slot2XZ[0]) * (slot1XZ[0] - slot2XZ[0]) + (slot1XZ[1] - slot2XZ[1]) * (slot1XZ[1] - slot2XZ[1]));
   }
 

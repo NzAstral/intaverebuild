@@ -292,6 +292,7 @@ public final class MovementEmulationEngine {
     movementData.setBoundingBox(entityBoundingBox);
     movementData.setVerifiedLocation(teleportLocation.clone(), "Emulation-Setback");
 //    player.teleport(teleportLocation);
+    player.closeInventory();
     rotationlessTeleport(player, teleportLocation, movementData.rotationYaw, movementData.rotationPitch);
     updateMovementStatus(user);
   }
