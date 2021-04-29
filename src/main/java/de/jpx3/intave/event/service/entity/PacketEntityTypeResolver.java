@@ -4,7 +4,7 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
-import de.jpx3.intave.adapter.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.logging.IntaveLogger;
 import de.jpx3.intave.patchy.PatchyLoadingInjector;
@@ -13,13 +13,16 @@ import de.jpx3.intave.reflect.ReflectiveAccess;
 import de.jpx3.intave.reflect.ReflectiveHandleAccess;
 import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
 import de.jpx3.intave.reflect.hitbox.ReflectiveEntityHitBoxAccess;
-import net.minecraft.server.v1_16_R1.*;
+import net.minecraft.server.v1_16_R1.EntitySize;
+import net.minecraft.server.v1_16_R1.EntityTypes;
+import net.minecraft.server.v1_16_R1.IChatBaseComponent;
+import net.minecraft.server.v1_16_R1.IRegistry;
 import org.bukkit.entity.Entity;
 
 import java.lang.reflect.Field;
 
 public final class PacketEntityTypeResolver {
-  private static final boolean DATA_WATCHER = !MinecraftVersion.VER1_15_0.atOrAbove();
+  private static final boolean DATA_WATCHER = !MinecraftVersions.VER1_15_0.atOrAbove();
   private String dataWatcherEntityFieldName;
 
   public PacketEntityTypeResolver(IntavePlugin plugin) {
@@ -31,11 +34,11 @@ public final class PacketEntityTypeResolver {
 
   private void registerDataWatcherEntityFieldName() {
     com.comphenix.protocol.utility.MinecraftVersion serverVersion = ProtocolLibAdapter.serverVersion();
-    if (serverVersion.isAtLeast(de.jpx3.intave.adapter.MinecraftVersion.VER1_14_0)) {
+    if (serverVersion.isAtLeast(MinecraftVersions.VER1_14_0)) {
       dataWatcherEntityFieldName = "entity";
-    } else if (serverVersion.isAtLeast(de.jpx3.intave.adapter.MinecraftVersion.VER1_10_0)) {
+    } else if (serverVersion.isAtLeast(MinecraftVersions.VER1_10_0)) {
       dataWatcherEntityFieldName = "c";
-    } else if (serverVersion.isAtLeast(de.jpx3.intave.adapter.MinecraftVersion.VER1_9_0)) {
+    } else if (serverVersion.isAtLeast(MinecraftVersions.VER1_9_0)) {
       dataWatcherEntityFieldName = "b";
     } else {
       dataWatcherEntityFieldName = "a";

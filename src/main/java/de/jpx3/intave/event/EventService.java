@@ -2,7 +2,7 @@ package de.jpx3.intave.event;
 
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
-import de.jpx3.intave.adapter.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.event.bukkit.BukkitEventSubscriber;
 import de.jpx3.intave.event.bukkit.BukkitEventSubscription;
@@ -32,7 +32,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 public final class EventService implements BukkitEventSubscriber {
-  private final static boolean DISABLE_ENTITY_COLLISIONS = ProtocolLibAdapter.serverVersion().isAtLeast(MinecraftVersion.VER1_9_0);
+  private final static boolean DISABLE_ENTITY_COLLISIONS = ProtocolLibAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0);
 
   private final IntavePlugin plugin;
   private TransactionFeedbackService transactionFeedbackService;

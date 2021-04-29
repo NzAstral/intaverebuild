@@ -2,7 +2,7 @@ package de.jpx3.intave.world.collision;
 
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
-import de.jpx3.intave.adapter.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.patchy.PatchyLoadingInjector;
 import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.wrapper.WrappedAxisAlignedBB;
@@ -32,18 +32,18 @@ public final class BoundingBoxAccess {
     String className = "de.jpx3.intave.world.collision.resolver.v8BoundingBoxResolver";
     String acClass = "de.jpx3.intave.world.collision.resolver.ac.v8AlwaysCollidingBoundingBox";
 
-    if(MinecraftVersion.VER1_14_0.atOrAbove()) {
+    if(MinecraftVersions.VER1_14_0.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v14BoundingBoxResolver";
-    } else if(MinecraftVersion.VER1_13_0.atOrAbove()) {
+    } else if(MinecraftVersions.VER1_13_0.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v13BoundingBoxResolver";
 //      acClass = "de.jpx3.intave.world.collision.resolver.ac.v13AlwaysCollidingBoundingBox";
-    } else if(MinecraftVersion.VER1_12_0.atOrAbove()) {
+    } else if(MinecraftVersions.VER1_12_0.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v12BoundingBoxResolver";
       acClass = "de.jpx3.intave.world.collision.resolver.ac.v12AlwaysCollidingBoundingBox";
-    } else if(MinecraftVersion.VER1_11_0.atOrAbove()) {
+    } else if(MinecraftVersions.VER1_11_0.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v11BoundingBoxResolver";
       acClass = "de.jpx3.intave.world.collision.resolver.ac.v11AlwaysCollidingBoundingBox";
-    } else if (MinecraftVersion.VER1_9_0.atOrAbove()) {
+    } else if (MinecraftVersions.VER1_9_0.atOrAbove()) {
       className = "de.jpx3.intave.world.collision.resolver.v9BoundingBoxResolver";
       acClass = "de.jpx3.intave.world.collision.resolver.ac.v9AlwaysCollidingBoundingBox";
     }

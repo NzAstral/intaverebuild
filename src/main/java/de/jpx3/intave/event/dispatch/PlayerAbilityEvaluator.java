@@ -3,7 +3,7 @@ package de.jpx3.intave.event.dispatch;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntavePlugin;
-import de.jpx3.intave.adapter.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.event.packet.*;
 import de.jpx3.intave.event.service.entity.ClientSideEntityService;
@@ -69,7 +69,7 @@ public final class PlayerAbilityEvaluator implements PacketEventSubscriber {
     }
   }
 
-  private final static boolean BIT_FIELD = ProtocolLibAdapter.serverVersion().isAtLeast(MinecraftVersion.VER1_16_0);
+  private final static boolean BIT_FIELD = ProtocolLibAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_16_0);
 
   private boolean requestedFlying(PacketContainer packet) {
     return packet.getBooleans().read(BIT_FIELD ? 0 : 1);
@@ -143,7 +143,7 @@ public final class PlayerAbilityEvaluator implements PacketEventSubscriber {
     );
   }
 
-  private final static boolean NEW_GAME_STATE_CHANGE_PACKET = MinecraftVersion.VER1_16_0.atOrAbove();
+  private final static boolean NEW_GAME_STATE_CHANGE_PACKET = MinecraftVersions.VER1_16_0.atOrAbove();
   private final static Class<?> GAME_STATE_CLASS = !NEW_GAME_STATE_CHANGE_PACKET ? null : ReflectiveAccess.lookupServerClass("PacketPlayOutGameStateChange$a");
 
   private boolean gameModeUpdateState(PacketContainer packet) {

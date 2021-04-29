@@ -2,6 +2,7 @@ package de.jpx3.intave.world.waterflow;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibAdapter;
 import de.jpx3.intave.reflect.ReflectiveAccess;
 import de.jpx3.intave.tools.wrapper.WrappedMathHelper;
@@ -30,7 +31,7 @@ final class VillageUpdateWaterflowEngine extends AbstractWaterflowEngine {
   @Override
   public void setup() throws Exception {
     MinecraftVersion minecraftVersion = ProtocolLibAdapter.serverVersion();
-    if (minecraftVersion.isAtLeast(de.jpx3.intave.adapter.MinecraftVersion.VER1_13_0)) {
+    if (minecraftVersion.isAtLeast(MinecraftVersions.VER1_13_0)) {
       loadFluidMethodHandle();
       loadFluidTaggedMethodHandle();
       loadFluidTagWater();
@@ -176,6 +177,6 @@ final class VillageUpdateWaterflowEngine extends AbstractWaterflowEngine {
 
   @Override
   public boolean appliesToAtLeast(MinecraftVersion currentVersion) {
-    return currentVersion.isAtLeast(de.jpx3.intave.adapter.MinecraftVersion.VER1_14_0);
+    return currentVersion.isAtLeast(MinecraftVersions.VER1_14_0);
   }
 }

@@ -15,8 +15,8 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.List;
 
-import static de.jpx3.intave.adapter.MinecraftVersion.VER1_13_0;
-import static de.jpx3.intave.adapter.MinecraftVersion.VER1_9_0;
+import static de.jpx3.intave.adapter.MinecraftVersions.VER1_13_0;
+import static de.jpx3.intave.adapter.MinecraftVersions.VER1_9_0;
 import static de.jpx3.intave.tools.items.BukkitItemResolver.materialByName;
 import static de.jpx3.intave.tools.items.BukkitItemResolver.materialsByName;
 import static de.jpx3.intave.tools.items.PlayerEnchantmentHelper.tridentRiptideEnchanted;
