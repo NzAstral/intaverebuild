@@ -27,9 +27,9 @@ public final class PacketEntityTypeResolver {
 
   public PacketEntityTypeResolver(IntavePlugin plugin) {
     if (DATA_WATCHER) {
-      this.registerDataWatcherEntityFieldName();
+      registerDataWatcherEntityFieldName();
     } else {
-      PatchyLoadingInjector.loadUnloadedClassPatched(plugin.getClass().getClassLoader(), "de.jpx3.intave.event.service.entity.PacketEntityTypeResolver$EntityTypeResolver");
+      loadEntityTypeResolver();
     }
   }
 
@@ -60,6 +60,10 @@ public final class PacketEntityTypeResolver {
         break;
       }
     }
+  }
+
+  private void loadEntityTypeResolver() {
+    PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), "de.jpx3.intave.event.service.entity.PacketEntityTypeResolver$EntityTypeResolver");
   }
 
   public String entityNameByBukkitEntity(Entity entity) {

@@ -3,6 +3,7 @@ package de.jpx3.intave.event.packet;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.diagnostics.timings.Timings;
 import de.jpx3.intave.logging.IntaveLogger;
 import de.jpx3.intave.user.UserRepository;
 
@@ -32,17 +33,14 @@ public final class LocalPacketAdapter extends IntavePacketAdapter implements Com
     if(!validateEvent(event)) {
       return;
     }
-//    boolean cancelled = event.isCancelled();
     try {
-//      Timings.packetProcessing.start();
+      Timings.EXE_NETTY.start();
       executor.invoke(subscriber, event);
-//      Timings.packetProcessing.stop();
     } catch (RuntimeException exception) {
       processException(event.getPacketType(), exception);
+    } finally {
+      Timings.EXE_NETTY.stop();
     }
-//    if(!cancelled && event.isCancelled()) {
-//      IntaveLogger.logger().globalPrintLn(subscriber.getClass().getSimpleName()+"."+methodName + " cancelled packet " + event.getPacketType());
-//    }
   }
 
   @Override
@@ -52,10 +50,7 @@ public final class LocalPacketAdapter extends IntavePacketAdapter implements Com
     }
     try {
       executor.invoke(subscriber, event);
-    }/* catch (UnsupportedOperationException exception) {
-      IntaveLogger.logger().globalPrintLn("[Intave] We recommend updating ProtocolLib");
-      processException(exception);
-    } */catch (RuntimeException exception) {
+    } catch (RuntimeException exception) {
       exception.getStackTrace();
       processException(event.getPacketType(), exception);
     }

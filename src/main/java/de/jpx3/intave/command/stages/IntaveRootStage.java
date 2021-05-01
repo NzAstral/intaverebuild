@@ -43,7 +43,9 @@ public final class IntaveRootStage extends CommandStage {
     permission = "sibyl"
   )
   @Native
-  public void timingsCommand(User user) {
+  public void timingsCommand(User user, @Optional String[] specifier) {
+    String fullSpecifier = specifier != null ? Arrays.stream(specifier).map(s -> s + " ").collect(Collectors.joining()).trim().toLowerCase(Locale.ROOT) : "";
+
     Player player = user.player();
     if (plugin.sibylIntegrationService().authentication().isAuthenticated(player)) {
       player.sendMessage(ChatColor.RED + "Loading timings...");
@@ -51,18 +53,35 @@ public final class IntaveRootStage extends CommandStage {
       timings.sort(Timing::compareTo);
 
       timings.forEach(timing -> {
-        boolean suspicious = timing.getAverageCallDurationInMillis() > 0.5d;
-        boolean dumping = timing.getAverageCallDurationInMillis() > 1.5d;
+        boolean suspicious = timing.averageCallDurationInMillis() > 0.5d;
+        boolean dumping = timing.averageCallDurationInMillis() > 1.5d;
         String message = String.format(
           "%s: %s::%sms (%s&f ms/c)",
-          timing.getTimingName(),
-          timing.getRecordedCalls(),
+          timing.coloredName(),
+          timing.recordedCalls(),
           MathHelper.formatDouble(timing.totalDurationMillis(), 4),
           (suspicious ? (dumping ? ChatColor.RED : ChatColor.YELLOW) : ChatColor.GREEN) + "" +
-            MathHelper.formatDouble(timing.getAverageCallDurationInMillis(), 8)
+            MathHelper.formatDouble(timing.averageCallDurationInMillis(), 8)
         );
+        if(!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
+          message = ChatColor.GRAY + ChatColor.stripColor(message);
+        }
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
       });
+    }
+  }
+
+  @SubCommand(
+    selectors = "timings2",
+    usage = "",
+    description = "Output timing data",
+    permission = "sibyl"
+  )
+  @Native
+  public void timings2Command(User user, @Optional String[] specifier) {
+    Player player = user.player();
+    if (plugin.sibylIntegrationService().authentication().isAuthenticated(player)) {
+      player.sendMessage(ChatColor.RED + "Loading timings...");
     }
   }
 
@@ -105,8 +124,8 @@ public final class IntaveRootStage extends CommandStage {
   public void outputBiasSuccess(User user) {
     Player player = user.player();
 
-    long biasCalls = Timings.CHECK_PHYSICS_PROC_BIA.getRecordedCalls();
-    long failedCalls = Timings.CHECK_PHYSICS_PROC_ITR.getRecordedCalls();
+    long biasCalls = Timings.CHECK_PHYSICS_PROC_BIA.recordedCalls();
+    long failedCalls = Timings.CHECK_PHYSICS_PROC_ITR.recordedCalls();
     long successfulCalls = biasCalls - failedCalls;
 
     double percentage = ((double) successfulCalls / (double) biasCalls) * 100;

@@ -1,5 +1,11 @@
 package de.jpx3.intave.diagnostics.timings;
 
+import org.bukkit.ChatColor;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Class generated using IntelliJ IDEA
  * Any distribution is strictly prohibited.
@@ -9,13 +15,15 @@ package de.jpx3.intave.diagnostics.timings;
 public class Timing implements Cloneable, Comparable<Timing> {
 
   private final String timingName;
+  private final String parentName;
   private final TimingData totalTimingData = new TimingData();
 
 //  private Lock lock = new ReentrantLock();
   private final ThreadLocal<Long> lastStart = ThreadLocal.withInitial(() -> 0L);
 
-  private Timing(String timingName) {
+  private Timing(String timingName, String parentName) {
     this.timingName = timingName;
+    this.parentName = parentName;
   }
 
   public void start() {
@@ -30,8 +38,31 @@ public class Timing implements Cloneable, Comparable<Timing> {
     totalTimingData.increaseCallCount();
   }
 
-  public String getTimingName() {
+  public String parentName() {
+    return parentName;
+  }
+
+  public Timing parent() {
+    return parentName == null ? null : Timings.lookupTimingByName(parentName);
+  }
+
+  public String name() {
     return timingName;
+  }
+
+  public String coloredName() {
+    String name = name();
+    List<String> path = Arrays.stream(name.split("/")).collect(Collectors.toList());
+    for (int i = 0, pathSize = path.size(); i < pathSize; i++) {
+      String pathElement = path.get(i);
+      ChatColor correspCC = Timings.COLOR_CODE_NAMESPACE.get(pathElement);
+      if(correspCC != null) {
+        pathElement = correspCC + pathElement + ChatColor.WHITE;
+      }
+      path.set(i, pathElement);
+    }
+    String outputString = path.stream().map(s -> s + "/").collect(Collectors.joining());
+    return outputString.substring(0, outputString.length() - 1);
   }
 
   public long getTotalDurationNanos() {
@@ -42,20 +73,20 @@ public class Timing implements Cloneable, Comparable<Timing> {
     return getTotalDurationNanos() / 1000000d;
   }
 
-  public long getRecordedCalls() {
+  public long recordedCalls() {
     return totalTimingData.getCalls();
   }
 
   public double getAverageCallDurationInNanos() {
-    return getTotalDurationNanos() / Math.max(1d, getRecordedCalls());
+    return getTotalDurationNanos() / Math.max(1d, recordedCalls());
   }
 
-  public double getAverageCallDurationInMillis() {
-    return (totalDurationMillis()) / (double) Math.max(1, getRecordedCalls());
+  public double averageCallDurationInMillis() {
+    return (totalDurationMillis()) / (double) Math.max(1, recordedCalls());
   }
 
   public double getDurationComparedToTick() {
-    return getAverageCallDurationInMillis() / 50;
+    return averageCallDurationInMillis() / 50;
   }
 
   @Override
@@ -77,7 +108,13 @@ public class Timing implements Cloneable, Comparable<Timing> {
   }
 
   static Timing of(String name) {
-    Timing timing = new Timing(name);
+    Timing timing = new Timing(name, null);
+    Timings.addTiming(timing);
+    return timing;
+  }
+
+  static Timing of(String name, String parentName) {
+    Timing timing = new Timing(name, parentName);
     Timings.addTiming(timing);
     return timing;
   }

@@ -2,6 +2,7 @@ package de.jpx3.intave.world.raytrace;
 
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.detect.checks.combat.AttackRaytrace;
+import de.jpx3.intave.diagnostics.timings.Timings;
 import de.jpx3.intave.event.service.entity.WrappedEntity;
 import de.jpx3.intave.patchy.PatchyLoadingInjector;
 import de.jpx3.intave.tools.client.RotationHelper;
@@ -107,6 +108,7 @@ public final class Raytracer {
     double expandBoundingBox,
     boolean rayTraceBlocks
   ) {
+    Timings.SERVICE_RAYTRACER_ENTITY.start();
     WrappedVector eyeVector = positionEyes(player, prevPosX, prevPosY, prevPosZ);
     double blockReachDistance = 6d;
     double attackReachDistance = AttackRaytrace.reachDistance(UserRepository.userOf(player).meta().abilityData().inGameMode(GameMode.CREATIVE));
@@ -150,6 +152,7 @@ public final class Raytracer {
       }
     }
 
+    Timings.SERVICE_RAYTRACER_ENTITY.stop();
     return new EntityInteractionRaytrace(lastHitVec, lastReach);
   }
 
@@ -180,7 +183,12 @@ public final class Raytracer {
   }
 
   public static WrappedMovingObjectPosition blockRayTrace(World world, Player player, WrappedVector eyeVector, WrappedVector targetVector) {
-    return versionRaytracer.raytrace(world, player, eyeVector, targetVector);
+    try {
+      Timings.SERVICE_RAYTRACER_BLOCK.start();
+      return versionRaytracer.raytrace(world, player, eyeVector, targetVector);
+    } finally {
+      Timings.SERVICE_RAYTRACER_BLOCK.stop();
+    }
   }
 
   public static WrappedVector resolvePositionEyes(Location location, Location prevLocation, double eyeHeight, float partialTicks) {
