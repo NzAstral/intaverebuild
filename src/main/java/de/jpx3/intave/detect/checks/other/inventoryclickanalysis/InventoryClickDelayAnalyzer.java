@@ -29,7 +29,7 @@ public final class InventoryClickDelayAnalyzer extends IntaveMetaCheckPart<Inven
 
   public InventoryClickDelayAnalyzer(InventoryClickAnalysis parentCheck) {
     super(parentCheck, ClickDelayMeta.class);
-    invalidVersion = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_11_0);
+    invalidVersion = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0);
     plugin = IntavePlugin.singletonInstance();
   }
 
