@@ -16,7 +16,7 @@ import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.annotate.Relocate;
 import de.jpx3.intave.tools.placeholder.PlayerContext;
 import de.jpx3.intave.tools.sync.Synchronizer;
-import de.jpx3.intave.world.blockshape.BlankUserBlockOCShapeAccess;
+import de.jpx3.intave.world.blockshape.BlankUserOCBlockShapeAccess;
 import de.jpx3.intave.world.blockshape.GlobalStaticOCBlockShapeAccess;
 import de.jpx3.intave.world.blockshape.MultiChunkKeyOCBlockShapeAccess;
 import de.jpx3.intave.world.blockshape.OCBlockShapeAccess;
@@ -166,7 +166,7 @@ public final class User {
   }
 
   public void useBlankBlockShapeAccess() {
-    setBlockShapeAccess(new BlankUserBlockOCShapeAccess());
+    setBlockShapeAccess(new BlankUserOCBlockShapeAccess());
   }
 
   public void useGlobalStaticBlockShapeAccess() {

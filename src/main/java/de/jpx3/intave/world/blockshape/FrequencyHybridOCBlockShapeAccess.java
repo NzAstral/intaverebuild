@@ -21,18 +21,14 @@ import static de.jpx3.intave.IntaveControl.DISABLE_BLOCK_CACHING_ENTIRELY;
 
 public final class FrequencyHybridOCBlockShapeAccess implements OCBlockShapeAccess {
   private final static int FREQUENCY_OVERFLOW = 2;
-
   private final Player player;
   private final BoundingBoxResolvePipeline resolver;
   private final Map<Integer, BlockShape> blockCache = new ConcurrentHashMap<>(4096);
   private final Map<Long, BlockShape> frequencyCache = new ConcurrentHashMap<>(4096);
-
   private final Map<Location, BlockShape> locatedReplacements = new ConcurrentHashMap<>(64);
   private final Map<Long, BlockShape> indexedReplacements = new ConcurrentHashMap<>(64);
-
   private int frequencyCounter;
   private long frequencyCheckReset;
-
   private int chunkXPos;
   private int chunkX;
   private int chunkZPos;

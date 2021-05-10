@@ -1,7 +1,6 @@
 package de.jpx3.intave.world.blockshape;
 
 import de.jpx3.intave.diagnostics.BoundingBoxAccessFlowStudy;
-import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.wrapper.WrappedAxisAlignedBB;
 import de.jpx3.intave.world.blockaccess.BlockDataAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
@@ -23,11 +22,8 @@ public final class MultiChunkKeyOCBlockShapeAccess implements OCBlockShapeAccess
   private final Player player;
   private final BoundingBoxResolvePipeline resolver;
   private final Map<Long, BlockShape> blockCache = new ConcurrentHashMap<>(4096);
-  private long lastCacheReset = 0;
-
   private final Map<Location, BlockShape> locatedReplacements = new ConcurrentHashMap<>(64);
   private final Map<Long, BlockShape> indexedReplacements = new ConcurrentHashMap<>(64);
-
   private int originChunkX;
   private int originChunkZ;
   private int chunkX;
@@ -53,7 +49,6 @@ public final class MultiChunkKeyOCBlockShapeAccess implements OCBlockShapeAccess
       if(distance > 2 || blockCache.size() > 4096) {
         this.originChunkX = chunkX;
         this.originChunkZ = chunkZ;
-        lastCacheReset = AccessHelper.now();
         blockCache.clear();
       }
       purgeOverrides();
@@ -93,7 +88,6 @@ public final class MultiChunkKeyOCBlockShapeAccess implements OCBlockShapeAccess
       if(distance > 2 || blockCache.size() > 4096) {
         this.originChunkX = chunkX;
         this.originChunkZ = chunkZ;
-        lastCacheReset = AccessHelper.now();
         blockCache.clear();
       }
       purgeOverrides();
@@ -133,7 +127,6 @@ public final class MultiChunkKeyOCBlockShapeAccess implements OCBlockShapeAccess
       if(distance > 2 || blockCache.size() > 4096) {
         this.originChunkX = chunkX;
         this.originChunkZ = chunkZ;
-        lastCacheReset = AccessHelper.now();
         blockCache.clear();
       }
       purgeOverrides();

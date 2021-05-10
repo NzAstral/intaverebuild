@@ -22,12 +22,10 @@ import static de.jpx3.intave.IntaveControl.DISABLE_BLOCK_CACHING_ENTIRELY;
 
 public final class GlobalStaticOCBlockShapeAccess implements OCBlockShapeAccess {
   public final static Map<World, Map<Long, BlockShape>> globalBlockCache = new ConcurrentHashMap<>(4096 * 16);
-
   private final Player player;
   private final BoundingBoxResolvePipeline resolver;
   private final Map<Long, BlockShape> indexedReplacements = new ConcurrentHashMap<>(64);
   private final Map<Location, BlockShape> locatedReplacements = new ConcurrentHashMap<>(64);
-
   private int chunkX;
   private int chunkZ;
 
@@ -52,12 +50,7 @@ public final class GlobalStaticOCBlockShapeAccess implements OCBlockShapeAccess 
 
     long key = bigKey(posX, posY, posZ);
 
-    BlockShape blockShape = indexedReplacements.get(key);
-    if(blockShape != null) {
-      return blockShape.boundingBoxes();
-    }
-
-    blockShape = globalBlockCache.computeIfAbsent(player.getWorld(), x -> new HashMap<>()).get(key);
+    BlockShape blockShape = globalBlockCache.computeIfAbsent(player.getWorld(), x -> new HashMap<>()).get(key);
     if (blockShape == null) {
       World world = player.getWorld();
       Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
@@ -85,12 +78,7 @@ public final class GlobalStaticOCBlockShapeAccess implements OCBlockShapeAccess 
 
     long key = bigKey(posX, posY, posZ);
 
-    BlockShape blockShape = indexedReplacements.get(key);
-    if(blockShape != null) {
-      return blockShape.type();
-    }
-
-    blockShape = globalBlockCache.computeIfAbsent(player.getWorld(), x -> new HashMap<>()).get(key);
+    BlockShape blockShape = globalBlockCache.computeIfAbsent(player.getWorld(), x -> new HashMap<>()).get(key);
     if (blockShape == null) {
       World world = player.getWorld();
       Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
@@ -118,12 +106,7 @@ public final class GlobalStaticOCBlockShapeAccess implements OCBlockShapeAccess 
 
     long key = bigKey(posX, posY, posZ);
 
-    BlockShape blockShape = indexedReplacements.get(key);
-    if(blockShape != null) {
-      return blockShape.data();
-    }
-
-    blockShape = globalBlockCache.computeIfAbsent(player.getWorld(), x -> new HashMap<>()).get(key);
+    BlockShape blockShape = globalBlockCache.computeIfAbsent(player.getWorld(), x -> new HashMap<>()).get(key);
     if (blockShape == null) {
       World world = player.getWorld();
       Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
@@ -184,19 +167,10 @@ public final class GlobalStaticOCBlockShapeAccess implements OCBlockShapeAccess 
 
   @Override
   public void invalidate() {
-//    Bukkit.broadcastMessage("Invalidate clear");
-//    globalBlockCache.clear();
   }
 
   @Override
   public void invalidate0(int posX, int posY, int posZ) {
-//    int chunkX = this.originChunkX;
-//    int chunkZ = this.originChunkZ;
-//    if (posX < chunkX || posZ < chunkZ || chunkX + 16 <= posX || chunkZ + 16 <= posZ) {
-//      return;
-//    }
-//    globalBlockCache.remove(bigKey(posX, posY, posZ));
-    // can not invalidate global block
   }
 
   @Override

@@ -9,8 +9,6 @@ import org.bukkit.World;
  */
 
 public interface CachedBlockShapeAccess extends BlockShapeAccess {
-  /* optional methods for a resolver */
-
   void identityInvalidate();
 
   void invalidate();

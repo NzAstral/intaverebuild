@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public final class BlankUserBlockOCShapeAccess implements OCBlockShapeAccess {
+public final class BlankUserOCBlockShapeAccess implements OCBlockShapeAccess {
   @Override
   public List<WrappedAxisAlignedBB> resolveBoxes(int chunkX, int chunkZ, int posX, int posY, int posZ) {
     return Collections.emptyList();

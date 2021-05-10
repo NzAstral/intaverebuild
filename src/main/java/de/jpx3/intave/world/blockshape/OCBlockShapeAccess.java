@@ -6,7 +6,6 @@ package de.jpx3.intave.world.blockshape;
  */
 
 public interface OCBlockShapeAccess extends OverrideBlockShapeAccess, CachedBlockShapeAccess {
-
   default void applyFrom(OCBlockShapeAccess priorBlockShapeAccess) {
     indexedReplacements().clear();
     locatedReplacements().clear();
