@@ -9,9 +9,9 @@ import de.jpx3.intave.user.UserMetaMovementData;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.world.blockaccess.BlockDataAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
-import de.jpx3.intave.world.collision.access.OCBlockShapeAccess;
-import de.jpx3.intave.world.collision.resolver.BoundingBoxResolvePipelineElement;
-import de.jpx3.intave.world.collision.resolver.BoundingBoxResolverFactory;
+import de.jpx3.intave.world.blockshape.OCBlockShapeAccess;
+import de.jpx3.intave.world.blockshape.resolver.BoundingBoxResolvePipeline;
+import de.jpx3.intave.world.blockshape.resolver.BoundingBoxResolverFactory;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 @Relocate
 public final class Collision {
-  private final static BoundingBoxResolvePipelineElement boundingBoxResolver = BoundingBoxResolverFactory.resolver();
+  private final static BoundingBoxResolvePipeline boundingBoxResolver = BoundingBoxResolverFactory.resolver();
 
   public static List<WrappedAxisAlignedBB> resolve(Player player, WrappedAxisAlignedBB playerBoundingBox) {
     int minX = WrappedMathHelper.floor(playerBoundingBox.minX);
