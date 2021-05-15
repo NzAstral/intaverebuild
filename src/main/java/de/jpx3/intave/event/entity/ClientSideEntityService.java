@@ -413,7 +413,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     }
 
     List<WrappedWatchableObject> watchableObjects = packet.getWatchableCollectionModifier().read(0);
-    Boolean isChild = isChildByWatchableObjects(watchableObjects, entity, player);
+    Boolean isChild = isChildByWatchableObjects(watchableObjects);
     if (isChild != null) {
       EntityTypeData entityTypeData = entityTypeResolver.entityTypeDataOfEntityMetaData(event, isChild, entity.entityTypeData.entityTypeId());
       entity.entityTypeData = entityTypeData;
@@ -454,7 +454,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     return null;
   }
 
-  private Boolean isChildByWatchableObjects(List<WrappedWatchableObject> watchableObjects, WrappedEntity entity, Player player) {
+  private Boolean isChildByWatchableObjects(List<WrappedWatchableObject> watchableObjects) {
     final int correctIndex;
     if (NEW_POSITION_PROCESSING_1_9) {
       if (HEALTH_PROCESSING_1_10) {
@@ -484,10 +484,6 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       Object object = watchableObject.getRawValue();
 
       if(index == correctIndex) {
-        Entity serverEntity = serverEntityByIdentifier(player, entity.entityId());
-        if(serverEntity != null)
-          player.teleport(serverEntity);
-
         if(object instanceof Integer) {
           Boolean isChild = (Boolean) object;
           return isChild;
@@ -495,7 +491,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
           byte isChild = (byte) object;
           return isChild < 0;
         } else {
-          IntaveLogger.logger().info("Failed to read EntityMetaData packet");
+          IntaveLogger.logger().info("Failed to read EntityMetaData packet.");
           return null;
         }
       }
