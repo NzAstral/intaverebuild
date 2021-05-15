@@ -1,5 +1,8 @@
 package de.jpx3.intave.tools.packet;
 
+import de.jpx3.intave.tools.annotate.KeepEnumInternalNames;
+
+@KeepEnumInternalNames
 public enum PlayerAction {
   PRESS_SHIFT_KEY("PRESS_SHIFT_KEY"),
   RELEASE_SHIFT_KEY("RELEASE_SHIFT_KEY"),
