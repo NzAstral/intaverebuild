@@ -59,7 +59,8 @@ public final class PacketOrderSwingHeuristic extends IntaveMetaCheckPart<Heurist
       String description = "swing not correlated with attack ("+user.meta().clientData().versionString()+")";
       Anomaly anomaly = Anomaly.anomalyOf("31", Confidence.CERTAIN, Anomaly.Type.KILLAURA, description, Anomaly.AnomalyOption.DELAY_128s);
       parentCheck().saveAnomaly(player, anomaly);
-      user.applyAttackNerfer(AttackNerfStrategy.HT_LIGHT);
+      //dmc11
+      user.applyAttackNerfer(AttackNerfStrategy.HT_LIGHT, "11");
     }
   }
 

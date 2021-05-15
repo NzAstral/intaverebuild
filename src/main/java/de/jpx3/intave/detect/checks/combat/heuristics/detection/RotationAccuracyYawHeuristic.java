@@ -64,7 +64,8 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
         int options = LIMIT_4 | SUGGEST_MINING;
         Anomaly anomaly = Anomaly.anomalyOf("86", Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, options);
         parentCheck().saveAnomaly(player, anomaly);
-        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+        //dmc16
+        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "16");
       }
     } else if (heuristicMeta.snapVL > 0) {
       heuristicMeta.snapVL -= 0.1;
@@ -100,7 +101,8 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
           int options = LIMIT_2 | DELAY_128s | SUGGEST_MINING;
           Anomaly anomaly = Anomaly.anomalyOf("82", Confidence.LIKELY, Anomaly.Type.KILLAURA, description, options);
           parentCheck().saveAnomaly(player, anomaly);
-          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+          //dmc17
+          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "17");
         }
 
         // Check yaw accuracy
@@ -115,7 +117,8 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
               int options = LIMIT_2 | DELAY_32s | SUGGEST_MINING;
               Anomaly anomaly = Anomaly.anomalyOf("83", Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, options);
               parentCheck().saveAnomaly(player, anomaly);
-              user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+              //dmc18
+              user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "18");
             }
           } else if (heuristicMeta.rotationAccuracyVL > 0) {
             heuristicMeta.rotationAccuracyVL -= 0.005;
@@ -131,7 +134,8 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
           Anomaly anomaly = Anomaly.anomalyOf("84", Confidence.MAYBE, Anomaly.Type.KILLAURA, description, options);
           parentCheck().saveAnomaly(player, anomaly);
           heuristicMeta.balanceYawAccuracyOther = 0;
-          user.applyAttackNerfer(AttackNerfStrategy.HT_LIGHT);
+          //dmc19
+          user.applyAttackNerfer(AttackNerfStrategy.HT_LIGHT, "19");
         }
       }
     }

@@ -70,7 +70,8 @@ public final class PlacementPacketOrderAnalyzer extends IntaveMetaCheckPart<Plac
                 .build();
               ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
               if (violationContext.violationLevelAfter() > 5) {
-                parentCheck().applyPlacementAnalysisDamageCancel(user);
+                //dmc2
+                parentCheck().applyPlacementAnalysisDamageCancel(user, "2");
               }
             }
             meta.lastIncrement = now;

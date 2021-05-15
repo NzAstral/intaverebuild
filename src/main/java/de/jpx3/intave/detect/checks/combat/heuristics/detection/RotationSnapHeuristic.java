@@ -247,11 +247,12 @@ public class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics, Rotat
       double vl = calculateViolation(valueOfSnap, changedLookToEntity, user, liteFlag);
       liteFlag = false;
 
+      //dmc23
       if (vl >= 40) {
-        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "23");
       }
       if(vl > 70) {
-        user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT);
+        user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT, "23");
       }
 
       Confidence confidence = Confidence.confidenceFrom((int) (vl + meta.internalViolation));

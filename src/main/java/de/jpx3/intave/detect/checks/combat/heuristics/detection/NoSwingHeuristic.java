@@ -85,7 +85,8 @@ public final class NoSwingHeuristic extends IntaveMetaCheckPart<Heuristics, NoSw
         String details = "missing swing packet on attack";
         Anomaly anomaly = Anomaly.anomalyOf("171", /*Confidence.LIKELY*/Confidence.NONE, Anomaly.Type.KILLAURA, details, Anomaly.AnomalyOption.LIMIT_4);
         parentCheck().saveAnomaly(player, anomaly);
-        user.applyAttackNerfer(AttackNerfStrategy.CANCEL);
+        //dmc26
+        user.applyAttackNerfer(AttackNerfStrategy.CANCEL, "26");
       }
     }
 

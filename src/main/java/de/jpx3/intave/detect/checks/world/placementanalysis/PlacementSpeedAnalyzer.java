@@ -104,7 +104,8 @@ public final class PlacementSpeedAnalyzer extends IntaveMetaCheckPart<PlacementA
 
           ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
           if (violationContext.violationLevelAfter() > 20) {
-            parentCheck().applyPlacementAnalysisDamageCancel(user);
+            //dmc1
+            parentCheck().applyPlacementAnalysisDamageCancel(user, "1");
           }
         }
       }

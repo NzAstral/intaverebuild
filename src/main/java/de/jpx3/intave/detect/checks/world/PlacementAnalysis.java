@@ -24,8 +24,8 @@ public final class PlacementAnalysis extends IntaveCheck {
     appendCheckPart(new PlacementPacketOrderAnalyzer(this));
   }
 
-  public void applyPlacementAnalysisDamageCancel(User user) {
-    user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT);
-    user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+  public void applyPlacementAnalysisDamageCancel(User user, String checkId) {
+    user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT, checkId);
+    user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, checkId);
   }
 }

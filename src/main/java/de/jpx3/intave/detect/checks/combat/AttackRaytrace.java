@@ -302,7 +302,8 @@ public final class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackR
       .build();
     ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
     if (violationContext.violationLevelAfter() > 50) {
-      user.applyAttackNerfer(AttackNerfStrategy.DMG_MEDIUM);
+      //dmc3
+      user.applyAttackNerfer(AttackNerfStrategy.DMG_MEDIUM, "3");
     }
     return true;
   }

@@ -234,12 +234,12 @@ public final class User {
     return receiveWhitelist.get(channel);
   }
 
-  public void applyAttackNerfer(AttackNerfStrategy strategy) {
+  public void applyAttackNerfer(AttackNerfStrategy strategy, String checkId) {
     if(trustFactor().atLeast(TrustFactor.BYPASS)) {
       return;
     }
     //noinspection deprecation
-    plugin().eventService().combatMitigator().mitigate(this, strategy);
+    plugin().eventService().combatMitigator().mitigate(this, strategy, checkId);
   }
 
   public void removeChannelConstraint(UserMessageChannel channel) {

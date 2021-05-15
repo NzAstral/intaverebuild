@@ -105,8 +105,9 @@ public final class PerfectAttackHeuristic extends IntaveMetaCheckPart<Heuristics
         Anomaly anomaly = Anomaly.anomalyOf("51", Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, options);
         parentCheck().saveAnomaly(player, anomaly);
         if (heuristicMeta.vl >= 2) {
-          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
-          user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT);
+          //dmc13
+          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "13");
+          user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT, "13");
         }
       } else if (heuristicMeta.vl > 0) {
         heuristicMeta.vl -= 0.2;

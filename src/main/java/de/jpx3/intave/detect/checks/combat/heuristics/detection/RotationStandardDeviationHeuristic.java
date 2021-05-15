@@ -91,7 +91,8 @@ public final class RotationStandardDeviationHeuristic extends IntaveMetaCheckPar
         Anomaly anomaly = Anomaly.anomalyOf("121", Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, options);
         parentCheck().saveAnomaly(player, anomaly);
         heuristicMeta.rotationBalanceYaw--;
-        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+        //dmc24
+        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "24");
       }
     } else {
       heuristicMeta.rotationBalanceYaw -= heuristicMeta.rotationBalanceYaw > 0 ? 0.2 : 0;
@@ -110,7 +111,8 @@ public final class RotationStandardDeviationHeuristic extends IntaveMetaCheckPar
         Anomaly anomaly = Anomaly.anomalyOf("122", Confidence.MAYBE, Anomaly.Type.KILLAURA, description, options);
         parentCheck().saveAnomaly(player, anomaly);
         heuristicMeta.rotationBalancePitch -= 2;
-        user.applyAttackNerfer(AttackNerfStrategy.HT_LIGHT);
+        //dmc25
+        user.applyAttackNerfer(AttackNerfStrategy.HT_LIGHT, "25");
       }
     } else {
       heuristicMeta.rotationBalancePitch -= heuristicMeta.rotationBalancePitch > 0 ? 0.2 : 0;

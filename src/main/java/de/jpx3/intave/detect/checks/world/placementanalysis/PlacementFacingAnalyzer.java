@@ -50,8 +50,9 @@ public final class PlacementFacingAnalyzer extends IntaveCheckPart<PlacementAnal
         .withVL(5)
         .build();
       plugin.violationProcessor().processViolation(violation);
-      user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT);
-      user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+      //dmc14
+      user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT, "14");
+      user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "14");
     }
   }
 

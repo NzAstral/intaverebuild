@@ -71,7 +71,8 @@ public final class RotationSensitivityHeuristic extends IntaveMetaCheckPart<Heur
               LIMIT_2 | DELAY_16s | SUGGEST_MINING
             )
           );
-          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+          //dmc21
+          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "21");
         }
       } else if (heuristicMeta.decimalVL > 0) {
         heuristicMeta.decimalVL--;
@@ -126,7 +127,8 @@ public final class RotationSensitivityHeuristic extends IntaveMetaCheckPart<Heur
           )
         );
         if (heuristicMeta.sensitivityVL > 300) {
-          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM);
+          //dmc22
+          user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "22");
           heuristicMeta.sensitivityVL = 300;
         }
       }
