@@ -72,7 +72,7 @@ public final class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackR
       WrappedEntity entity = entityByIdentifier(user, entityId);
       UserMetaClientData clientData = user.meta().clientData();
       if(entity == null) {
-        shouldResend = false;
+        shouldResend = true;
       } else {
         if(movementData.lastTeleport == 0 || violationLevelData.isInActiveTeleportBundle) {
           shouldResend = true;

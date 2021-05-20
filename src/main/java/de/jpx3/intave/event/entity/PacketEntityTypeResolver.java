@@ -120,22 +120,24 @@ public final class PacketEntityTypeResolver {
         if(AT_OR_ABOVE_1_14) {
           if(AT_OR_ABOVE_1_15) {
             // 1.15+
-            if(entityTypeId == 1) {
+            if(entityTypeId == 30) {
+              // armorstand
               correctIndex = 14;
             } else {
               correctIndex = 15;
             }
           } else {
-            // 1.14+
-            correctIndex = 14;
+            if(entityTypeId == 30) {
+              // armorstand
+              correctIndex = 13;
+            } else {
+              // 1.14+
+              correctIndex = 14;
+            }
           }
         } else {
-          if(entityTypeId == 1) {
-            correctIndex = 14;
-          } else {
-            // 1.10+
-            correctIndex = 12;
-          }
+          // 1.10+
+          correctIndex = 12;
         }
       } else {
         // 1.9
@@ -157,7 +159,11 @@ public final class PacketEntityTypeResolver {
             return isChild;
           } else if(object instanceof Byte) {
             byte isChild = (byte) object;
-            return isChild < 0;
+            if(AT_OR_ABOVE_1_14 && entityTypeId == 30) {
+              return isChild == 1;
+            } else {
+              return isChild < 0;
+            }
           } else {
 //          IntaveLogger.logger().info("Failed to read EntityMetaData packet. " + object.getClass());
             return null;
