@@ -3,6 +3,7 @@ package de.jpx3.intave.event.entity;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.adapter.MinecraftVersions;
@@ -17,8 +18,13 @@ import de.jpx3.intave.reflect.hitbox.typeaccess.EntityTypeData;
 import org.bukkit.entity.Entity;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 public final class PacketEntityTypeResolver {
+  private final static boolean AT_OR_ABOVE_1_9 = MinecraftVersions.VER1_9_0.atOrAbove();
+  private final static boolean AT_OR_ABOVE_1_10 = MinecraftVersions.VER1_10_0.atOrAbove();
+  private final static boolean AT_OR_ABOVE_1_14 = MinecraftVersions.VER1_14_0.atOrAbove();
+  private final static boolean AT_OR_ABOVE_1_15 = MinecraftVersions.VER1_15_0.atOrAbove();
   private static final boolean DATA_WATCHER_ACCESS_UNDER_1_15 = !MinecraftVersions.VER1_15_0.atOrAbove();
   private static final boolean ENTITY_TYPE_ACCESS_1_14 = !MinecraftVersions.VER1_14_0.atOrAbove();
   private String dataWatcherEntityFieldName;
@@ -103,10 +109,67 @@ public final class PacketEntityTypeResolver {
     }
   }
 
-  public EntityTypeData entityTypeDataOfEntityMetaData(PacketEvent event, Boolean isChild, int entityTypeId) {
+  private Boolean isChildByWatchableObjects(List<WrappedWatchableObject> watchableObjects, int entityTypeId) {
+    final int correctIndex;
+    if (AT_OR_ABOVE_1_9) {
+      if (AT_OR_ABOVE_1_10) {
+        if(AT_OR_ABOVE_1_14) {
+          if(AT_OR_ABOVE_1_15) {
+            // 1.15+
+            if(entityTypeId == 1) {
+              correctIndex = 14;
+            } else {
+              correctIndex = 15;
+            }
+          } else {
+            // 1.14+
+            correctIndex = 14;
+          }
+        } else {
+          if(entityTypeId == 1) {
+            correctIndex = 14;
+          } else {
+            // 1.10+
+            correctIndex = 12;
+          }
+        }
+      } else {
+        // 1.9
+        correctIndex = 11;
+      }
+    } else {
+      // 1.8
+      correctIndex = 12;
+    }
+
+    for (WrappedWatchableObject watchableObject : watchableObjects) {
+      int index = watchableObject.getIndex();
+      Object object = watchableObject.getRawValue();
+
+      if(object != null) {
+        if(index == correctIndex) {
+          if(object instanceof Boolean) {
+            Boolean isChild = (Boolean) object;
+            return isChild;
+          } else if(object instanceof Byte) {
+            byte isChild = (byte) object;
+            return isChild < 0;
+          } else {
+//          IntaveLogger.logger().info("Failed to read EntityMetaData packet. " + object.getClass());
+            return null;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public EntityTypeData entityTypeDataOfEntityMetaData(PacketEvent event, int entityTypeId, List<WrappedWatchableObject> watchableObjects) {
     PacketContainer packet = event.getPacket();
     int entityId = packet.getIntegers().read(0);
     Entity entity = ClientSideEntityService.serverEntityByIdentifier(event.getPlayer(), entityId);
+    Boolean isChild = isChildByWatchableObjects(watchableObjects, entityTypeId);
 
     if (entity != null) {
       return entityTypeDataOfBukkitEntity(entity);
