@@ -49,13 +49,17 @@ public class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics, SameR
       return;
     }
 
-    float yawMotion = Math.abs(movementData.lastRotationYaw - movementData.rotationYaw);
-    float pitchMotion = Math.abs(movementData.lastRotationPitch - movementData.rotationPitch);
+    Tick currentTick = new Tick(
+      movementData.rotationYaw, movementData.rotationPitch,
+      Math.abs(movementData.lastRotationYaw - movementData.rotationYaw),
+      Math.abs(movementData.lastRotationPitch - movementData.rotationPitch)
+    );
+
     boolean isPartner = (UserMetaClientData.VERSION_DETAILS & 0x100) != 0;
 //    boolean isEnterprise = (UserMetaClientData.VERSION_DETAILS & 0x200) != 0;
 
     if(movementData.lastTeleport > 5 && isPartner) {
-      if (meta.lastLastTick.yawMotion < 10 && meta.lastTick.yawMotion > 40 && yawMotion < 10) {
+      if (meta.lastLastTick.yawMotion < 10 && meta.lastTick.yawMotion > 40 && currentTick.yawMotion < 10) {
         checkSameRotationYaw(meta, player);
         checkExactRotationMotionYaw(meta, player);
         checkExactRotationYaw(meta, player);
@@ -63,7 +67,7 @@ public class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics, SameR
         meta.yawRotations.add(meta.lastLastTick.yaw);
         meta.yawRotations.add(meta.lastTick.yaw);
       }
-      if (meta.lastLastTick.pitchMotion < 10 && meta.lastTick.pitchMotion > 40 && pitchMotion < 10) {
+      if (meta.lastLastTick.pitchMotion < 10 && meta.lastTick.pitchMotion > 40 && currentTick.yawMotion < 10) {
         checkSameRotationPitch(meta, player);
         checkExactRotationMotionPitch(meta, player);
         checkExactRotationPitch(meta, player);
@@ -73,7 +77,7 @@ public class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics, SameR
       }
     }
 
-    prepareNextTick(user, yawMotion, pitchMotion);
+    prepareNextTick(user, currentTick);
   }
 
   private void checkExactRotationYaw(SameRotationHeuristicMeta meta, Player player) {
@@ -161,12 +165,11 @@ public class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics, SameR
     return options;
   }
 
-  private void prepareNextTick(User user, float yawMotion, float pitchMotion) {
-    UserMetaMovementData movementData = user.meta().movementData();
+  private void prepareNextTick(User user, Tick currentTick) {
     SameRotationHeuristicMeta meta = metaOf(user);
 
     meta.lastLastTick = meta.lastTick;
-    meta.lastTick = new Tick(movementData.rotationYaw, movementData.rotationPitch, yawMotion, pitchMotion);
+    meta.lastTick = currentTick;
 
     if (meta.yawRotations.size() > 15)
       meta.yawRotations.remove(0);
