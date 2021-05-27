@@ -29,20 +29,16 @@ public final class BlockPhysicBubbleColumn implements BlockPhysic {
 
   @Override
   public Vector entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
-    try {
-      UserMetaClientData clientData = user.meta().clientData();
-      if (clientData.waterUpdate()) {
-        boolean water = Fluid.fluidAt(user, location.getX(), location.getY() + 1, location.getZ()).isIn(FluidTag.WATER);
-        Block block = location.getBlock();
-        boolean downwards = block.toString().contains("drag=true");
-        if (water) {
-          return enterBubbleColumn(user, downwards, motionX, motionY, motionZ);
-        } else {
-          return enterBubbleColumnWithAirAbove(downwards, motionX, motionY, motionZ);
-        }
+    UserMetaClientData clientData = user.meta().clientData();
+    if (clientData.waterUpdate()) {
+      boolean water = Fluid.fluidAt(user, location.getX(), location.getY() + 1, location.getZ()).isIn(FluidTag.WATER);
+      Block block = location.getBlock();
+      boolean downwards = block.toString().contains("drag=true");
+      if (water) {
+        return enterBubbleColumn(user, downwards, motionX, motionY, motionZ);
+      } else {
+        return enterBubbleColumnWithAirAbove(downwards, motionX, motionY, motionZ);
       }
-    } catch (Exception | Error e ) {
-      e.printStackTrace();
     }
     return null;
   }
