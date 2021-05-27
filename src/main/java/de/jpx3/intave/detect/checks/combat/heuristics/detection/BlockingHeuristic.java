@@ -17,10 +17,7 @@ import de.jpx3.intave.event.violation.AttackNerfStrategy;
 import de.jpx3.intave.reflect.ReflectiveDataWatcherAccess;
 import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.sync.Synchronizer;
-import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.UserCustomCheckMeta;
-import de.jpx3.intave.user.UserMetaMovementData;
-import de.jpx3.intave.user.UserMetaPunishmentData;
+import de.jpx3.intave.user.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static de.jpx3.intave.detect.checks.combat.heuristics.Anomaly.AnomalyOption.*;
+import static de.jpx3.intave.user.UserMetaClientData.PROTOCOL_VERSION_COMBAT_UPDATE;
 
 public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, BlockingHeuristic.BlockingMeta> {
   private final IntavePlugin plugin;
@@ -183,10 +181,11 @@ public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, Blo
     if (user.meta().abilityData().ignoringMovementPackets()) {
       return;
     }
+    UserMetaClientData clientData = user.meta().clientData();
 
-    boolean flyingPackets = user.meta().clientData().flyingPacketStream();
     UserMetaMovementData movementData = user.meta().movementData();
-    if (!flyingPackets && movementData.recentlyEncounteredFlyingPacket(20) || movementData.inWeb) {
+    if (movementData.recentlyEncounteredFlyingPacket(2)
+      && clientData.protocolVersion() >= PROTOCOL_VERSION_COMBAT_UPDATE) {
       return;
     }
 
