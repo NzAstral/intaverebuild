@@ -10,6 +10,7 @@ import de.jpx3.intave.detect.IntaveMetaCheckPart;
 import de.jpx3.intave.detect.checks.combat.Heuristics;
 import de.jpx3.intave.detect.checks.combat.heuristics.Anomaly;
 import de.jpx3.intave.detect.checks.combat.heuristics.Confidence;
+import de.jpx3.intave.event.packet.ListenerPriority;
 import de.jpx3.intave.event.packet.PacketDescriptor;
 import de.jpx3.intave.event.packet.PacketSubscription;
 import de.jpx3.intave.event.packet.Sender;
@@ -45,7 +46,7 @@ public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, Blo
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "ARM_ANIMATION")
     }
   )
-  public void receiveMovementPacket(PacketEvent event) {
+  public void receiveMovementAndSwingPacket(PacketEvent event) {
     Player player = event.getPlayer();
     User user = userOf(player);
     BlockingMeta meta = metaOf(user);
@@ -62,21 +63,6 @@ public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, Blo
     if (meta.ventosFreundlicherBoolean) {
       meta.clientTicksBetweenBlockingToggle++;
     }
-
-    if (meta.heldItemOperations > 1) {
-      if (meta.blocksPlacedThisTick == 0 || meta.heldItemOperations > 2) {
-        String description = "sent too many item operations (operations: " + meta.heldItemOperations + ")";
-        description += " (version " + user.meta().clientData().versionString() + ")";
-        Anomaly anomaly = Anomaly.anomalyOf("144", Confidence.NONE, Anomaly.Type.KILLAURA, description, 0);
-        parentCheck().saveAnomaly(player, anomaly);
-      } else {
-        PacketContainer packetContainer = meta.unsendPackets.get(0);
-        receiveExcludedPacket(player, packetContainer);
-      }
-      meta.unsendPackets.clear();
-    }
-
-    meta.blocksPlacedThisTick = 0;
     meta.heldItemOperations = 0;
   }
 
@@ -127,7 +113,6 @@ public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, Blo
 
       }
     } else { // BLOCK_PLACE
-      meta.blocksPlacedThisTick++;
       ItemStack itemInHand = packet.getItemModifier().readSafely(0);
       boolean sword = itemInHand != null && itemInHand.getType().name().endsWith("_SWORD");
 
@@ -169,6 +154,78 @@ public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, Blo
     }
   }
 
+  //---------other-check-------------
+
+  @PacketSubscription(
+    priority = ListenerPriority.HIGH,
+    packets = {
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "FLYING"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "POSITION"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "POSITION_LOOK"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "LOOK"),
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "VEHICLE_MOVE"),
+    }
+  )
+  public void receiveMovementPacket(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = userOf(player);
+    BlockingMeta meta = metaOf(user);
+    UserMetaMovementData movementData = user.meta().movementData();
+    UserMetaClientData clientData = user.meta().clientData();
+    if (movementData.lastTeleport == 0) {
+      return;
+    }
+    // checks if the client version is above 1.8 for disabling the check if the player is standing still
+    if (!movementData.recentlyEncounteredFlyingPacket(2) || clientData.protocolVersion() < PROTOCOL_VERSION_COMBAT_UPDATE) {
+      if (meta.heldItemOperations > 1) {
+        if (meta.blocksPlacedThisTick == 0 || meta.heldItemOperations > 2) {
+          String description = "sent too many item operations (operations: " + meta.heldItemOperations + ")";
+          description += " (version " + user.meta().clientData().versionString() + ")";
+          Anomaly anomaly = Anomaly.anomalyOf("144", Confidence.NONE, Anomaly.Type.KILLAURA, description, 0);
+          parentCheck().saveAnomaly(player, anomaly);
+        } else {
+          PacketContainer packetContainer = meta.unsendPackets.get(0);
+          receiveExcludedPacket(player, packetContainer);
+        }
+        meta.unsendPackets.clear();
+      }
+    }
+
+    meta.blocksPlacedThisTick = 0;
+  }
+
+  @PacketSubscription(
+    packets = {
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "USE_ITEM")
+    }
+  )
+  public void receiveUseItem(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = userOf(player);
+    UserMetaClientData clientData = user.meta().clientData();
+    BlockingMeta meta = metaOf(player);
+    // 1.8
+    if(clientData.protocolVersion() >= PROTOCOL_VERSION_COMBAT_UPDATE) {
+      meta.blocksPlacedThisTick++;
+    }
+  }
+
+  @PacketSubscription(
+    packets = {
+      @PacketDescriptor(sender = Sender.CLIENT, packetName = "BLOCK_PLACE")
+    }
+  )
+  public void receiveBlockPlace(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = userOf(player);
+    BlockingMeta meta = metaOf(player);
+    UserMetaClientData clientData = user.meta().clientData();
+    // 1.9+
+    if(clientData.protocolVersion() < PROTOCOL_VERSION_COMBAT_UPDATE) {
+      meta.blocksPlacedThisTick++;
+    }
+  }
+
   @PacketSubscription(
     packets = {
       @PacketDescriptor(sender = Sender.CLIENT, packetName = "HELD_ITEM_SLOT")
@@ -179,13 +236,6 @@ public final class BlockingHeuristic extends IntaveMetaCheckPart<Heuristics, Blo
     User user = userOf(player);
     BlockingMeta meta = metaOf(player);
     if (user.meta().abilityData().ignoringMovementPackets()) {
-      return;
-    }
-    UserMetaClientData clientData = user.meta().clientData();
-
-    UserMetaMovementData movementData = user.meta().movementData();
-    if (movementData.recentlyEncounteredFlyingPacket(2)
-      && clientData.protocolVersion() >= PROTOCOL_VERSION_COMBAT_UPDATE) {
       return;
     }
 
