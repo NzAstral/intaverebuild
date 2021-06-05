@@ -82,7 +82,6 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
           receiveRequest(user, transactionResponse);
         }
         event.setCancelled(true);
-
       } finally {
         synchronizeData.transactionLock.unlock();
       }
