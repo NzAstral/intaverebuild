@@ -122,6 +122,9 @@ public final class UserMetaMovementData {
   public UserMetaMovementData(Player player, User user) {
     this.player = player;
     this.user = user;
+    if (player != null) {
+      this.elytraFlying = PoseHelper.flyingWithElytra(player);
+    }
   }
 
   public void setup() {
@@ -209,7 +212,6 @@ public final class UserMetaMovementData {
       motionZ = positionZ - verifiedPositionZ;
 
       swimming = PoseHelper.isSwimming(player);
-//      elytraFlying = PoseHelper.flyingWithElytra(player);
       boolean falling = motionY() <= 0.0D;
       if (falling && EffectLogic.isPotionSlowFallingActive(player)) {
         artificialFallDistance = 0f;
