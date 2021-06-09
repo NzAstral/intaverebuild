@@ -129,47 +129,52 @@ public final class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackR
     for (Attack remainingAttack : remainingAttacks) {
       statisticApply(user, CheckStatistics::increaseTotal);
       WrappedEntity entity = entityByIdentifier(user, remainingAttack.entityId());
-      boolean cancelHit = false;
+      Boolean cancelHit = null;
       UserMetaAbilityData abilityData = user.meta().abilityData();
       float health = abilityData.health;
 
-      // gives bypass if the player is inside a vehicle or hits a entity which is on a vehicle
-      if(!player.isInsideVehicle() && (entity == null || entity.mountedEntity() == null) && entity.isEntityLiving) {
+      if(!player.isInsideVehicle()) {
         // stops raytrace if the entity is null or the player is in the death screen
-        if (entity != null && health > 0) {
-          if (clientData.protocolVersion() >= PROTOCOL_VERSION_COMBAT_UPDATE) {
-            // >= 1.9.x
-            if (entity.clientSynchronized
-              && !movementData.recentlyEncounteredFlyingPacket(2)
-              && attackRaytraceMeta.lastFlyPacketCounterReach > 1
-            ) {
-              // 1.9+ beim bewegen
-              cancelHit = processReachCheck(player, entity, 0.1f);
-            } else {
-              // 1.9+ beim still stehen oder wenn das entity nicht synchronisiert ist
-              cancelHit = processIterativeReachCheck(player, entity);
+        if (health > 0) {
+          // bypass when the entity is null or on entities which are riding and players which are mounted on entities
+          if(entity != null && entity.mountedEntity() == null && entity.isEntityLiving) {
+            if (clientData.protocolVersion() >= PROTOCOL_VERSION_COMBAT_UPDATE) {
+              // >= 1.9.x
+              if (entity.clientSynchronized
+                && !movementData.recentlyEncounteredFlyingPacket(2)
+                && attackRaytraceMeta.lastFlyPacketCounterReach > 1
+              ) {
+                // 1.9+ beim bewegen
+                cancelHit = processReachCheck(player, entity, 0.1f);
+              } else {
+                // 1.9+ beim still stehen oder wenn das entity nicht synchronisiert ist
+                cancelHit = processIterativeReachCheck(player, entity);
+              }
             }
-          }
-          if (clientData.protocolVersion() <= PROTOCOL_VERSION_BOUNTIFUL_UPDATE) {
-            // <= 1.8.9
-            if (!entity.clientSynchronized) {
-              // 1.8.x wenn das entity nicht synchronisiert ist
-              cancelHit = processIterativeReachCheck(player, entity);
-            } else if (attackRaytraceMeta.lastFlyPacketCounterReach > 1) {
-              // 1.8.x beim bewegen
-              cancelHit = processReachCheck(player, entity, 0.1f);
-            } else {
-              // 1.8.x beim still stehen
-              cancelHit = processReachCheck(player, entity, 0.13f);
+            if (clientData.protocolVersion() <= PROTOCOL_VERSION_BOUNTIFUL_UPDATE) {
+              // <= 1.8.9
+              if (!entity.clientSynchronized) {
+                // 1.8.x wenn das entity nicht synchronisiert ist
+                cancelHit = processIterativeReachCheck(player, entity);
+              } else if (attackRaytraceMeta.lastFlyPacketCounterReach > 1) {
+                // 1.8.x beim bewegen
+                cancelHit = processReachCheck(player, entity, 0.1f);
+              } else {
+                // 1.8.x beim still stehen
+                cancelHit = processReachCheck(player, entity, 0.13f);
+              }
             }
-          }
 
-          if (cancelHit) {
-            statisticApply(user, CheckStatistics::increaseFails);
-          } else {
-            statisticApply(user, CheckStatistics::increasePasses);
+            if(cancelHit != null) {
+              if (cancelHit) {
+                statisticApply(user, CheckStatistics::increaseFails);
+              } else {
+                statisticApply(user, CheckStatistics::increasePasses);
+              }
+            }
           }
         } else {
+          cancelHit = true;
           Synchronizer.synchronize(new Runnable() {
             @Native
             @Override
@@ -190,9 +195,10 @@ public final class AttackRaytrace extends IntaveMetaCheck<AttackRaytrace.AttackR
         }
       }
       // Do not exclude packets if the player has bypass TrustFactor
-      cancelHit &= user.trustFactor() != TrustFactor.BYPASS;
-      if (!cancelHit && !violationLevelData.isInActiveTeleportBundle && remainingAttack.shouldResend) {
-        receiveExcludedPacket(player, remainingAttack.packet);
+      if(cancelHit == null || cancelHit || user.trustFactor() == TrustFactor.BYPASS) {
+        if (!violationLevelData.isInActiveTeleportBundle && remainingAttack.shouldResend) {
+          receiveExcludedPacket(player, remainingAttack.packet);
+        }
       }
     }
     remainingAttacks.clear();
