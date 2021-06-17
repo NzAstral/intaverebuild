@@ -74,8 +74,7 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
           transactionShortKeyMap.remove(request.key());
           receiveRequest(user, request);
         }
-//          IntaveLogger.logger().pushPrintln("[Intave] " + player.getName() + " sent invalid validation response (received " + received + ", but expected " + expected + " -> "+emulations +" emulations)");
-        synchronizeData.noteHardTransactionResponse();
+        user.noteHardTransactionResponse();
       }
       transactionShortKeyMap.remove(transactionIdentifier);
       transactionGlobalKeyMap.remove(transactionResponse.num());

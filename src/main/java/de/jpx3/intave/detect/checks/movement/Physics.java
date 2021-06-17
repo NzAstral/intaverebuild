@@ -884,6 +884,10 @@ public final class Physics extends IntaveCheck {
       }
     }
 
+    if (movementData.pushedByEntity) {
+      legitimateDeviation = Math.max(legitimateDeviation, 0.05);
+    }
+
     double abuseHorizontally = Math.max(0, distance - legitimateDeviation);
     boolean movedTooQuickly = distanceMoved > predictedDistanceMoved * 1.0005 && abuseHorizontally > 0;
 

@@ -2,6 +2,7 @@ package de.jpx3.intave.detect.checks.combat.heuristics;
 
 import de.jpx3.intave.tools.AccessHelper;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class Anomaly {
@@ -23,7 +24,7 @@ public class Anomaly {
   ) {
     this.key = key;
     this.added = AccessHelper.now();
-    this.description = description;
+    this.description = description.toLowerCase(Locale.ROOT);
     this.confidence = confidence;
     this.type = type;
     this.options = options;

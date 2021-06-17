@@ -350,13 +350,13 @@ public final class IntavePlugin extends JavaPlugin {
           if (VERSION_DETAILS == 97) {
             requiredState = properties.get("configuration-hash");
             if (properties.containsKey("partner")) {
-              VERSION_DETAILS |= 0x100;
+              VERSION_DETAILS |= 0b0100000000;
             }
             if (properties.containsKey("enterprise")) {
-              VERSION_DETAILS |= 0x200;
+              VERSION_DETAILS |= 0b1000000000;
             }
           } else {
-            VERSION_DETAILS = 97;
+            VERSION_DETAILS = 0b0001100001;
           }
           String keyResponse = properties.get("exchange-key");
           // verify the server integrity

@@ -211,6 +211,7 @@ public final class MovementDispatcher implements EventProcessor {
     UserMetaInventoryData inventoryData = meta.inventoryData();
     UserMetaViolationLevelData violationLevelData = meta.violationLevelData();
     UserMetaConnectionData connectionData = meta.connectionData();
+    UserMetaClientData clientData = meta.clientData();
 
     PacketType packetType = event.getPacketType();
     boolean vehicleMove = packetType == PacketType.Play.Client.VEHICLE_MOVE;
@@ -223,6 +224,22 @@ public final class MovementDispatcher implements EventProcessor {
       movementData.rotationYaw = packet.getFloat().read(0);
       movementData.rotationPitch = packet.getFloat().read(1);
       return;
+    }
+
+    // garbage fix
+    if (
+      clientData.cavesAndCliffsUpdate() && hasMovement && !movementData.awaitTeleport
+    ) {
+      StructureModifier<Double> modifier = packet.getDoubles();
+      double positionX = round(modifier.read(0));
+      double positionY = round(modifier.read(1));
+      double positionZ = round(modifier.read(2));
+      double motionX = positionX - movementData.verifiedPositionX;
+      double motionY = positionY - movementData.verifiedPositionY;
+      double motionZ = positionZ - movementData.verifiedPositionZ;
+      if (MathHelper.hypot3d(motionX, motionY, motionZ) < 0.00001) {
+        return;
+      }
     }
 
     connectionData.receiveMovement();
@@ -279,7 +296,6 @@ public final class MovementDispatcher implements EventProcessor {
     if (!movementData.isTeleportConfirmationPacket) {
       interactionRaytraceCheck.receiveMovement(event);
 
-
       if (hasMovement) {
         physicsCheck.receiveMovement(user);
       } else {
@@ -325,6 +341,12 @@ public final class MovementDispatcher implements EventProcessor {
       movementData.awaitOutgoingTeleport = true; // awaiting next teleport
       event.setCancelled(true);
     }
+  }
+
+  private double round(double input) {
+    double factor = 100000000000000d;
+    return Math.round(input * factor) / factor;
+//    return input;
   }
 
   @PacketSubscription(
@@ -623,6 +645,7 @@ public final class MovementDispatcher implements EventProcessor {
     User user = UserRepository.userOf(player);
     User.UserMeta meta = user.meta();
     UserMetaMovementData movementData = meta.movementData();
+    UserMetaClientData clientData = meta.clientData();
     UserMetaPunishmentData punishmentData = meta.punishmentData();
     PacketContainer packet = event.getPacket();
     PlayerAction playerAction = PlayerActionResolver.resolveActionFromPacket(packet);
@@ -654,7 +677,7 @@ public final class MovementDispatcher implements EventProcessor {
       case START_FALL_FLYING:
         ItemStack plate = player.getInventory().getChestplate();
 
-        if (plate != null /* kann null sein, bitte null-check nicht wieder entfernen */ && plate.getType() == Material.ELYTRA) {
+        if (plate != null /* kann null sein, bitte null-check nicht wieder entfernen */ && plate.getType() == Material.ELYTRA && clientData.canUseElytra()) {
           movementData.elytraFlying = true;
         }
     }

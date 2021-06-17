@@ -2,13 +2,13 @@ package de.jpx3.intave.permission;
 
 import de.jpx3.intave.tools.AccessHelper;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public final class BukkitPermissionCache {
   private final static long CACHE_EXPIRE = TimeUnit.SECONDS.toMillis(20);
-  private final Map<String, PermissionEntry> permissionEntries = new HashMap<>();
+  private final Map<String, PermissionEntry> permissionEntries = new ConcurrentHashMap<>();
 
   public boolean inCache(String permission) {
     PermissionEntry entry;

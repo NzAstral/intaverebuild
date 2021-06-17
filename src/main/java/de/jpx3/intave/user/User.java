@@ -38,8 +38,6 @@ import java.util.function.Predicate;
 public final class User {
   private final Map<Class<? extends UserCustomCheckMeta>, UserCustomCheckMeta> customMetaPool = new ConcurrentHashMap<>();
 
-  public static boolean USE_GLOBAL_STATIC_BLOCK_SHAPE_ACCESS = true;
-
   private final WeakReference<Player> playerRef;
   private final WeakReference<Object> nmsEntity;
   private final UserMeta userMeta;
@@ -301,6 +299,15 @@ public final class User {
     return typeTranslations;
   }
 
+  public void noteHardTransactionResponse() {
+    UserMetaConnectionData connectionData = userMeta.connectionData;
+    if (connectionData.hardTransactionResponse++ > 100 && hasPlayer) {
+      Player player = player();
+      IntaveLogger.logger().error(player.getName() + " has been removed for repeated validation faults");
+      UserRepository.userOf(player).synchronizedDisconnect("Timed out");
+    }
+  }
+
   public void synchronizedDisconnect(String reason) {
     if (!hasOnlinePlayer()) {
       return;
@@ -313,6 +320,14 @@ public final class User {
     });
   }
 
+  public void unregister() {
+    FakePlayer fakePlayer = meta().attackData.fakePlayer();
+    if (fakePlayer != null) {
+      fakePlayer.despawn();
+    }
+    EntityNoDamageTickChanger.removeNoDamageTickChangeOf(this);
+  }
+
   private IntavePlugin plugin() {
     return IntavePlugin.singletonInstance();
   }
@@ -323,14 +338,6 @@ public final class User {
 
   protected static User userFor(Player player) {
     return new User(player);
-  }
-
-  public void unregister() {
-    FakePlayer fakePlayer = meta().attackData.fakePlayer();
-    if (fakePlayer != null) {
-      fakePlayer.despawn();
-    }
-    EntityNoDamageTickChanger.removeNoDamageTickChangeOf(this);
   }
 
   public static final class UserMeta {

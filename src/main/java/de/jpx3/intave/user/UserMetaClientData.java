@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 @Relocate
 public final class UserMetaClientData {
   // final has been removed to disguise modified integer VERSION_DETAILS
+  public static int VER_1_17 = 755; // 1.17
   public static int VER_1_16 = 735; // 1.16
   public static int VER_1_15 = 573; // 1.15
   public static int VER_1_14 = 477; // 1.14
@@ -134,6 +135,14 @@ public final class UserMetaClientData {
     return protocolVersion >= VER_1_14;
   }
 
+  public boolean canUseElytra() {
+    return protocolVersion >= VER_1_9;
+  }
+
+  public boolean affectedByLevitation() {
+    return protocolVersion >= VER_1_12;
+  }
+
   public boolean roundEnvironmentNumbers() {
     // < 1.14
     return protocolVersion < VER_1_14;
@@ -162,6 +171,10 @@ public final class UserMetaClientData {
   public boolean motionResetOnCollision() {
     // 1.14
     return protocolVersion < VER_1_14;
+  }
+
+  public boolean cavesAndCliffsUpdate() {
+    return protocolVersion >= VER_1_17;
   }
 
   public boolean beeUpdate() {

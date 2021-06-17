@@ -61,7 +61,7 @@ public final class PlacementSneakAnalyzer extends IntaveMetaCheckPart<PlacementA
             .forPlayer(player).withDefaultThreshold()
             .withMessage(COMMON_FLAG_MESSAGE)
             .withDetails(((int) average) + "ms/block in a straight line without sneaking")
-            .withDefaultThreshold().withVL(5).build();
+            .withDefaultThreshold().withVL(3).build();
           ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
           if (violationContext.violationLevelAfter() > 20) {
             //dmc79

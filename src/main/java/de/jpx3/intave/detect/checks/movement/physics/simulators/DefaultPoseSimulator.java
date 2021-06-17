@@ -1,7 +1,9 @@
 package de.jpx3.intave.detect.checks.movement.physics.simulators;
 
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.detect.checks.movement.physics.MotionVector;
 import de.jpx3.intave.detect.checks.movement.physics.PoseSimulator;
+import de.jpx3.intave.event.entity.WrappedEntity;
 import de.jpx3.intave.tools.client.EffectLogic;
 import de.jpx3.intave.tools.client.MovementContext;
 import de.jpx3.intave.tools.client.SpecialMaterials;
@@ -25,6 +27,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.Collection;
 
 import static de.jpx3.intave.user.UserMetaClientData.VER_1_14;
 
@@ -319,6 +323,7 @@ public class DefaultPoseSimulator extends PoseSimulator {
     User.UserMeta meta = user.meta();
     UserMetaViolationLevelData violationLevelData = meta.violationLevelData();
     UserMetaMovementData movementData = meta.movementData();
+    UserMetaClientData clientData = meta.clientData();
     MotionVector motionVector = movementData.motionVector;
     motionVector.reset(motionX, motionY, motionZ);
 
@@ -365,6 +370,10 @@ public class DefaultPoseSimulator extends PoseSimulator {
       simulateLavaAfter(player, user, motionVector, boundingBox, collidedHorizontally);
     } else if (!elytraFlying) {
       simulateNormalAfter(user, motionVector, gravity, slipperiness);
+    }
+
+    if (clientData.combatUpdate() && MinecraftVersions.VER1_9_0.atOrAbove() /* todo: add scoreboard check */) {
+      performGlobalEntityPush(user, motionVector, boundingBox);
     }
 
     if (!violationLevelData.isInActiveTeleportBundle) {
@@ -571,5 +580,44 @@ public class DefaultPoseSimulator extends PoseSimulator {
     context.motionX *= multiplier;
     context.motionY *= 0.98f;
     context.motionZ *= multiplier;
+  }
+
+  private void performGlobalEntityPush(User user, MotionVector context, WrappedAxisAlignedBB boundingBox) {
+    Collection<WrappedEntity> entities = user.meta().connectionData().synchronizedEntityMap().values();
+    UserMetaMovementData movementData = user.meta().movementData();
+    movementData.pushedByEntity = false;
+    for (WrappedEntity entity : entities) {
+      if (!entity.tracingEnabled() || !entity.clientSynchronized) {
+        continue;
+      }
+      if (entity.entityBoundingBox().intersectsWith(boundingBox)) {
+        applyEntityPush(user, context, entity);
+      }
+    }
+  }
+
+  private void applyEntityPush(User user, MotionVector motionVector, WrappedEntity entity) {
+    UserMetaMovementData movementData = user.meta().movementData();
+    double xDistance = movementData.positionX - entity.position.posX;
+    double zDistance = movementData.positionZ - entity.position.posZ;
+    double biggerDistance = WrappedMathHelper.abs_max(xDistance, zDistance);
+    if (biggerDistance >= (double) 0.01F) {
+      biggerDistance = WrappedMathHelper.sqrt_double(biggerDistance);
+      xDistance = xDistance / biggerDistance;
+      zDistance = zDistance / biggerDistance;
+      double pushFactor = 1.0D / biggerDistance;
+      if (pushFactor > 1.0D) {
+        pushFactor = 1.0D;
+      }
+      xDistance = xDistance * pushFactor;
+      zDistance = zDistance * pushFactor;
+      xDistance *= 0.05F;
+      zDistance *= 0.05F;
+      if (!movementData.hasRidingEntity()) {
+        movementData.pushedByEntity = true;
+        motionVector.motionX += xDistance;
+        motionVector.motionZ += zDistance;
+      }
+    }
   }
 }

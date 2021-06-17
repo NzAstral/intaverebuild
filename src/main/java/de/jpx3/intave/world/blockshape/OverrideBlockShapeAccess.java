@@ -10,13 +10,13 @@ import java.util.Map;
  */
 
 public interface OverrideBlockShapeAccess extends BlockShapeAccess {
- boolean currentlyInOverride(int posX, int posY, int posZ);
+  boolean currentlyInOverride(int posX, int posY, int posZ);
 
- BlockShape overrideOf(int posX, int posY, int posZ);
+  BlockShape overrideOf(int posX, int posY, int posZ);
 
- void invalidateOverride(int posX, int posY, int posZ);
+  void invalidateOverride(int posX, int posY, int posZ);
 
- Map<Location, BlockShape> locatedReplacements();
+  Map<Location, BlockShape> locatedReplacements();
 
- Map<Long, BlockShape> indexedReplacements();
+  Map<Long, BlockShape> indexedReplacements();
 }

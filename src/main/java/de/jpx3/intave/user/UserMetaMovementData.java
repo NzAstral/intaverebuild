@@ -120,6 +120,9 @@ public final class UserMetaMovementData {
   private volatile Location verifiedLocation;
   public int teleportResendCountdown = 10;
 
+  // States if an external entity push onto the player is estimated
+  public boolean pushedByEntity;
+
   // Key inputs sent by the client
   public boolean applyClientKeys = false;
   public int clientInputKey = 0;

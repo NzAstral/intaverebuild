@@ -25,11 +25,11 @@ import static de.jpx3.intave.detect.checks.world.PlacementAnalysis.COMMON_FLAG_M
 import static de.jpx3.intave.event.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.event.packet.PacketId.Client.POSITION_LOOK;
 
-public final class PlacementRotationSpeedAnalyzer extends IntaveMetaCheckPart<PlacementAnalysis, PlacementRotationSpeedAnalyzer.RotationSpeedMeta> {
+public final class PlacementSharpRotationAnalyzer extends IntaveMetaCheckPart<PlacementAnalysis, PlacementSharpRotationAnalyzer.SharpRotationMeta> {
   private final IntavePlugin plugin;
 
-  public PlacementRotationSpeedAnalyzer(PlacementAnalysis parentCheck) {
-    super(parentCheck, RotationSpeedMeta.class);
+  public PlacementSharpRotationAnalyzer(PlacementAnalysis parentCheck) {
+    super(parentCheck, SharpRotationMeta.class);
     plugin = IntavePlugin.singletonInstance();
   }
 
@@ -43,37 +43,36 @@ public final class PlacementRotationSpeedAnalyzer extends IntaveMetaCheckPart<Pl
     Player player = event.getPlayer();
     User user = userOf(player);
     UserMetaMovementData movementData = user.meta().movementData();
-    RotationSpeedMeta meta = metaOf(user);
+    SharpRotationMeta meta = metaOf(user);
     float rotationMovement = Math.min(MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw), 360);
 
-    if (AccessHelper.now() - meta.lastBlockPlacement > 2000 || movementData.lastTeleport <= 5) {
-      return;
+    boolean recentBlockPlacement = AccessHelper.now() - meta.lastBlockPlacement < 2000;
+    boolean hit = Math.abs(rotationMovement - 180) < 10;
+    if (hit && recentBlockPlacement) {
+      meta.sharpRotations++;
     }
-
-    List<Float> rotationHistory = meta.rotationHistory;
-    if (rotationHistory.size() > 5 * 20) {
-      rotationHistory.remove(0);
-    }
-    rotationHistory.add(rotationMovement);
   }
 
   @BukkitEventSubscription
   public void on(BlockPlaceEvent place) {
     Player player = place.getPlayer();
     User user = userOf(player);
-    RotationSpeedMeta meta = metaOf(user);
+    SharpRotationMeta meta = metaOf(user);
 
-    meta.lastBlockPlacement = AccessHelper.now();
-
-    if (place.getBlock().getY() < player.getLocation().getBlockY() && blockAgainstWasPlaced(user, place.getBlockAgainst())) {
-      List<Float> rotationHistory = meta.rotationHistory;
-      double rotationSum = rotationHistory.stream().mapToDouble(value -> value).sum();
-      if (rotationSum > 3000) {
+    if (place.getBlock().getY() < player.getLocation().getBlockY()) {
+      if (AccessHelper.now() - meta.sharpRotationReset > 10000) {
+        meta.sharpRotations -= 1;
+        meta.sharpRotations /= 2;
+        meta.sharpRotationReset = AccessHelper.now();
+      }
+      meta.lastBlockPlacement = AccessHelper.now();
+      if (meta.sharpRotations > 4 && blockAgainstWasPlaced(user, place.getBlockAgainst())) {
+        String details = "maintains sharp 180deg rotations";
         Violation violation = Violation.builderFor(PlacementAnalysis.class)
           .forPlayer(player).withDefaultThreshold()
           .withMessage(COMMON_FLAG_MESSAGE)
-          .withDetails("high rotation activity while placing blocks") // + " (" + ((int) rotationSum) + " degrees)
-          .withDefaultThreshold().withVL(0).build();
+          .withDetails(details)
+          .withDefaultThreshold().withVL(meta.sharpRotations > 10 ? 10 : 0).build();
         plugin.violationProcessor().processViolation(violation);
         place.setCancelled(true);
       }
@@ -98,9 +97,11 @@ public final class PlacementRotationSpeedAnalyzer extends IntaveMetaCheckPart<Pl
     return false;
   }
 
-  public static class RotationSpeedMeta extends UserCustomCheckMeta {
-    private final List<Float> rotationHistory = new ArrayList<>();
+  public static class SharpRotationMeta extends UserCustomCheckMeta {
+    private long sharpRotations = 0;
+    private long sharpRotationReset = AccessHelper.now();
+    private long lastBlockPlacement = AccessHelper.now();
+
     private final List<Vector> lastBlocksPlaced = new ArrayList<>();
-    private long lastBlockPlacement;
   }
 }

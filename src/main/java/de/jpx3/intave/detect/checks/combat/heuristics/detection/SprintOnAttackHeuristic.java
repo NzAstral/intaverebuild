@@ -74,13 +74,12 @@ public class SprintOnAttackHeuristic extends IntaveMetaCheckPart<Heuristics, Spr
 
     if(meta.totalAttacks > 10) {
       double ratio = (double) meta.attacksWithSprintChange / (double) meta.totalAttacks;
-//      player.sendMessage("" + ratio);
       if(ratio > 0.9) {
         Anomaly anomaly = Anomaly.anomalyOf(
           "200",
           Confidence.NONE,
           Anomaly.Type.KILLAURA,
-          "Player sprint attack ratio is too high (" + ratio + ")", Anomaly.AnomalyOption.DELAY_16s
+          "sprint-toggles aligned with attacks (" + ratio + "%)", Anomaly.AnomalyOption.DELAY_16s
         );
         parentCheck().saveAnomaly(player, anomaly);
       }

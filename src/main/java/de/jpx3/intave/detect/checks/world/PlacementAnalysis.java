@@ -25,6 +25,7 @@ public final class PlacementAnalysis extends IntaveCheck {
     if (enterprise || partner) {
       appendCheckPart(new PlacementSpeedAnalyzer(this));
       appendCheckPart(new PlacementRotationSpeedAnalyzer(this));
+      appendCheckPart(new PlacementSharpRotationAnalyzer(this));
       appendCheckPart(new PlacementSneakAnalyzer(this));
     }
     appendCheckPart(new PlacementPacketOrderAnalyzer(this));

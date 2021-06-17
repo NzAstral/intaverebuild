@@ -133,16 +133,8 @@ public final class WrappedMathHelper {
   /**
    * Maximum of the absolute value of two numbers.
    */
-  public static double abs_max(double p_76132_0_, double p_76132_2_) {
-    if (p_76132_0_ < 0.0D) {
-      p_76132_0_ = -p_76132_0_;
-    }
-
-    if (p_76132_2_ < 0.0D) {
-      p_76132_2_ = -p_76132_2_;
-    }
-
-    return p_76132_0_ > p_76132_2_ ? p_76132_0_ : p_76132_2_;
+  public static double abs_max(double a, double b) {
+    return Math.max(Math.abs(a), Math.abs(b));
   }
 
   /**

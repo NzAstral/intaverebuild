@@ -4,6 +4,7 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.executor.BackgroundExecutor;
 import de.jpx3.intave.tools.AccessHelper;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
 import java.io.*;
@@ -34,17 +35,25 @@ public final class IntaveLogger {
     singletonInstance = this;
     this.plugin = plugin;
     this.archiver = new FileArchiver();
-    outputStreams.add(System.out);
+//    outputStreams.add(System.out);
     setup();
   }
 
   public void info(String infoMessage) {
-    pushPrintln("[Intave] " + infoMessage);
+    String message = "[Intave] " + infoMessage;
+    for (PrintStream outputStream : outputStreams) {
+      outputStream.print(message);
+    }
+    Bukkit.getLogger().info(message);
     logToFile("(INF) " + infoMessage);
   }
 
   public void error(String errorMessage) {
-    pushPrintln("[Intave] ERROR: " + errorMessage);
+    String message = "[Intave] " + errorMessage;
+    for (PrintStream outputStream : outputStreams) {
+      outputStream.print(message);
+    }
+    Bukkit.getLogger().warning(message);
     logToFile("(ERR) " + errorMessage);
   }
 
@@ -74,8 +83,9 @@ public final class IntaveLogger {
 
   public void pushPrintln(String message) {
     for (PrintStream outputStream : outputStreams) {
-      outputStream.println(message);
+      outputStream.print(message);
     }
+    Bukkit.getLogger().info(message);
   }
 
   public void addOutputStream(PrintStream outputStream) {

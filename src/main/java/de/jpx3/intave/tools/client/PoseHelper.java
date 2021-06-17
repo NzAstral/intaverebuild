@@ -14,7 +14,17 @@ public final class PoseHelper {
   private final static boolean ELYTRA_ENABLED = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0);
 
   public static boolean flyingWithElytra(Player player) {
-    return ELYTRA_ENABLED && player.isGliding();
+    return ELYTRA_ENABLED && canUseElytra(player) && player.isGliding();
+  }
+
+  private static boolean canUseElytra(Player player) {
+    if (!UserRepository.hasUser(player)) {
+      return true;
+    }
+    User user = UserRepository.userOf(player);
+    User.UserMeta meta = user.meta();
+    UserMetaClientData clientData = meta.clientData();
+    return clientData.canUseElytra();
   }
 
   public static boolean isSwimming(Player player) {
