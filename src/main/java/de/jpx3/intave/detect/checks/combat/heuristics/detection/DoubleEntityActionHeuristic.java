@@ -13,9 +13,9 @@ import de.jpx3.intave.user.UserCustomCheckMeta;
 import de.jpx3.intave.user.UserMetaMovementData;
 import org.bukkit.entity.Player;
 
-import static de.jpx3.intave.event.packet.PacketId.Client.*;
+import static de.jpx3.intave.event.packet.PacketId.Client.ENTITY_ACTION;
 
-public class DoubleEntityActionHeuristic extends IntaveMetaCheckPart<Heuristics, DoubleEntityActionHeuristic.DoubleEntityActionHeuristicMeta> {
+public final class DoubleEntityActionHeuristic extends IntaveMetaCheckPart<Heuristics, DoubleEntityActionHeuristic.DoubleEntityActionHeuristicMeta> {
 
   public DoubleEntityActionHeuristic(Heuristics parentCheck) {
     super(parentCheck, DoubleEntityActionHeuristic.DoubleEntityActionHeuristicMeta.class);

@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public class JumpVelocityHeuristic extends IntaveMetaCheckPart<Heuristics, JumpVelocityHeuristic.JumpVelocityHeuristicMeta> {
+public final class JumpVelocityHeuristic extends IntaveMetaCheckPart<Heuristics, JumpVelocityHeuristic.JumpVelocityHeuristicMeta> {
 
   public JumpVelocityHeuristic(Heuristics parentCheck) {
     super(parentCheck, JumpVelocityHeuristic.JumpVelocityHeuristicMeta.class);

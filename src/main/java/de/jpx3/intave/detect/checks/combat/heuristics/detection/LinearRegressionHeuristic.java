@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, LinearRegressionHeuristic.LinearRegressionHeuristicMeta> {
+public final class LinearRegressionHeuristic extends IntaveMetaCheckPart<Heuristics, LinearRegressionHeuristic.LinearRegressionHeuristicMeta> {
   private final ExecutorService executorService = Executors.newSingleThreadExecutor(IntaveThreadFactory.ofLowestPriority());
 
   public LinearRegressionHeuristic(Heuristics parentCheck) {

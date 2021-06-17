@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public class SprintOnAttackHeuristic extends IntaveMetaCheckPart<Heuristics, SprintOnAttackHeuristic.SprintOnAttackHeuristicMeta> {
+public final class SprintOnAttackHeuristic extends IntaveMetaCheckPart<Heuristics, SprintOnAttackHeuristic.SprintOnAttackHeuristicMeta> {
 
   public SprintOnAttackHeuristic(Heuristics parentCheck) {
     super(parentCheck, SprintOnAttackHeuristic.SprintOnAttackHeuristicMeta.class);

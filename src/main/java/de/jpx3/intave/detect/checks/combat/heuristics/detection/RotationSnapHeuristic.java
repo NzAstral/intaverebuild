@@ -30,7 +30,7 @@ import java.util.Map;
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 import static de.jpx3.intave.world.raytrace.Raytracer.distanceOf;
 
-public class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics, RotationSnapHeuristic.RotationSnapHeuristicMeta> {
+public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics, RotationSnapHeuristic.RotationSnapHeuristicMeta> {
 
   public RotationSnapHeuristic(Heuristics parentCheck) {
     super(parentCheck, RotationSnapHeuristicMeta.class);

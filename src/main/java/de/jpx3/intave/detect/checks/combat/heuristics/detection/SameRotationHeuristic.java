@@ -21,7 +21,7 @@ import java.util.List;
 
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics, SameRotationHeuristic.SameRotationHeuristicMeta> {
+public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics, SameRotationHeuristic.SameRotationHeuristicMeta> {
   public SameRotationHeuristic(Heuristics parentCheck) {
     super(parentCheck, SameRotationHeuristicMeta.class);
   }

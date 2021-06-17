@@ -69,9 +69,7 @@ public final class PlacementSharpRotationAnalyzer extends IntaveMetaCheckPart<Pl
       if (meta.sharpRotations > 4 && blockAgainstWasPlaced(user, place.getBlockAgainst())) {
         String details = "maintains sharp 180deg rotations";
         Violation violation = Violation.builderFor(PlacementAnalysis.class)
-          .forPlayer(player).withDefaultThreshold()
-          .withMessage(COMMON_FLAG_MESSAGE)
-          .withDetails(details)
+          .forPlayer(player).withMessage(COMMON_FLAG_MESSAGE).withDetails(details)
           .withDefaultThreshold().withVL(meta.sharpRotations > 10 ? 10 : 0).build();
         plugin.violationProcessor().processViolation(violation);
         place.setCancelled(true);
