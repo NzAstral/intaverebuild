@@ -5,7 +5,6 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.adapter.MinecraftVersions;
-import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.detect.IntaveMetaCheckPart;
 import de.jpx3.intave.detect.checks.combat.Heuristics;
 import de.jpx3.intave.detect.checks.combat.heuristics.Anomaly;
@@ -57,9 +56,10 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     }
   )
   public void blockPlace(PacketEvent event) {
-    if (ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0)) {
-      return;
-    }
+    // moved to enabled() function at the bottom
+//    if (MinecraftVersions.VER1_9_0.atOrAbove()) {
+//      return;
+//    }
     Player player = event.getPlayer();
     User user = userOf(player);
 
@@ -123,9 +123,10 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     }
   )
   public void receiveMovementPacket(PacketEvent event) {
-    if (ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0)) {
-      return;
-    }
+  // moved to enabled() function at the bottom
+//    if (MinecraftVersions.VER1_9_0.atOrAbove()) {
+//      return;
+//    }
     Player player = event.getPlayer();
     User user = userOf(player);
     UserMetaMovementData movementData = user.meta().movementData();
@@ -165,7 +166,7 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
       }
 
       Tick tick = new Tick(
-        meta.lastLastPosX,meta.lastLastPosY, meta.lastLastPosZ,
+        meta.lastLastPosX, meta.lastLastPosY, meta.lastLastPosZ,
         movementData.lastRotationYaw, movementData.lastRotationPitch
       );
       meta.movementAtTick[0] = tick;
@@ -179,7 +180,6 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     }
 
     boolean isSuspicious = (meta.yawMotions[1] == 0 && meta.yawMotions[0] > 25 && meta.yawMotions[0] > 9);
-
     boolean liteFlag = false;
     if (isSuspicious && meta.silentMovements[1] == KeyStates.SILENTMOVE && meta.rotationPacketCounter > 10 && movementData.lastTeleport > 7) {
       liteFlag = true;
@@ -260,11 +260,13 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
         if (user.meta().clientData().protocolVersion() > 47) {
           description += " " + user.meta().clientData().protocolVersion();
         }
+
+        // TODO: 06/17/21 Use isPartner and isEnterprise only in a method annotated with @Native
         boolean isPartner = (UserMetaClientData.VERSION_DETAILS & 0x100) != 0;
         boolean isEnterprise = (UserMetaClientData.VERSION_DETAILS & 0x200) != 0;
 
         if (isPartner || isEnterprise) {
-          Anomaly anomaly = Anomaly.anomalyOf("102", confidence, Anomaly.Type.KILLAURA, description, anomalieOptions(isPartner));
+          Anomaly anomaly = Anomaly.anomalyOf("102", confidence, Anomaly.Type.KILLAURA, description, anomalyOptions(isPartner));
           parentCheck().saveAnomaly(player, anomaly);
         }
       }
@@ -275,11 +277,12 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     if (liteFlag) {
       String description = "rotation snap scaffold [" +  MathHelper.formatDouble(meta.yawMotions[0], 2) + "]";
 
+      // TODO: 06/17/21 Use isPartner and isEnterprise only in a method annotated with @Native
       boolean isPartner = (UserMetaClientData.VERSION_DETAILS & 0x100) != 0;
       boolean isEnterprise = (UserMetaClientData.VERSION_DETAILS & 0x200) != 0;
 
       if (isPartner || isEnterprise) {
-        Anomaly anomaly = Anomaly.anomalyOf("103", Confidence.MAYBE, Anomaly.Type.KILLAURA, description, anomalieOptions(isPartner));
+        Anomaly anomaly = Anomaly.anomalyOf("103", Confidence.MAYBE, Anomaly.Type.KILLAURA, description, anomalyOptions(isPartner));
         parentCheck().saveAnomaly(player, anomaly);
       }
     }
@@ -287,7 +290,7 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     prepareNextTick(meta, yawMotion, user);
   }
 
-  private static int anomalieOptions(boolean isPartner) {
+  private int anomalyOptions(boolean isPartner) {
     int options;
     if (IntaveControl.GOMME_MODE) {
       options = Anomaly.AnomalyOption.DELAY_32s;
@@ -299,7 +302,7 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     return options;
   }
 
-  private double calculateViolation(double valueOfSnap, boolean channgedLookToEntity, User user, boolean liteFlag) {
+  private double calculateViolation(double valueOfSnap, boolean changedLookToEntity, User user, boolean liteFlag) {
     RotationSnapHeuristicMeta meta = metaOf(user);
 
     double vl = 7;
@@ -317,7 +320,7 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
       vl *= 1.5;
     }
 
-    if (channgedLookToEntity) {
+    if (changedLookToEntity) {
       vl *= 2;
     }
 
@@ -364,13 +367,17 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     meta.lastBlockPlace++;
   }
 
+  @Override
+  public boolean enabled() {
+    return !MinecraftVersions.VER1_9_0.atOrAbove() && super.enabled();
+  }
 
   public static final class RotationSnapHeuristicMeta extends UserCustomCheckMeta {
     double lastLastPosX, lastLastPosY, lastLastPosZ;
     HashMap<Integer, WrappedEntity.EntityPositionContext> entityPositions = new HashMap<>();
-    private Tick[] movementAtTick = new Tick[2];
-    private double[] yawMotions = new double[2];
-    private KeyStates[] silentMovements = new KeyStates[2];
+    private final Tick[] movementAtTick = new Tick[2];
+    private final double[] yawMotions = new double[2];
+    private final KeyStates[] silentMovements = new KeyStates[2];
     private int internalViolation;
     private int lastKeyForward;
     private int lastKeyStrafe;
@@ -385,7 +392,7 @@ public final class RotationSnapHeuristic extends IntaveMetaCheckPart<Heuristics,
     NONE, CHANGED, SILENTMOVE
   }
 
-  class Tick {
+  static class Tick {
     double posX, posY, posZ;
     float yaw, pitch;
 

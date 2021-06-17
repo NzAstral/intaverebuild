@@ -44,16 +44,13 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
     UserMetaAttackData attackData = meta.attackData();
     RotationAccuracyHeuristicMeta heuristicMeta = metaOf(player);
     WrappedEntity entity = attackData.lastAttackedEntity();
-
     float rotationYaw = movementData.rotationYaw;
     float perfectYaw = attackData.perfectYaw();
     float yawSpeed = MathHelper.distanceInDegrees(rotationYaw, movementData.lastRotationYaw);
     float distanceToPerfectYaw = MathHelper.distanceInDegrees(perfectYaw, rotationYaw);
-
     if (entity == null || movementData.lastTeleport < 5) {
       return;
     }
-
     if (attackData.recentlyAttacked(150)
       && yawSpeed > 1001
       && attackData.lastReach() > 1.0
@@ -70,20 +67,14 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
     } else if (heuristicMeta.snapVL > 0) {
       heuristicMeta.snapVL -= 0.1;
     }
-
     if (entity.moving(0.05) && attackData.recentlyAttacked(1000)) {
-
       if (yawSpeed > 1.0) {
-
         if (yawSpeed > 3.0) {
           double increase = MathHelper.minmax(-2.5, (2.2 - distanceToPerfectYaw) * Math.min(6, yawSpeed), 2);
-
           heuristicMeta.followBalance += increase;
-
           if (heuristicMeta.followBalance < 0) {
             heuristicMeta.followBalance = 0;
           }
-
           if (heuristicMeta.followBalance > 25) {
             String description = "follows entity movement too precisely";
             int options = LIMIT_4 | SUGGEST_MINING | DELAY_64s;
@@ -92,9 +83,7 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
             heuristicMeta.followBalance -= 7;
 //            plugin.eventService().attackCancelService().requestDamageCancel(user, AttackCancelType.LIGHT);
           }
-
         }
-
         // Check perfect yaw
         if (distanceToPerfectYaw == 0) {
           String description = "rotated yaw too precisely (0.0)";
@@ -104,7 +93,6 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
           //dmc17
           user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "17");
         }
-
         // Check yaw accuracy
         if (yawSpeed > 3.0) {
           double expectedDifference = 2.0;//Math.min(10, yawSpeed * 0.6);
@@ -124,12 +112,11 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
             heuristicMeta.rotationAccuracyVL -= 0.005;
           }
         }
-
         // Check yaw accuracy (other)
         if (distanceToPerfectYaw > 4.0) {
           heuristicMeta.balanceYawAccuracyOther = 0;
         } else if (heuristicMeta.balanceYawAccuracyOther++ > 50) {
-          String description = "high accuracy rotation yaw (2) vl:" + heuristicMeta.balanceYawAccuracyOther;
+          String description = "keeps high yaw accuracy in " + heuristicMeta.balanceYawAccuracyOther + " rotations";
           int options = LIMIT_2 | DELAY_32s | SUGGEST_MINING;
           Anomaly anomaly = Anomaly.anomalyOf("84", Confidence.MAYBE, Anomaly.Type.KILLAURA, description, options);
           parentCheck().saveAnomaly(player, anomaly);
@@ -139,17 +126,16 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
         }
       }
     }
-
-    if (Math.hypot(movementData.motionX(), movementData.motionZ()) < 0.05
+    if (
+      Math.hypot(movementData.motionX(), movementData.motionZ()) < 0.05
       || attackData.lastReach() < 1
-      || !entity.moving(0.05)) {
+      || !entity.moving(0.05)
+    ) {
       return;
     }
-
     int direction = perfectYaw > rotationYaw ? 1 : 0;
-    boolean sameDirection = heuristicMeta.lastBodyDirection == direction;
-
-    if (!sameDirection) {
+    boolean sameYawDirection = heuristicMeta.lastBodyDirection == direction;
+    if (!sameYawDirection) {
       heuristicMeta.bitBoxCornerBalance = 0;
     } else if (yawSpeed > 3) {
       float deviation = MathHelper.distanceInDegrees(heuristicMeta.prevDistanceToPerfectYaw, distanceToPerfectYaw);
@@ -165,7 +151,6 @@ public final class RotationAccuracyYawHeuristic extends IntaveMetaCheckPart<Heur
         heuristicMeta.lastHARYAnomaly = AccessHelper.now();
       }
     }
-
     heuristicMeta.lastBodyDirection = direction;
     heuristicMeta.prevDistanceToPerfectYaw = distanceToPerfectYaw;
   }
