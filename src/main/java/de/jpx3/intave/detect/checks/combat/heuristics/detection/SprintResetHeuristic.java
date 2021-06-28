@@ -124,7 +124,7 @@ public final class SprintResetHeuristic extends IntaveMetaCheckPart<Heuristics, 
     if(
       !attacked
       && player.getFoodLevel() > 6
-      && abilityData.health > 0
+      && abilityData.unsynchroniszedHealth > 0
       && meta.sprintingTicksLeft != 0
       && !useItem
       && movementData.lastTeleport != 0
