@@ -10,7 +10,7 @@ import de.jpx3.intave.tools.annotate.Native;
 import de.jpx3.intave.tools.sync.Synchronizer;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserCustomCheckMeta;
-import org.bukkit.Bukkit;
+import de.jpx3.intave.user.UserMessageSubscriptions;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -41,7 +41,7 @@ public final class InventoryClickPacketDelayAnalyzer extends IntaveMetaCheckPart
   @Native
   private void processSibylDebug(String message) {
     IntavePlugin plugin = IntavePlugin.singletonInstance();
-    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+    for (Player onlinePlayer : UserMessageSubscriptions.sibylReceivers()/*Bukkit.getOnlinePlayers()*/) {
       if (plugin.sibylIntegrationService().isAuthenticated(onlinePlayer)) {
         onlinePlayer.sendMessage(message);
       }

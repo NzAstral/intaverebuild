@@ -33,7 +33,7 @@ public final class UserMessageSubscriptions {
   }
 
   public static void setChannelActivation(Player player, UserMessageChannel channel, boolean status) {
-    List<Player> players = messageChannelSubscriptions.computeIfAbsent(channel, channel1 -> new CopyOnWriteArrayList<>());
+    List<Player> players = messageChannelSubscriptions.computeIfAbsent(channel, theChannel -> new CopyOnWriteArrayList<>());
     if (status) {
       if (!players.contains(player)) {
         players.add(player);

@@ -194,6 +194,10 @@ public final class AttackDispatcher implements EventProcessor {
     }
   }
 
+  /*
+    This is not a good idea ~Richy
+   */
+  @Deprecated
   private boolean playerAttack(Integer entityId) {
     for (Player player : Bukkit.getOnlinePlayers()) {
       if (player.getEntityId() == entityId) {
