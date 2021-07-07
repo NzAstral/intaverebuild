@@ -13,7 +13,6 @@ public final class CollisionModifiers {
 
   public static void setup() {
     setup(ScaffoldingCollisionModifier.class);
-    setup(BambooCollisionModifier.class);
   }
 
   public static void setup(Class<? extends CollisionModifier> modifierClass) {

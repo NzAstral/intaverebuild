@@ -26,6 +26,15 @@ public final class BoundingBoxBuilder {
     this.maxZ = maxZ;
   }
 
+  public void shape(WrappedAxisAlignedBB bb) {
+    this.minX = bb.minX;
+    this.minY = bb.minY;
+    this.minZ = bb.minZ;
+    this.maxX = bb.maxX;
+    this.maxY = bb.maxY;
+    this.maxZ = bb.maxZ;
+  }
+
   public List<WrappedAxisAlignedBB> applyAndResolve() {
     apply();
     return resolve();

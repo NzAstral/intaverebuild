@@ -20,6 +20,7 @@ public final class BoundingBoxPatcher {
     add(BlockLilyPadPatch.class);
     add(BlockFenceGatePatch.class);
     add(BlockFarmlandPatch.class);
+    add(BlockBambooPatch.class);
     add(BlockThinPatch.class);
 //    add(BlockDoorPatch.class);
   }
