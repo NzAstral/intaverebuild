@@ -44,7 +44,7 @@ public final class ScaffoldingCollisionModifier extends CollisionModifier {
 
   private boolean bottomProperty(World world, int posX, int posY, int posZ) {
     Block block = BukkitBlockAccess.blockAccess(world, posX, posY, posZ);
-    return blockState.valueOf(block, blockBottomState) && blockState.valueOf(block, blockDistanceState) == 0;
+    return blockState.valueOf(block, blockBottomState) && blockState.valueOf(block, blockDistanceState) != 0;
   }
 
   private boolean useCustomCollision(User user, double blockY) {
