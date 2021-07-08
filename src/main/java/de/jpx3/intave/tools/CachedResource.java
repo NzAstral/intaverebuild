@@ -120,9 +120,9 @@ public final class CachedResource {
   @Native
   private FileChannel acquireInputFileChannel() {
     acquireFileChannel();
-    FileOutputStream in;
+    FileInputStream in;
     try {
-      in = new FileOutputStream(fileStore());
+      in = new FileInputStream(fileStore());
       return in.getChannel();
     } catch (FileNotFoundException e) {
       throw new IllegalStateException(e);
