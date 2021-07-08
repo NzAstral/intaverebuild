@@ -4,7 +4,11 @@ public final class BlockStateBoolean extends BlockStateData<Boolean> {
   private Object converter;
 
   public BlockStateBoolean(String name) {
-    super(name);
+    super(name, false);
+  }
+
+  public BlockStateBoolean(String name, boolean defaultValue) {
+    super(name, defaultValue);
   }
 
   @Override
@@ -19,5 +23,9 @@ public final class BlockStateBoolean extends BlockStateData<Boolean> {
 
   public static BlockStateBoolean of(String name) {
     return new BlockStateBoolean(name);
+  }
+
+  public static BlockStateBoolean of(String name, boolean defaultValue) {
+    return new BlockStateBoolean(name, defaultValue);
   }
 }

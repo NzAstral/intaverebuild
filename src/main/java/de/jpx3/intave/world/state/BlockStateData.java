@@ -11,9 +11,11 @@ import org.bukkit.craftbukkit.v1_16_R3.block.data.CraftBlockData;
 
 public abstract class BlockStateData<T> {
   private final String name;
+  private final T defaultValue;
 
-  protected BlockStateData(String name) {
+  protected BlockStateData(String name, T defaultValue) {
     this.name = name;
+    this.defaultValue = defaultValue;
   }
 
   public abstract void build();
@@ -32,12 +34,18 @@ public abstract class BlockStateData<T> {
   public static final class BlockStateServerBridge {
 
     @PatchyAutoTranslation
-    public static <T> T valueOf(Block block, BlockStateData<?> blockStateData) {
+    public static <T> T valueOf(Block block, BlockStateData<T> blockStateData) {
       CraftBlock craftBlock = (CraftBlock) block;
       CraftBlockData craftBlockData = (CraftBlockData) craftBlock.getBlockData();
+      IBlockState<?> blockState = (IBlockState<?>) blockStateData.convert();
       IBlockData state = craftBlockData.getState();
-      //noinspection unchecked
-      return (T) state.get((IBlockState<?>) blockStateData.convert());
+      // containsKey
+      if (state.b(blockState)) {
+        //noinspection unchecked
+        return (T) state.get(blockState);
+      } else {
+        return blockStateData.defaultValue;
+      }
     }
 
     // Converter
