@@ -102,7 +102,7 @@ public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics,
     boolean yawExactNumber = meta.lastTick.yaw % 1 == 0;
 
     if (yawExactNumber && !lastYawMotionExactNumber) {
-      meta.violationLevel += 20;
+      meta.violationLevel += transformViolation(20);
       String description = "exact Yaw Rotation:" + meta.lastTick.yaw;
       Anomaly anomaly = anomalyOf("183", description, meta);
       parentCheck().saveAnomaly(player, anomaly);
@@ -117,7 +117,7 @@ public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics,
     boolean pitchExactNumber = meta.lastTick.pitch % 1 == 0;
 
     if (pitchExactNumber && Math.abs(meta.lastTick.pitch) != 90 && !lastPitchMotionExactNumber) {
-      meta.violationLevel += 20;
+      meta.violationLevel += transformViolation(20);
       String description = "exact pitch rotation:" + meta.lastTick.pitch;
       Anomaly anomaly = anomalyOf("183", description, meta);
       parentCheck().saveAnomaly(player, anomaly);
@@ -129,7 +129,7 @@ public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics,
     boolean containedYaw = meta.yawRotations.contains(meta.lastTick.yaw);
 
     if (containedYaw) {
-      meta.violationLevel += 50;
+      meta.violationLevel += transformViolation(50);
       String description = "same rotation (Yaw:" + meta.lastTick.yaw + ", YawMotion:" + MathHelper.formatDouble(meta.lastTick.yawMotion, 2) + ")";
       Anomaly anomaly = anomalyOf("181", description, meta);
       parentCheck().saveAnomaly(player, anomaly);
@@ -146,7 +146,7 @@ public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics,
     }
 
     if (containedPitch && Math.abs(meta.lastTick.pitch) != 90) {
-      meta.violationLevel += 50;
+      meta.violationLevel += transformViolation(50);
       String description = "same rotation (Pitch:" + meta.lastTick.pitch + ", PitchMotion:" + MathHelper.formatDouble(meta.lastTick.pitchMotion, 2) + ")";
       Anomaly anomaly = anomalyOf("181", description, meta);
       parentCheck().saveAnomaly(player, anomaly);
@@ -158,7 +158,7 @@ public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics,
     boolean yawMotionExactNumber = meta.lastTick.yawMotion % 1 == 0;
 
     if (yawMotionExactNumber) {
-      meta.violationLevel += 30;
+      meta.violationLevel += transformViolation(30);
       String description = "exact yaw motion:" + meta.lastTick.yawMotion;
       Anomaly anomaly = anomalyOf("182", description, meta);
       parentCheck().saveAnomaly(player, anomaly);
@@ -170,19 +170,27 @@ public final class SameRotationHeuristic extends IntaveMetaCheckPart<Heuristics,
     boolean pitchMotionExactNumber = meta.lastTick.pitchMotion % 1 == 0;
 
     if (pitchMotionExactNumber) {
-      meta.violationLevel += 20;
+      meta.violationLevel += transformViolation(20);
       String description = "exact pitch motion:" + meta.lastTick.pitchMotion;
       Anomaly anomaly = anomalyOf("182", description, meta);
       parentCheck().saveAnomaly(player, anomaly);
     }
   }
 
+  private int transformViolation(int violation) {
+    if (!IntaveControl.GOMME_MODE) {
+      violation /= 2;
+    }
+
+    return violation;
+  }
+
   private Anomaly anomalyOf(String key, String description, SameRotationHeuristicMeta meta) {
-    Confidence confidence = getConfidence(meta);
+    Confidence confidence = confidence(meta);
     return Anomaly.anomalyOf(key, confidence, Anomaly.Type.KILLAURA, description + " conf:" + confidence.level(), options());
   }
 
-  private Confidence getConfidence(SameRotationHeuristicMeta meta) {
+  private Confidence confidence(SameRotationHeuristicMeta meta) {
     Confidence confidence = Confidence.confidenceFrom(meta.violationLevel);
     meta.violationLevel -= confidence.level();
     return confidence;
