@@ -150,7 +150,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       } else {
         // mounts on entity
         WrappedEntity sittingOnEntity = synchronizedEntityMap.get(vehicleEntityID);
-        if (sittingOnEntity != null && !(sittingEntity instanceof DeadWrappedEntity)) {
+        if (sittingOnEntity != null && !(sittingOnEntity instanceof DeadWrappedEntity)) {
           sittingEntity.mountToEntity(sittingOnEntity);
         } else {
           if (IntaveControl.DISABLE_LICENSE_CHECK) {
