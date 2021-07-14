@@ -1,25 +1,25 @@
-package de.jpx3.intave.event.transaction;
+package de.jpx3.intave.event.feedback;
 
-public final class TFRequest<T> {
-  private final TFCallback<T> TFCallback;
+public final class Request<T> {
+  private final Callback<T> Callback;
   private final T obj;
   private final short key;
   private final long time;
   private final long num;
 
-  public TFRequest(TFCallback<T> TFCallback, T obj, short key, long num) {
-    this.TFCallback = TFCallback;
+  Request(Callback<T> Callback, T obj, short key, long num) {
+    this.Callback = Callback;
     this.obj = obj;
     this.key = key;
     this.num = num;
     this.time = System.currentTimeMillis();
   }
 
-  public TFCallback<T> callback() {
-    return TFCallback;
+  public Callback<T> callback() {
+    return Callback;
   }
 
-  public T lock() {
+  public T obj() {
     return obj;
   }
 

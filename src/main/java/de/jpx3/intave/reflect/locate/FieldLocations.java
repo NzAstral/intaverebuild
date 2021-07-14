@@ -24,7 +24,8 @@ public final class FieldLocations {
   }
 
   public FieldLocations reduceToCurrentVersion() {
-    return forward(fieldLocation -> fieldLocation.versionMatcher().matches(currentMinecraftVersion()));
+    int currentMinecraftVersion = currentMinecraftVersion();
+    return forward(fieldLocation -> fieldLocation.versionMatcher().matches(currentMinecraftVersion));
   }
 
   private int currentMinecraftVersion() {

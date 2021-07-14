@@ -8,10 +8,10 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
+import de.jpx3.intave.event.feedback.Callback;
 import de.jpx3.intave.event.packet.ListenerPriority;
 import de.jpx3.intave.event.packet.PacketEventSubscriber;
 import de.jpx3.intave.event.packet.PacketSubscription;
-import de.jpx3.intave.event.transaction.TFCallback;
 import de.jpx3.intave.fakeplayer.FakePlayer;
 import de.jpx3.intave.logging.IntaveLogger;
 import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
@@ -31,10 +31,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import static de.jpx3.intave.event.feedback.FeedbackService.TransactionOptions.APPEND_ON_OVERFLOW;
 import static de.jpx3.intave.event.packet.PacketId.Client.POSITION;
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 import static de.jpx3.intave.event.packet.PacketId.Server.*;
-import static de.jpx3.intave.event.transaction.TransactionFeedbackService.TransactionOptions.APPEND_ON_OVERFLOW;
 
 public final class ClientSideEntityService implements PacketEventSubscriber {
   /*
@@ -316,14 +316,14 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     if(entity == null) return;
 
     if (entity.isEntityLiving && entity.tracingEnabled()) {
-      TFCallback<PacketEvent> task = (player1, event1) -> {
+      Callback<PacketEvent> task = (player1, event1) -> {
         entity.verifiedPosition = false;
         entity.handleEntityTeleport(packet);
         entity.clientSynchronized = true;
       };
 
       if (entity.doubleVerification) {
-        TFCallback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
+        Callback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
         plugin.eventService().feedback().doubleSynchronize(player, event, event, task, verificationTask);
       } else {
         plugin.eventService().feedback().singleSynchronize(player, event, task);
@@ -372,12 +372,12 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     if(entity == null) return;
 
     if (entity.isEntityLiving && entity.tracingEnabled()) {
-      TFCallback<PacketEvent> task = (player1, event1) -> {
+      Callback<PacketEvent> task = (player1, event1) -> {
         entity.verifiedPosition = false;
         entity.handleEntityMovement(packet);
       };
       if (entity.doubleVerification) {
-        TFCallback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
+        Callback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
         plugin.eventService().feedback().doubleSynchronize(player, event, event, task, verificationTask);
       } else {
         plugin.eventService().feedback().singleSynchronize(player, event, task);
@@ -538,7 +538,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     }
     boolean synchronize = entity.clientSynchronized && entity.tracingEnabled();
     if (synchronize) {
-      TFCallback<WrappedEntity> task = (p, e) -> updateDeadState(e);
+      Callback<WrappedEntity> task = (p, e) -> updateDeadState(e);
       plugin.eventService().feedback().singleSynchronize(player, entity, task);
     } else {
       updateDeadState(entity);

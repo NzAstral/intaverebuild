@@ -1,4 +1,4 @@
-package de.jpx3.intave.event.transaction;
+package de.jpx3.intave.event.feedback;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -22,35 +22,35 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import static de.jpx3.intave.event.transaction.TransactionFeedbackService.TransactionOptions.*;
+import static de.jpx3.intave.event.feedback.FeedbackService.TransactionOptions.*;
 
-public final class TransactionFeedbackService implements PacketEventSubscriber {
+public final class FeedbackService implements PacketEventSubscriber {
   public final static long TRANSACTION_TIMEOUT = 3000;
   public final static long TRANSACTION_TIMEOUT_KICK = 20000;
   public final static short TRANSACTION_MIN_CODE = -32768;
   public final static short TRANSACTION_MAX_CODE = -16370;
   public final static long OPTIONAL_PENDING_LIMIT = 20;
   public final static long OPTIONAL_SENT_LIMIT = 100;
-  public final static int K_APPLIER = 0b11110101010101010100000000000000;
+  public final static int PING_MASK = 0xf5550000;
 
   private final static ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
-  private final TransactionResponseEnforcingProcessor responseLocker;
+  private final FeedbackResponsePull responseListener;
 
-  public TransactionFeedbackService(IntavePlugin plugin) {
+  public FeedbackService(IntavePlugin plugin) {
     plugin.packetSubscriptionLinker().linkSubscriptionsIn(this);
-    responseLocker = new TransactionResponseEnforcingProcessor(plugin);
+    responseListener = new FeedbackResponsePull(plugin);
   }
 
   public <T> void doubleSynchronize(
     Player player, PacketEvent event, T target,
-    TFCallback<T> firstCallback, TFCallback<T> secondCallback
+    Callback<T> firstCallback, Callback<T> secondCallback
   ) {
     doubleSynchronize(player, event, target, firstCallback, secondCallback, 0);
   }
 
   public <T> void doubleSynchronize(
     Player player, PacketEvent event, T target,
-    TFCallback<T> firstCallback, TFCallback<T> secondCallback,
+    Callback<T> firstCallback, Callback<T> secondCallback,
     int options
   ) {
     doubleSynchronize(player, event.getPacket(), target, firstCallback, secondCallback, options);
@@ -59,7 +59,7 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
 
   public <T> void doubleSynchronize(
     Player player, PacketContainer encapsulate,
-    T target, TFCallback<T> firstCallback, TFCallback<T> secondCallback
+    T target, Callback<T> firstCallback, Callback<T> secondCallback
   ) {
     doubleSynchronize(player, encapsulate, target, firstCallback, secondCallback, 0);
   }
@@ -67,7 +67,7 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
   public <T> void doubleSynchronize(
     Player player,
     PacketContainer encapsulate, T target,
-    TFCallback<T> firstCallback, TFCallback<T> secondCallback,
+    Callback<T> firstCallback, Callback<T> secondCallback,
     int options
   ) {
     User user = UserRepository.userOf(player);
@@ -81,13 +81,13 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
   }
 
   public <T> void singleSynchronize(
-    Player player, T target, TFCallback<T> callback
+    Player player, T target, Callback<T> callback
   ) {
     singleSynchronize(player, target, callback, 0);
   }
 
   public <T> void singleSynchronize(
-    Player player, T target, TFCallback<T> callback, int options
+    Player player, T target, Callback<T> callback, int options
   ) {
     if (!Bukkit.isPrimaryThread()) {
       if (TransactionOptions.matches(SELF_SYNCHRONIZATION, options)) {
@@ -124,25 +124,25 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
   private final static Object FALLBACK_OBJECT = new Object();
 
   private <T> void appendRequestToContext(
-    Player player, T obj, TFCallback<T> callback
+    Player player, T obj, Callback<T> callback
   ) {
     User user = UserRepository.userOf(player);
     if (user == null || !user.hasOnlinePlayer()) {
       return;
     }
     UserMetaConnectionData synchronizeData = user.meta().connectionData();
-    Queue<TFRequest<?>> queue = synchronizeData
+    Queue<Request<?>> queue = synchronizeData
       .transactionAppendixMap()
       .computeIfAbsent(synchronizeData.transactionNumCounter, aLong -> new LinkedBlockingDeque<>());
     if (obj == null) {
       //noinspection unchecked
       obj = (T) FALLBACK_OBJECT;
     }
-    queue.add(new TFRequest<>(callback, obj, (short) -1, -1));
+    queue.add(new Request<>(callback, obj, (short) -1, -1));
   }
 
   private /* synchronized (is already always sync) */ <T> short acquireNewId(
-    Player player, T obj, TFCallback<T> callback
+    Player player, T obj, Callback<T> callback
   ) {
     User user = UserRepository.userOf(player);
     UserMetaConnectionData synchronizeData = user.meta().connectionData();
@@ -155,7 +155,7 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
       //noinspection unchecked
       obj = (T) FALLBACK_OBJECT;
     }
-    TFRequest<T> feedbackEntry = new TFRequest<>(callback, obj, transactionKey, transactionNumCounter);
+    Request<T> feedbackEntry = new Request<>(callback, obj, transactionKey, transactionNumCounter);
     synchronizeData.transactionShortKeyMap().put(transactionKey, feedbackEntry);
     synchronizeData.transactionGlobalKeyMap().put(transactionNumCounter, feedbackEntry);
     return transactionKey;
@@ -164,7 +164,7 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
   private synchronized short findAvailableTransactionIdFor(Player player) {
     User user = UserRepository.userOf(player);
     UserMetaConnectionData synchronizeData = user.meta().connectionData();
-    Map<Short, TFRequest<?>> transactionFeedBackMap = synchronizeData.transactionShortKeyMap();
+    Map<Short, Request<?>> transactionFeedBackMap = synchronizeData.transactionShortKeyMap();
     short counter = TRANSACTION_MIN_CODE;
     while (transactionFeedBackMap.containsKey(counter)) counter++;
     return counter;
@@ -176,27 +176,26 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
     connectionData.transactionPacketCounter++;
 
     if (AccessHelper.now() - connectionData.transactionPacketCounterReset > 3000) {
-//      System.out.println(connectionData.transactionPacketCounter + " transactions last 3 seconds");
       connectionData.transactionPacketCounter = 0;
       connectionData.transactionPacketCounterReset = AccessHelper.now();
     }
   }
 
   private void sendTransactionPacket(Player receiver, short id) {
-    PacketContainer transactionPacket;
+    PacketContainer packet;
     if (MinecraftVersions.VER1_17_0.atOrAbove()) {
-      transactionPacket = protocolManager.createPacket(PacketType.Play.Server.PING);
-      transactionPacket.getIntegers().write(0, ((int)id) | K_APPLIER);
+      packet = protocolManager.createPacket(PacketType.Play.Server.PING);
+      packet.getIntegers().write(0, ((int) id) | PING_MASK);
     } else {
-      transactionPacket = protocolManager.createPacket(PacketType.Play.Server.TRANSACTION);
-      transactionPacket.getIntegers().write(0, 0);
-      transactionPacket.getShorts().write(0, id);
-      transactionPacket.getBooleans().write(0, false);
+      packet = protocolManager.createPacket(PacketType.Play.Server.TRANSACTION);
+      packet.getIntegers().write(0, 0);
+      packet.getShorts().write(0, id);
+      packet.getBooleans().write(0, false);
     }
-    sendPacket(receiver, transactionPacket);
+    sendPacket(receiver, packet);
   }
 
-  private void sendPacket(Player receiver, PacketContainer packet){
+  private void sendPacket(Player receiver, PacketContainer packet) {
     try {
       protocolManager.sendServerPacket(receiver, packet);
     } catch (InvocationTargetException exception) {
@@ -215,6 +214,7 @@ public final class TransactionFeedbackService implements PacketEventSubscriber {
   public static class TransactionOptions {
     public static int SELF_SYNCHRONIZATION = 1;
     public static int APPEND_ON_OVERFLOW = 2;
+    @Deprecated
     public static int APPEND = 4;
 
     public static boolean matches(int option, int options) {

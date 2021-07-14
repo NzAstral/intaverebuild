@@ -3,7 +3,7 @@ package de.jpx3.intave.user;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.jpx3.intave.event.entity.WrappedEntity;
-import de.jpx3.intave.event.transaction.TFRequest;
+import de.jpx3.intave.event.feedback.Request;
 import de.jpx3.intave.tools.AccessHelper;
 import de.jpx3.intave.tools.Rotation;
 import de.jpx3.intave.tools.annotate.DispatchCrossCall;
@@ -18,9 +18,9 @@ import java.util.Queue;
 @Relocate
 public final class UserMetaConnectionData {
   private final Player player;
-  private final Map<Short, TFRequest<?>> transactionShortMap = Maps.newConcurrentMap();
-  private final Map<Long, TFRequest<?>> transactionGlobalKeyMap = Maps.newConcurrentMap();
-  private final Map<Long, Queue<TFRequest<?>>> transactionOptionalAppendixMap = Maps.newConcurrentMap();
+  private final Map<Short, Request<?>> transactionShortMap = Maps.newConcurrentMap();
+  private final Map<Long, Request<?>> transactionGlobalKeyMap = Maps.newConcurrentMap();
+  private final Map<Long, Queue<Request<?>>> transactionOptionalAppendixMap = Maps.newConcurrentMap();
   private final Map<Integer, WrappedEntity> synchronizedEntityMap = Maps.newConcurrentMap();
   private final Map<Long, Long> remainingPingPacketTimestamps = Maps.newConcurrentMap();
   private final List<Long> latencyDifferenceBalance = Lists.newCopyOnWriteArrayList();
@@ -65,15 +65,15 @@ public final class UserMetaConnectionData {
     return Rotation.averageOf(movementLagSpikeHistory);
   }
 
-  public Map<Short, TFRequest<?>> transactionShortKeyMap() {
+  public Map<Short, Request<?>> transactionShortKeyMap() {
     return transactionShortMap;
   }
 
-  public Map<Long, TFRequest<?>> transactionGlobalKeyMap() {
+  public Map<Long, Request<?>> transactionGlobalKeyMap() {
     return transactionGlobalKeyMap;
   }
 
-  public Map<Long, Queue<TFRequest<?>>> transactionAppendixMap() {
+  public Map<Long, Queue<Request<?>>> transactionAppendixMap() {
     return transactionOptionalAppendixMap;
   }
 

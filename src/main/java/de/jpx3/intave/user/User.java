@@ -9,7 +9,7 @@ import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.connect.customclient.CustomClientSupport;
 import de.jpx3.intave.connect.shadow.ShadowPacketDataLink;
-import de.jpx3.intave.event.transaction.TransactionFeedbackService;
+import de.jpx3.intave.event.feedback.FeedbackService;
 import de.jpx3.intave.event.violation.AttackNerfStrategy;
 import de.jpx3.intave.event.violation.EntityNoDamageTickChanger;
 import de.jpx3.intave.fakeplayer.FakePlayer;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
-import static de.jpx3.intave.event.transaction.TransactionFeedbackService.TransactionOptions.SELF_SYNCHRONIZATION;
+import static de.jpx3.intave.event.feedback.FeedbackService.TransactionOptions.SELF_SYNCHRONIZATION;
 
 @Relocate
 public final class User {
@@ -320,7 +320,7 @@ public final class User {
     UserMetaConnectionData connectionData = userMeta.connectionData;
     if (connectionData.hardTransactionResponse++ > 100 && hasPlayer) {
       Player player = player();
-      IntaveLogger.logger().error(player.getName() + " has been removed for repeated validation faults");
+      IntaveLogger.logger().error(player.getName() + " has been removed for repeated feedback faults");
       synchronizedDisconnect("Timed out");
     }
   }
@@ -329,7 +329,8 @@ public final class User {
     if (!hasPlayer) {
       return;
     }
-    IntaveLogger.logger().info("Performed manual disconnect of player " + player().getName() + " with reason \"" + reason + "\"");
+    IntaveLogger.logger().info("Queuing manual disconnect of player " + player().getName() + " for \"" + reason + "\"");
+    IntaveLogger.logger().info("This measure is a security-constraint necessity, but feel free to contact us if this happens too often");
     Synchronizer.synchronize(() -> {
       if(player().isOnline()) {
         player().kickPlayer(reason);
@@ -355,7 +356,7 @@ public final class User {
       return;
     }
     Player player = player();
-    TransactionFeedbackService feedback = plugin().eventService().feedback();
+    FeedbackService feedback = plugin().eventService().feedback();
     feedback.singleSynchronize(player, null, (player1, target) -> {
       sendStatsUpdate(player, 0, 0);
       feedback.singleSynchronize(player, null, (player2, target1) -> {

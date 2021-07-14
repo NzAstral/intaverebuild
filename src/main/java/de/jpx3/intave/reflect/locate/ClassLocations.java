@@ -19,7 +19,8 @@ public final class ClassLocations {
   }
 
   public ClassLocations reduceToCurrentVersion() {
-    return forward(classLocation -> classLocation.versionMatcher().matches(currentMinecraftVersion()));
+    int currentMinecraftVersion = currentMinecraftVersion();
+    return forward(classLocation -> classLocation.versionMatcher().matches(currentMinecraftVersion));
   }
 
   private int currentMinecraftVersion() {

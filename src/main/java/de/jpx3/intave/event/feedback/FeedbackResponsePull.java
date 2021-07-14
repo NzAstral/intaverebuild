@@ -1,4 +1,4 @@
-package de.jpx3.intave.event.transaction;
+package de.jpx3.intave.event.feedback;
 
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
@@ -17,13 +17,13 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.Queue;
 
+import static de.jpx3.intave.event.feedback.FeedbackService.*;
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
-import static de.jpx3.intave.event.transaction.TransactionFeedbackService.*;
 
-public final class TransactionResponseEnforcingProcessor implements PacketEventSubscriber {
+public final class FeedbackResponsePull implements PacketEventSubscriber {
   private final IntavePlugin plugin;
 
-  public TransactionResponseEnforcingProcessor(IntavePlugin plugin) {
+  public FeedbackResponsePull(IntavePlugin plugin) {
     this.plugin = plugin;
     plugin.packetSubscriptionLinker().linkSubscriptionsIn(this);
     plugin.getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, this::checkTransactionTimeout, 20 * 2, 20 * 2);
@@ -38,7 +38,7 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
   private void checkTransactionTimeoutFor(Player player) {
     User user = userOf(player);
     if (oldestPendingTransaction(user) > TRANSACTION_TIMEOUT_KICK) {
-      IntaveLogger.logger().error(player.getName() + " was not responding to validation packets and therefore removed");
+      IntaveLogger.logger().error(player.getName() + " is not responding to any feedback packets");
       user.synchronizedDisconnect("Timed out");
     }
   }
@@ -56,13 +56,13 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
       return;
     }
     UserMetaConnectionData synchronizeData = user.meta().connectionData();
-    Map<Long, TFRequest<?>> transactionGlobalKeyMap = synchronizeData.transactionGlobalKeyMap();
-    Map<Short, TFRequest<?>> transactionShortKeyMap = synchronizeData.transactionShortKeyMap();
+    Map<Long, Request<?>> transactionGlobalKeyMap = synchronizeData.transactionGlobalKeyMap();
+    Map<Short, Request<?>> transactionShortKeyMap = synchronizeData.transactionShortKeyMap();
     PacketContainer packet = event.getPacket();
     short transactionIdentifier;
     if (packet.getShorts().size() == 0) {
       int inputInteger = packet.getIntegers().readSafely(0);
-      boolean hasMask = (inputInteger ^ K_APPLIER) >> Short.SIZE - 1 == 0;
+      boolean hasMask = (inputInteger ^ PING_MASK) >> Short.SIZE - 1 == 0;
       if (!hasMask) {
         return;
       }
@@ -72,7 +72,7 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
     }
 
     if (transactionIdentifier <= TRANSACTION_MAX_CODE) {
-      TFRequest<?> transactionResponse = transactionShortKeyMap.get(transactionIdentifier);
+      Request<?> transactionResponse = transactionShortKeyMap.get(transactionIdentifier);
       if (transactionResponse == null) {
         return;
       }
@@ -82,7 +82,7 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
         long from = Math.min(expected, received);
         long to = Math.max(expected, received);
         for (long i = from; i < to; i++) {
-          TFRequest<?> request = transactionGlobalKeyMap.remove(i);
+          Request<?> request = transactionGlobalKeyMap.remove(i);
           if (request == null) continue;
           transactionShortKeyMap.remove(request.key());
           receiveRequest(user, request);
@@ -96,20 +96,20 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
     }
   }
 
-  private void receiveRequest(User user, TFRequest<?> transactionResponse) {
+  private void receiveRequest(User user, Request<?> transactionResponse) {
     Player player = user.player();
     UserMetaConnectionData synchronizeData = user.meta().connectionData();
     synchronizeData.lastSynchronization = transactionResponse.requested();
     synchronizeData.lastReceivedTransactionNum = transactionResponse.num();
-    Map<Long, Queue<TFRequest<?>>> appendixMap = synchronizeData.transactionAppendixMap();
-    Queue<TFRequest<?>> appendixRequests = appendixMap.get(transactionResponse.num());
+    Map<Long, Queue<Request<?>>> appendixMap = synchronizeData.transactionAppendixMap();
+    Queue<Request<?>> appendixRequests = appendixMap.get(transactionResponse.num());
     if (appendixRequests != null && !appendixRequests.isEmpty()) {
-      for (TFRequest<?> appendixRequest : appendixRequests) {
-        appendixRequest.callback().success(player, convertInstanceOfObject(appendixRequest.lock()));
+      for (Request<?> appendixRequest : appendixRequests) {
+        appendixRequest.callback().success(player, convertInstanceOfObject(appendixRequest.obj()));
       }
       appendixMap.remove(transactionResponse.num());
     }
-    transactionResponse.callback().success(player, convertInstanceOfObject(transactionResponse.lock()));
+    transactionResponse.callback().success(player, convertInstanceOfObject(transactionResponse.obj()));
   }
 
   private <T> T convertInstanceOfObject(Object o) {
@@ -151,9 +151,9 @@ public final class TransactionResponseEnforcingProcessor implements PacketEventS
 
   private static long oldestPendingTransaction(User user) {
     UserMetaConnectionData synchronizeData = user.meta().connectionData();
-    Map<Short, TFRequest<?>> transactionFeedBackMap = synchronizeData.transactionShortKeyMap();
+    Map<Short, Request<?>> transactionFeedBackMap = synchronizeData.transactionShortKeyMap();
     long duration = AccessHelper.now();
-    for (TFRequest<?> value : transactionFeedBackMap.values()) {
+    for (Request<?> value : transactionFeedBackMap.values()) {
       duration = Math.min(duration, value.requested());
     }
     return AccessHelper.now() - duration;

@@ -87,7 +87,7 @@ public final class ConnectionHealthResolver implements PacketEventSubscriber {
     }
 
     if (!remainingPingPackets.containsKey(id)) {
-      IntaveLogger.logger().pushPrintln("[Intave] Player " + player + " sent kai " + id + ", but expected " + remainingPingPackets);
+      IntaveLogger.logger().error(player.getName() + " sent KAI " + id + ", but expected one of " + remainingPingPackets);
       user.synchronizedDisconnect("Unknown keep-alive identifier");
       return;
     }

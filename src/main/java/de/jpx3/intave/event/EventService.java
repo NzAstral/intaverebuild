@@ -10,7 +10,7 @@ import de.jpx3.intave.event.dispatch.*;
 import de.jpx3.intave.event.entity.ClientSideEntityService;
 import de.jpx3.intave.event.entity.EntityNoCollisionService;
 import de.jpx3.intave.event.entity.LazyEntityCollisionService;
-import de.jpx3.intave.event.transaction.TransactionFeedbackService;
+import de.jpx3.intave.event.feedback.FeedbackService;
 import de.jpx3.intave.event.violation.CombatMitigator;
 import de.jpx3.intave.event.violation.MovementEmulationEngine;
 import de.jpx3.intave.event.violation.ReconDelayLimiter;
@@ -38,7 +38,7 @@ public final class EventService implements BukkitEventSubscriber {
   private final static boolean DISABLE_ENTITY_COLLISIONS = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0);
 
   private final IntavePlugin plugin;
-  private TransactionFeedbackService transactionFeedbackService;
+  private FeedbackService feedbackService;
   private MovementEmulationEngine emulationEngine;
   private CombatMitigator combatMitigator;
   private ReconDelayLimiter reconDelayLimiter;
@@ -48,7 +48,7 @@ public final class EventService implements BukkitEventSubscriber {
   }
 
   public void setup() {
-    this.transactionFeedbackService = new TransactionFeedbackService(plugin);
+    this.feedbackService = new FeedbackService(plugin);
     this.emulationEngine = new MovementEmulationEngine(plugin);
     this.combatMitigator = new CombatMitigator(plugin);
     this.reconDelayLimiter = new ReconDelayLimiter(plugin);
@@ -133,8 +133,8 @@ public final class EventService implements BukkitEventSubscriber {
     return emulationEngine;
   }
 
-  public TransactionFeedbackService feedback() {
-    return transactionFeedbackService;
+  public FeedbackService feedback() {
+    return feedbackService;
   }
 
   public CombatMitigator combatMitigator() {
