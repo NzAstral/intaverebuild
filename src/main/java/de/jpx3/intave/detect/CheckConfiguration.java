@@ -3,6 +3,7 @@ package de.jpx3.intave.detect;
 import com.google.common.collect.ImmutableMap;
 import de.jpx3.intave.access.IntaveException;
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.access.check.MitigationStrategy;
 import de.jpx3.intave.tools.MathHelper;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -69,6 +70,10 @@ public final class CheckConfiguration {
       }
       thresholds.put(key, thresholdMap);
       return thresholdMap;
+    }
+
+    public MitigationStrategy mitigationStrategy() {
+      return MitigationStrategy.byName(stringBy("mitigation"));
     }
 
     public List<String> stringListBy(String key) {
@@ -158,54 +163,6 @@ public final class CheckConfiguration {
 
     private Object uncheckedResolveOrDefault(String key, Object def) {
       return access.getOrDefault(key, def);
-    }
-  }
-
-  public static class CheckViolationDecaySettings {
-    private volatile int amount;
-    private volatile long delay;
-    private volatile long wait;
-
-    public CheckViolationDecaySettings(int amount, long delay, long wait) {
-      this.amount = amount;
-      this.delay = delay;
-      this.wait = wait;
-    }
-
-    public int amount() {
-      return amount;
-    }
-
-    public void setAmount(int amount) {
-      this.amount = amount;
-    }
-
-    public long delay() {
-      return delay;
-    }
-
-    public void setDelay(long delay) {
-      this.delay = delay;
-    }
-
-    public long waitTime() {
-      return wait;
-    }
-
-    public void setWait(long wait) {
-      this.wait = wait;
-    }
-
-    public static CheckViolationDecaySettings ofMap(Map<String, Integer> settings) {
-      return new CheckViolationDecaySettings(
-        settings.getOrDefault("amount", 0),
-        settings.getOrDefault("delay", 0),
-        settings.getOrDefault("wait", 0)
-      );
-    }
-
-    public static CheckViolationDecaySettings empty() {
-      return new CheckViolationDecaySettings(0,0,0);
     }
   }
 }

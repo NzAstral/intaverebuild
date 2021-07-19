@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.check.CheckAccess;
 import de.jpx3.intave.access.check.CheckStatisticsAccess;
+import de.jpx3.intave.access.check.MitigationStrategy;
 import de.jpx3.intave.access.check.UnknownCheckException;
 import de.jpx3.intave.access.player.UnknownPlayerException;
 import de.jpx3.intave.detect.IntaveCheck;
@@ -79,6 +80,19 @@ public final class CheckAccessor {
         }
         Map<String, Map<String, Double>> violationLevel = UserRepository.userOf(player).meta().violationLevelData().violationLevel;
         violationLevel.getOrDefault(check.name().toLowerCase(), DEFAULT_RETURN).remove(threshold);
+      }
+
+      @Override
+      public void setMitigationStrategy(MitigationStrategy mitigationStrategy) {
+        if (check.mitigationStrategy() == MitigationStrategy.NOT_SUPPORTED) {
+          throw new UnsupportedOperationException("Check " + name() + " does not support a mitigation strategy");
+        }
+        check.setMitigationStrategy(mitigationStrategy);
+      }
+
+      @Override
+      public MitigationStrategy mitigationStrategy() {
+        return check.mitigationStrategy();
       }
 
       @Override

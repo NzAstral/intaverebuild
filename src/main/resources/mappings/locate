@@ -259,6 +259,10 @@ ServerConnection -> {
   17 -> "net/minecraft/server/network/ServerConnection"
 }
 
+Tag -> {
+  17 -> "net/minecraft/tags/Tag"
+}
+
 TagsFluid -> {
   17 -> "net/minecraft/tags/TagsFluid"
   fields {

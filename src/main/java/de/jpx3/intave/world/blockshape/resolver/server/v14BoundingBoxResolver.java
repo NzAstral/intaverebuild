@@ -38,9 +38,6 @@ public final class v14BoundingBoxResolver implements BoundingBoxResolvePipeline 
     }
     VoxelShape collisionShape = blockData.getCollisionShape(handle, blockPosition);
     List<AxisAlignedBB> nativeBoxes = collisionShape.d();
-    if (nativeBoxes.isEmpty()) {
-      return Collections.emptyList();
-    }
     return translate(nativeBoxes, posX, posY, posZ);
   }
 

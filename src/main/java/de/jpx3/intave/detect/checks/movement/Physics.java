@@ -3,6 +3,7 @@ package de.jpx3.intave.detect.checks.movement;
 import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.access.check.MitigationStrategy;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.detect.CheckStatistics;
@@ -46,7 +47,6 @@ import java.util.List;
 
 import static de.jpx3.intave.tools.MathHelper.formatDouble;
 import static de.jpx3.intave.tools.MathHelper.formatPosition;
-import static de.jpx3.intave.user.UserMetaClientData.VER_1_13;
 
 @Relocate
 public final class Physics extends IntaveCheck {
@@ -67,6 +67,7 @@ public final class Physics extends IntaveCheck {
     this.simulationProcessor = new SimulationProcessor();
 
     highToleranceMode = configuration().settings().boolBy("high-tolerance", false);
+    setDefaultMitigationStrategy(MitigationStrategy.AGGRESSIVE);
 
     searchFallDamageApplier();
     linkCheckToPoseSimulators();
@@ -277,7 +278,7 @@ public final class Physics extends IntaveCheck {
     User.UserMeta meta = user.meta();
     UserMetaClientData clientData = meta.clientData();
     UserMetaMovementData movementData = meta.movementData();
-    if (clientData.protocolVersion() >= VER_1_13) {
+    if (clientData.waterUpdate()) {
       movementData.inWater = Fluids.handleFluidAcceleration(user, movementData.boundingBox());
     } else {
       WrappedAxisAlignedBB entityBoundingBox = movementData.boundingBox();
@@ -513,13 +514,37 @@ public final class Physics extends IntaveCheck {
         .forPlayer(player).withMessage(message).withDetails(details).withVL(vl).build();
       ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
 
-      boolean deepPitchViolationOverflow = violationContext.shouldCounterThreat();
-      boolean highPitchViolationOverflow = violationLevelData.physicsVL > trustFactorSetting("pa-override-threshold", player);
+      MitigationStrategy mitigationStrategy = mitigationStrategy();
 
-      boolean setback = deepPitchViolationOverflow || (!highToleranceMode && highPitchViolationOverflow);
+      // a few helpful states
+      boolean isMidAir = !expectedMovement.onGround() && !expectedMovement.collidedHorizontally() && !expectedMovement.collidedVertically();
+      boolean isOnGround = expectedMovement.onGround();
 
-      // Apply manual setback override when the deviation is greater than 0.75 blocks
-      if (distance > 0.75 && !user.trustFactor().atLeast(TrustFactor.BYPASS)) {
+      boolean setback = false;
+      double manualOverrideDistance = 0;
+      switch (mitigationStrategy) {
+        case AGGRESSIVE:
+          boolean deepPitchViolationOverflow = violationContext.shouldCounterThreat();
+          boolean highPitchViolationOverflow = violationLevelData.physicsVL > trustFactorSetting("pa-override-threshold", player);
+          setback = deepPitchViolationOverflow || (!highToleranceMode && highPitchViolationOverflow);
+          manualOverrideDistance = 0.75;
+          break;
+        case CAREFUL:
+          setback = false;
+          manualOverrideDistance = 0.75;
+          break;
+        case LENIENT:
+          setback = false;
+          manualOverrideDistance = 0.9;
+          break;
+        case SILENT:
+          setback = false;
+          manualOverrideDistance = 1;
+          break;
+      }
+
+      // Apply manual setback override when the deviation is greater than a certain amount of blocks
+      if (distance > manualOverrideDistance && !user.trustFactor().atLeast(TrustFactor.BYPASS)) {
         setback = true;
       }
 

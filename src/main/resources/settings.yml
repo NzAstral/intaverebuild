@@ -4,7 +4,13 @@ state: 0
 check:
   physics:
 
+    # Toggle overall
     high-tolerance: false
+
+    # Mitigation mode
+    # Choose between AGGRESSIVE, CAREFUL, LENIENT and SILENT
+    # Trustfactor mappings and high-tolerance modes are supported throughout all of them
+    mitigation: AGGRESSIVE
 
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly"

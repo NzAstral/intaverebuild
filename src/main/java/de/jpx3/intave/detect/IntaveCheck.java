@@ -2,6 +2,7 @@ package de.jpx3.intave.detect;
 
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.access.check.MitigationStrategy;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
@@ -21,6 +22,8 @@ public abstract class IntaveCheck implements EventProcessor {
   private final Map<TrustFactor, CheckStatistics> perTrustFactorStatistics;
   private final CheckConfiguration checkConfiguration;
   private final boolean enabled;
+  private MitigationStrategy mitigationStrategy;
+  private MitigationStrategy defaultMitigationStrategy = MitigationStrategy.NOT_SUPPORTED;
 
   public final List<IntaveCheckPart<?>> checkParts = new ArrayList<>();
 
@@ -33,6 +36,7 @@ public abstract class IntaveCheck implements EventProcessor {
     this.perTrustFactorStatistics = new EnumMap<>(TrustFactor.class);
     plugin.checkService().enterConfiguration(checkConfiguration);
     this.enabled = checkConfiguration.settings().boolBy("enabled");
+    this.mitigationStrategy = checkConfiguration.settings().mitigationStrategy();
   }
 
   protected User userOf(Player player) {
@@ -74,6 +78,21 @@ public abstract class IntaveCheck implements EventProcessor {
 
   public CheckConfiguration configuration() {
     return checkConfiguration;
+  }
+
+  public MitigationStrategy mitigationStrategy() {
+    if (mitigationStrategy == MitigationStrategy.NOT_SUPPORTED) {
+      return mitigationStrategy = defaultMitigationStrategy;
+    }
+    return mitigationStrategy;
+  }
+
+  public void setMitigationStrategy(MitigationStrategy mitigationStrategy) {
+    this.mitigationStrategy = mitigationStrategy;
+  }
+
+  public void setDefaultMitigationStrategy(MitigationStrategy defaultMitigationStrategy) {
+    this.defaultMitigationStrategy = defaultMitigationStrategy;
   }
 
   public List<IntaveCheckPart<?>> checkParts() {

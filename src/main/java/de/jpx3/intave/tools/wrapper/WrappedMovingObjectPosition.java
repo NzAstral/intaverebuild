@@ -68,18 +68,17 @@ public class WrappedMovingObjectPosition {
   public static WrappedMovingObjectPosition fromNativeMovingObjectPosition(Object movingObjectPosition) {
     if (movingObjectPosition == null) {
       // just to make IntelliJ happy..
-      //return new WrappedMovingObjectPosition(new WrappedVector(0,0,0), WrappedEnumDirection.UP, new WrappedBlockPosition(0,0,0));
       return null;
     }
 
     if (NEW_RESOLVER) {
-      return newResolve(movingObjectPosition);
+      return modernResolve(movingObjectPosition);
     } else {
       return legacyResolve(movingObjectPosition);
     }
   }
 
-  private static WrappedMovingObjectPosition newResolve(Object movingObjectPosition) {
+  private static WrappedMovingObjectPosition modernResolve(Object movingObjectPosition) {
     try {
       Class<?> movingObjectPositionBase = ReflectiveAccess.lookupServerClass("MovingObjectPosition");
       Class<?> movingObjectPositionEntity = ReflectiveAccess.lookupServerClass("MovingObjectPositionEntity");
@@ -94,7 +93,7 @@ public class WrappedMovingObjectPosition {
         Object entity = field.get(movingObjectPosition);
         return new WrappedMovingObjectPosition(serverEntityByIdentifier((int) entity.getClass().getMethod("getId").invoke(entity)));
       } else {
-        Field movingObjectPositionBaseField = ReflectiveAccess.lookupServerField("MovingObjectPosition", "pos");/*movingObjectPositionBase.getDeclaredField("pos");*/
+        Field movingObjectPositionBaseField = ReflectiveAccess.lookupServerField("MovingObjectPosition", "pos");
         if (!movingObjectPositionBaseField.isAccessible())
           movingObjectPositionBaseField.setAccessible(true);
         Object pos = movingObjectPositionBaseField.get(movingObjectPosition);

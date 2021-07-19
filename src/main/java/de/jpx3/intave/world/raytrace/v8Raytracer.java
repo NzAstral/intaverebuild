@@ -127,7 +127,7 @@ public final class v8Raytracer implements Raytracer {
       lookY = MathHelper.floor(lookVector.yCoord) - (enumdirection == EnumDirection.UP ? 1 : 0);
       lookZ = MathHelper.floor(lookVector.zCoord) - (enumdirection == EnumDirection.SOUTH ? 1 : 0);
       blockposition = new BlockPosition(lookX, lookY, lookZ);
-      IBlockData iblockdata1 = typeOf(player, world, blockposition);//world.getType(blockposition);
+      IBlockData iblockdata1 = typeOf(player, world, blockposition);
       Block block1 = iblockdata1.getBlock();
 
       // block1.a refers to getCollisionBoundingBox

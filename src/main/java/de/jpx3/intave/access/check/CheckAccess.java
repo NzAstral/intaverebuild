@@ -24,6 +24,14 @@ public interface CheckAccess {
   }
   void resetViolationLevel(Player player, String threshold);
 
+  default MitigationStrategy mitigationStrategy() {
+    return MitigationStrategy.NOT_SUPPORTED;
+  }
+
+  default void setMitigationStrategy(MitigationStrategy mitigationStrategy) {
+    throw new UnsupportedOperationException("Check " + name() + " does not support a mitigation strategy");
+  }
+
   Map<Integer, List<String>> commandsOf(String threshold);
   CheckStatisticsAccess statistics();
 }

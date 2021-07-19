@@ -15,8 +15,7 @@ public final class v13Raytracer implements Raytracer {
   @Override
   @PatchyAutoTranslation
   public WrappedMovingObjectPosition raytrace(World world, Player player, WrappedVector eyeVector, WrappedVector targetVector) {
-    net.minecraft.server.v1_13_R2.World minecraftWorld = ((CraftWorld) world).getHandle().getMinecraftWorld();
-    MovingObjectPosition movingObjectPosition = minecraftWorld.rayTrace(
+    MovingObjectPosition movingObjectPosition = ((CraftWorld) world).getHandle().rayTrace(
       (Vec3D) eyeVector.convertToNativeVec3(),
       (Vec3D) targetVector.convertToNativeVec3(),
       FluidCollisionOption.NEVER,

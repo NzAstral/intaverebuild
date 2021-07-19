@@ -1,4 +1,3 @@
-# See our website for configuration
-
 # Selected configuration
+# Select "file" to use a file configuration
 config-identifier: "example-001"
