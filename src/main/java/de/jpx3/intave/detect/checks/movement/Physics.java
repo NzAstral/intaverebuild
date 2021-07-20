@@ -507,17 +507,26 @@ public final class Physics extends IntaveCheck {
         details += ", strict";
       }
 
+      // a few helpful states
+      boolean isMidAir = !expectedMovement.onGround() && !expectedMovement.collidedHorizontally() && !expectedMovement.collidedVertically();
+      boolean isOnGround = expectedMovement.onGround();
+      boolean uncommonArea = movementData.pastWaterMovement < 20
+        || movementData.collidedHorizontally
+        || movementData.collidedVertically
+        || movementData.collidedWithBoat()
+        || movementData.inWeb
+        || movementData.pastElytraFlying < 20;
+
       double vl = violationLevelIncrease / (highToleranceMode ? 75 : (violationLevelData.physicsVL >= 100 ? 20 : 50));
+      if (uncommonArea) {
+        vl /= 2;
+      }
 
       Violation violation = Violation.builderFor(Physics.class)
         .forPlayer(player).withMessage(message).withDetails(details).withVL(vl).build();
       ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
 
       MitigationStrategy mitigationStrategy = mitigationStrategy();
-
-      // a few helpful states
-      boolean isMidAir = !expectedMovement.onGround() && !expectedMovement.collidedHorizontally() && !expectedMovement.collidedVertically();
-      boolean isOnGround = expectedMovement.onGround();
 
       boolean setback = false;
       double manualOverrideDistance = 0;
@@ -529,11 +538,11 @@ public final class Physics extends IntaveCheck {
           manualOverrideDistance = 0.75;
           break;
         case CAREFUL:
-          setback = false;
+          setback = violationLevelData.physicsVL >= 100;
           manualOverrideDistance = 0.75;
           break;
         case LENIENT:
-          setback = false;
+          setback = MathHelper.hypot3d(movementData.motionX(), movementData.motionY(), movementData.motionZ()) > 0.4 && violationLevelData.physicsVL >= 100;
           manualOverrideDistance = 0.9;
           break;
         case SILENT:
