@@ -484,6 +484,15 @@ public final class Physics extends IntaveCheck {
     }
 
     if (violationLevelIncrease > 0) {
+      boolean uncommonArea = movementData.pastWaterMovement < 20
+        || movementData.collidedHorizontally
+        || movementData.collidedVertically
+        || movementData.collidedWithBoat()
+        || movementData.inWeb
+        || movementData.pastElytraFlying < 20;
+      if (uncommonArea) {
+        violationLevelIncrease /= 2;
+      }
       violationLevelIncrease = Math.min(200.0, violationLevelIncrease);
       violationLevelIncrease = Math.max(1, violationLevelIncrease);
       violationLevelData.physicsVL = MathHelper.minmax(0, violationLevelData.physicsVL + violationLevelIncrease, 200);
@@ -507,25 +516,14 @@ public final class Physics extends IntaveCheck {
         details += ", strict";
       }
 
-      // a few helpful states
-      boolean isMidAir = !expectedMovement.onGround() && !expectedMovement.collidedHorizontally() && !expectedMovement.collidedVertically();
-      boolean isOnGround = expectedMovement.onGround();
-      boolean uncommonArea = movementData.pastWaterMovement < 20
-        || movementData.collidedHorizontally
-        || movementData.collidedVertically
-        || movementData.collidedWithBoat()
-        || movementData.inWeb
-        || movementData.pastElytraFlying < 20;
-
       double vl = violationLevelIncrease / (highToleranceMode ? 75 : (violationLevelData.physicsVL >= 100 ? 20 : 50));
-      if (uncommonArea) {
-        vl /= 2;
-      }
-
       Violation violation = Violation.builderFor(Physics.class)
         .forPlayer(player).withMessage(message).withDetails(details).withVL(vl).build();
       ViolationContext violationContext = plugin.violationProcessor().processViolation(violation);
 
+      // a few helpful states
+      boolean isMidAir = !expectedMovement.onGround() && !expectedMovement.collidedHorizontally() && !expectedMovement.collidedVertically();
+      boolean isOnGround = expectedMovement.onGround();
       MitigationStrategy mitigationStrategy = mitigationStrategy();
 
       boolean setback = false;
@@ -629,6 +627,7 @@ public final class Physics extends IntaveCheck {
       if (velocityDetected) {
         tags.add("velocity?");
       }
+      tags.add("riding:" + movementData.hasRidingEntity());
 
       debug += " " + String.join(" ", tags);
       String finalDebug = debug;

@@ -325,7 +325,7 @@ public final class MovementDispatcher implements EventProcessor {
     }
 
     WrappedEntity attachedEntity = movementData.ridingEntity();
-    if (attachedEntity != null && !attachedEntity.isEntityAlive()) {
+    if (attachedEntity != null && !attachedEntity.isEntityAlive() && !attachedEntity.entityName().equals("Boat")) {
       movementData.dismountRidingEntity();
     }
 

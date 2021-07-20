@@ -162,6 +162,7 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
     } else if (entityID == player.getEntityId()) {
       // The Player
       // ID -1 => undo attachment
+      tryCreateVehicleEntity(user, vehicleEntityID);
       WrappedEntity ridingEntity = synchronizedEntityMap.get(vehicleEntityID);
       if (movementData.hasRidingEntity()) {
         movementData.dismountRidingEntity();
@@ -169,6 +170,13 @@ public final class ClientSideEntityService implements PacketEventSubscriber {
       if (ridingEntity != null && !(ridingEntity instanceof DeadWrappedEntity)) {
         movementData.setRidingEntity(ridingEntity);
       }
+    }
+  }
+
+  private void tryCreateVehicleEntity(User user, int entityID) {
+    Entity entity = serverEntityByIdentifier(user.player(), entityID);
+    if (entity != null) {
+      spawnMobByBukkitEntity(user, entity);
     }
   }
 
