@@ -28,7 +28,7 @@ public final class IntaveBotStage extends CommandStage {
   @SubCommand(
     selectors = "spawn",
     usage = "<player> <type>",
-    permission = "intave.command.bot.spawn",
+    permission = "intave.command.internals.bot.spawn",
     description = "Summon bots to a specified player"
   )
   public void spawn(CommandSender commandSender, Player targetPlayer, String typeName) {

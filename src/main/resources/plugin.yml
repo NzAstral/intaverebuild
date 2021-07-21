@@ -70,6 +70,7 @@ permissions:
       intave.command.internals.rejoinblock: true
       intave.command.internals.sendnotify: true
       intave.command.internals.collectivekick: true
+      intave.command.internals.bot: true
 
   intave.command.internals.delay:
     default: false
@@ -81,4 +82,7 @@ permissions:
     default: false
 
   intave.command.internals.collectivekick:
+    default: false
+
+  intave.command.internals.bot:
     default: false

@@ -52,7 +52,7 @@ public final class IntaveInternalsStage extends CommandStage {
     selectors = "bot",
     usage = "<player> <type>",
     description = "Bot related commands",
-    permission = "intave.command.bot"
+    permission = "intave.command.internals.bot"
   )
   @Forward(
     target = IntaveBotStage.class
