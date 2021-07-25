@@ -72,7 +72,9 @@ public final class UserMetaMovementData {
   // Timestamps
   public long lastSneakingTimestamps, lastJumpTimestamps;
 
-  private volatile WrappedAxisAlignedBB boundingBox;
+  private volatile WrappedAxisAlignedBB boundingBox = WrappedAxisAlignedBB.fromBounds(0, 0, 0, 0,0,0);
+  private boolean boundingBoxSetup = false;
+
   public Vector emulationVelocity;
   public Vector setbackOverrideVelocity = new Vector(0, 0, 0);
   public Vector lastVelocity = new Vector();
@@ -166,6 +168,7 @@ public final class UserMetaMovementData {
     this.hasJumpFactor = clientData.protocolVersion() >= VER_1_15;
     Location location = player.getLocation();
     boundingBox = WrappedAxisAlignedBB.createFromPosition(user, location.getX(), location.getY(), location.getZ());
+    boundingBoxSetup = true;
   }
 
   private void applyPlayerLocation() {
@@ -207,7 +210,7 @@ public final class UserMetaMovementData {
     boolean hasMovement, boolean hasRotation
   ) {
     UserMetaClientData clientData = user.meta().clientData();
-    if (boundingBox == null) {
+    if (!boundingBoxSetup) {
       setupDefaults();
     }
 
@@ -620,7 +623,7 @@ public final class UserMetaMovementData {
   }
 
   public void setBoundingBox(WrappedAxisAlignedBB entityBoundingBox) {
-    if (this.boundingBox == null) {
+    if (!boundingBoxSetup) {
       setupDefaults();
     }
     this.boundingBox = entityBoundingBox;
