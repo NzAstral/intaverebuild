@@ -18,7 +18,7 @@ public final class IntaveDiagnosticsStage extends CommandStage {
   private final IntavePlugin plugin;
 
   protected IntaveDiagnosticsStage() {
-    super(IntaveCommandStage.singletonInstance(), "diagnostics", 1);
+    super(IntaveCommandStage.singletonInstance(), "diagnostics");
     plugin = IntavePlugin.singletonInstance();
   }
 

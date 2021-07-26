@@ -31,7 +31,7 @@ public final class IntaveInternalsStage extends CommandStage {
   private final WrappedDataWatcher fallbackDatawatcher;
 
   private IntaveInternalsStage() {
-    super(IntaveCommandStage.singletonInstance(), "internals", 1);
+    super(IntaveCommandStage.singletonInstance(), "internals");
     plugin = IntavePlugin.singletonInstance();
 
     fallbackDatawatcher = defaultWatcherOf(Bukkit.getWorlds().get(0), EntityType.ARMOR_STAND);

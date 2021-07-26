@@ -19,7 +19,7 @@ public final class IntaveBotStage extends CommandStage {
   private final IntavePlugin plugin;
 
   private IntaveBotStage() {
-    super(IntaveInternalsStage.singletonInstance(), "bot", 1);
+    super(IntaveInternalsStage.singletonInstance(), "bot");
     plugin = IntavePlugin.singletonInstance();
   }
 

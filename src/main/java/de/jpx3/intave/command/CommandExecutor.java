@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class IntaveSubCommand {
+public final class CommandExecutor {
   private final CommandStage stage;
   private String[] selectors;
   private String usage, description, permission;
@@ -35,16 +35,16 @@ public final class IntaveSubCommand {
   private boolean requiresUserParameter;
   private boolean requiresCommandSenderParameter;
 
-  public IntaveSubCommand(
+  public CommandExecutor(
     CommandStage stage,
     Method targetMethod
   ) {
     this.stage = stage;
     this.targetMethod = targetMethod;
-    this.load();
+    this.compile();
   }
 
-  public void load() {
+  public void compile() {
     SubCommand subCommand = targetMethod.getDeclaredAnnotation(SubCommand.class);
     selectors = subCommand.selectors();
     usage = subCommand.usage();
@@ -53,10 +53,8 @@ public final class IntaveSubCommand {
     hideInHelp = subCommand.hideInHelp();
 
     Forward forward = targetMethod.getDeclaredAnnotation(Forward.class);
-
     if (forward != null) {
       forwardClass = forward.target();
-//      return;
     }
 
     Annotation[][] parameterAnnotations = targetMethod.getParameterAnnotations();
@@ -178,7 +176,6 @@ public final class IntaveSubCommand {
   }
 
   public List<String> tabComplete(CommandSender commandSender, String executedCommand) {
-    String prefix = IntavePlugin.prefix();
     String[] args = executedCommand.split(" ");
 
     if (!permission.equals("none") && !BukkitPermissionCheck.permissionCheck(commandSender, permission)) {

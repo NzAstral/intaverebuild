@@ -19,7 +19,7 @@ public final class IntaveProxyStage extends CommandStage {
   private final IntavePlugin plugin;
 
   private IntaveProxyStage() {
-    super(IntaveCommandStage.singletonInstance(), "proxy", 1);
+    super(IntaveCommandStage.singletonInstance(), "proxy");
     plugin = IntavePlugin.singletonInstance();
   }
 

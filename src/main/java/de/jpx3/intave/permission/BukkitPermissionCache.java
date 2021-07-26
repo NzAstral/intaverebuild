@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public final class BukkitPermissionCache {
-  private final static long CACHE_EXPIRE = TimeUnit.SECONDS.toMillis(20);
+  private final static long CACHE_EXPIRE = TimeUnit.SECONDS.toMillis(16);
   private final Map<String, PermissionEntry> permissionEntries = new ConcurrentHashMap<>();
 
   public boolean inCache(String permission) {

@@ -51,12 +51,8 @@ public final class TypeTranslators {
       return "nothing";
     } else if (size == 1) {
       return "only " + elements.get(0);
-    } else /*if (size == 2) {
-      return "either " + elements.get(0) + " or " + elements.get(1);
-    } else */{
-      String elementsListed = String.join(", ", elements.subList(0, size - 1));
-      String lastElement = elements.get(size - 1);
-      return "either " + elementsListed + " or " + lastElement;
+    } else {
+      return "either " + String.join(", ", elements.subList(0, size - 1)) + " or " + elements.get(size - 1);
     }
   }
 

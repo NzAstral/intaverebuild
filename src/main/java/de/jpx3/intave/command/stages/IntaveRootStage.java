@@ -39,7 +39,7 @@ public final class IntaveRootStage extends CommandStage {
   private final IntavePlugin plugin;
 
   private IntaveRootStage() {
-    super(IntaveCommandStage.singletonInstance(), "root", 1);
+    super(IntaveCommandStage.singletonInstance(), "root");
     plugin = IntavePlugin.singletonInstance();
   }
 

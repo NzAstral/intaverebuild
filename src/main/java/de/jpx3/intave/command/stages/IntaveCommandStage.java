@@ -29,12 +29,12 @@ public final class IntaveCommandStage extends CommandStage {
   private static IntaveCommandStage singletonInstance;
 
   private IntaveCommandStage() {
-    super(null, "/intave", 0);
+    super(null, "/intave");
   }
 
   @SubCommand(
     selectors = "verbose",
-    usage = "[<player>]",
+    usage = "[<player...>]",
     description = "Toggle verbose messages",
     permission = "intave.command.verbose"
   )
@@ -145,11 +145,11 @@ public final class IntaveCommandStage extends CommandStage {
   public void internalCommand(User user) {}
 
   @Override
-  protected void showInfo(CommandSender sender) {
+  protected void showAllCommands(CommandSender sender) {
     boolean hasIntavePermission = BukkitPermissionCheck.permissionCheck(sender, "intave.command");
 
     if (hasIntavePermission) {
-      super.showInfo(sender);
+      super.showAllCommands(sender);
     } else {
       sendVersionMessage(sender);
     }
