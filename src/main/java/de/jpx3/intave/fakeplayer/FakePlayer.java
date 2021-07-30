@@ -287,7 +287,7 @@ public final class FakePlayer extends FakePlayerBody {
     return attackSubscriber;
   }
 
-  public WrappedGameProfile gameprofile() {
+  public WrappedGameProfile profile() {
     return wrappedGameProfile;
   }
 

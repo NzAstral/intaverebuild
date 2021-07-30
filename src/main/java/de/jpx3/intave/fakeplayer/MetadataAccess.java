@@ -21,7 +21,7 @@ public final class MetadataAccess {
     FakePlayerIdentity identity,
     boolean sprinting
   ) {
-    WrappedDataWatcher wrappedDataWatcher = identity.datawatcher();
+    WrappedDataWatcher wrappedDataWatcher = identity.dataWatcher();
     List<WrappedWatchableObject> watchableObjects = wrappedDataWatcher.getWatchableObjects();
     for (WrappedWatchableObject watchableObject : watchableObjects) {
       if (watchableObject.getIndex() != 0) {
@@ -44,7 +44,7 @@ public final class MetadataAccess {
     FakePlayerIdentity identity,
     boolean sneaking
   ) {
-    WrappedDataWatcher wrappedDataWatcher = identity.datawatcher();
+    WrappedDataWatcher wrappedDataWatcher = identity.dataWatcher();
     List<WrappedWatchableObject> watchableObjects = wrappedDataWatcher.getWatchableObjects();
     for (WrappedWatchableObject watchableObject : watchableObjects) {
       if (watchableObject.getIndex() != 0) {
@@ -65,7 +65,7 @@ public final class MetadataAccess {
     FakePlayerIdentity identity,
     float newHealth
   ) {
-    WrappedDataWatcher wrappedDataWatcher = identity.datawatcher();
+    WrappedDataWatcher wrappedDataWatcher = identity.dataWatcher();
     List<WrappedWatchableObject> watchableObjects = wrappedDataWatcher.getWatchableObjects();
     for (WrappedWatchableObject watchableObject : watchableObjects) {
       if (watchableObject.getIndex() != 6) {
@@ -83,7 +83,7 @@ public final class MetadataAccess {
     FakePlayerIdentity identity,
     boolean invisible
   ) {
-    WrappedDataWatcher wrappedDataWatcher = identity.datawatcher();
+    WrappedDataWatcher wrappedDataWatcher = identity.dataWatcher();
     List<WrappedWatchableObject> watchableObjects = wrappedDataWatcher.getWatchableObjects();
     for (WrappedWatchableObject watchableObject : watchableObjects) {
       if (watchableObject.getIndex() != 0) {

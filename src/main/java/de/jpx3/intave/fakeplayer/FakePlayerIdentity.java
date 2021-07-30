@@ -17,11 +17,11 @@ public abstract class FakePlayerIdentity {
     return identifier;
   }
 
-  public WrappedGameProfile gameprofile() {
+  public WrappedGameProfile profile() {
     return wrappedGameProfile;
   }
 
-  public WrappedDataWatcher datawatcher() {
+  public WrappedDataWatcher dataWatcher() {
     return wrappedDataWatcher;
   }
 }

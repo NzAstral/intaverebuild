@@ -69,8 +69,8 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
 
   protected void spawn(Location spawn) {
     PacketContainer spawnPacket = create(PacketType.Play.Server.NAMED_ENTITY_SPAWN);
-    WrappedGameProfile gameProfile = gameprofile();
-    WrappedDataWatcher dataWatcher = datawatcher();
+    WrappedGameProfile gameProfile = profile();
+    WrappedDataWatcher dataWatcher = dataWatcher();
     spawnPacket.getModifier()
       .write(0, identifier())
       .write(1, gameProfile.getUUID())
@@ -86,7 +86,7 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
     addToTabList(this.observer, gameProfile, tabListName);
     send(spawnPacket);
     if (!hasAttribute(attributes, IN_TABLIST)) {
-      removeFromTabList(this.observer, this.gameprofile());
+      removeFromTabList(this.observer, this.profile());
     }
     if (hasAttribute(attributes, INVISIBLE)) {
       updateVisibility(observer, this, true);
@@ -95,7 +95,7 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
 
   public void despawn() {
     if (hasAttribute(attributes, IN_TABLIST)) {
-      TablistMutator.removeFromTabList(observer(), gameprofile());
+      TablistMutator.removeFromTabList(observer(), profile());
     }
     PacketContainer packet = create(PacketType.Play.Server.ENTITY_DESTROY);
     packet.getIntegerArrays().write(0, new int[]{identifier()});
@@ -292,14 +292,14 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
       .write(0, teamName)
       .write(2, prefix);
     send(scoreboardCreatePacket);
-    sendScoreboard(observer, teamName, gameprofile(), hasAttribute(attributes, INVISIBLE));
+    sendScoreboard(observer, teamName, profile(), hasAttribute(attributes, INVISIBLE));
   }
 
   public void latencyInitialize() {
     PacketContainer packet = create(PacketType.Play.Server.PLAYER_INFO);
     WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromText(prefix);
     PlayerInfoData playerInfoData = new PlayerInfoData(
-      gameprofile(),
+      profile(),
       0,
       EnumWrappers.NativeGameMode.SURVIVAL,
       wrappedChatComponent
