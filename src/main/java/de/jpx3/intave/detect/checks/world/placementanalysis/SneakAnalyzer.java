@@ -23,12 +23,12 @@ import java.util.List;
 
 import static de.jpx3.intave.detect.checks.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 
-public final class PlacementSneakAnalyzer extends MetaCheckPart<PlacementAnalysis, PlacementSneakAnalyzer.SneakMeta> {
+public final class SneakAnalyzer extends MetaCheckPart<PlacementAnalysis, SneakAnalyzer.SneakMeta> {
   private final static int CHECK_LENGTH = 24;
 
   private final IntavePlugin plugin;
 
-  public PlacementSneakAnalyzer(PlacementAnalysis parentCheck) {
+  public SneakAnalyzer(PlacementAnalysis parentCheck) {
     super(parentCheck, SneakMeta.class);
     plugin = IntavePlugin.singletonInstance();
   }

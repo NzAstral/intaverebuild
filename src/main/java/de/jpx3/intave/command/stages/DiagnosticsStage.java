@@ -69,7 +69,7 @@ public final class DiagnosticsStage extends CommandStage {
       }
       String violatedRate = MathHelper.formatDouble((((double) violations / (double) processed)) * 100d, 5);
       String checkFormat = ChatColor.RED + check.name();
-      String message = checkFormat + ChatColor.GRAY + ": " + violations + " detections in " + processed + " processes (" + violatedRate + "%)";
+      String message = checkFormat + IntavePlugin.defaultColor() + ": " + violations + " detections in " + processed + " processes (" + violatedRate + "%)";
       sender.sendMessage(message);
     }
   }

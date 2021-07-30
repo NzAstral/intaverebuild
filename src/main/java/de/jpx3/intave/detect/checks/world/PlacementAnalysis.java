@@ -23,13 +23,13 @@ public final class PlacementAnalysis extends Check {
     boolean enterprise = (UserMetaClientData.VERSION_DETAILS & 0x200) != 0;
     boolean partner = (UserMetaClientData.VERSION_DETAILS & 0x100) != 0;
     if (enterprise || partner) {
-      appendCheckPart(new PlacementSpeedAnalyzer(this));
-      appendCheckPart(new PlacementRotationSpeedAnalyzer(this));
-      appendCheckPart(new PlacementSharpRotationAnalyzer(this));
-      appendCheckPart(new PlacementSneakAnalyzer(this));
+      appendCheckPart(new SpeedAnalyzer(this));
+      appendCheckPart(new RotationSpeedAnalyzer(this));
+      appendCheckPart(new SharpRotationAnalyzer(this));
+      appendCheckPart(new SneakAnalyzer(this));
     }
-    appendCheckPart(new PlacementPacketOrderAnalyzer(this));
-    appendCheckPart(new PlacementFacingAnalyzer(this));
+    appendCheckPart(new PacketOrderAnalyzer(this));
+    appendCheckPart(new FacingAnalyzer(this));
   }
 
   public void applyPlacementAnalysisDamageCancel(User user, String checkId) {

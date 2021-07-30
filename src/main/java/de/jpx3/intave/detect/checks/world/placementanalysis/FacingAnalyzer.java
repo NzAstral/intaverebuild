@@ -15,10 +15,10 @@ import org.bukkit.entity.Player;
 import static de.jpx3.intave.detect.checks.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.event.packet.PacketId.Client.BLOCK_PLACE;
 
-public final class PlacementFacingAnalyzer extends CheckPart<PlacementAnalysis> {
+public final class FacingAnalyzer extends CheckPart<PlacementAnalysis> {
   private final IntavePlugin plugin;
 
-  public PlacementFacingAnalyzer(PlacementAnalysis parentCheck) {
+  public FacingAnalyzer(PlacementAnalysis parentCheck) {
     super(parentCheck);
     this.plugin = IntavePlugin.singletonInstance();
   }

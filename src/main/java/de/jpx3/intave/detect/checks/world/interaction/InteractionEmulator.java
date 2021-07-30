@@ -68,13 +68,14 @@ public final class InteractionEmulator implements EventProcessor {
     blockShapeAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
   }
 
-
   @BukkitEventSubscription(ignoreCancelled = true)
   public void onPre(BlockBreakEvent breeak) {
-    Block block = breeak.getBlock();
-    OCBlockShapeAccess blockShapeAccess = userOf(breeak.getPlayer()).blockShapeAccess();
-    blockShapeAccess.invalidate(block.getX(), block.getY(), block.getZ());
-    blockShapeAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
+    if (breeak.getClass().equals(BlockBreakEvent.class)) {
+      Block block = breeak.getBlock();
+      OCBlockShapeAccess blockShapeAccess = userOf(breeak.getPlayer()).blockShapeAccess();
+      blockShapeAccess.invalidate(block.getX(), block.getY(), block.getZ());
+      blockShapeAccess.invalidateOverride(block.getX(), block.getY(), block.getZ());
+    }
   }
 
   public EmulationResult emulate(Interaction interaction) {

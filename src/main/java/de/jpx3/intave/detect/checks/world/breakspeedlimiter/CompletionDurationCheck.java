@@ -31,8 +31,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public final class BreakSpeedFinishCheck extends MetaCheckPart<BreakSpeedLimiter, BreakSpeedFinishCheck.BreakSpeedFinishMeta> {
-  public BreakSpeedFinishCheck(BreakSpeedLimiter parentCheck) {
+public final class CompletionDurationCheck extends MetaCheckPart<BreakSpeedLimiter, CompletionDurationCheck.BreakSpeedFinishMeta> {
+  public CompletionDurationCheck(BreakSpeedLimiter parentCheck) {
     super(parentCheck, BreakSpeedFinishMeta.class);
   }
 

@@ -19,9 +19,9 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public final class BreakSpeedStartCheck extends MetaCheckPart<BreakSpeedLimiter, BreakSpeedStartCheck.BreakSpeedStartMeta> {
-  public BreakSpeedStartCheck(BreakSpeedLimiter parentCheck) {
-    super(parentCheck, BreakSpeedStartCheck.BreakSpeedStartMeta.class);
+public final class RestartCheck extends MetaCheckPart<BreakSpeedLimiter, RestartCheck.BreakSpeedStartMeta> {
+  public RestartCheck(BreakSpeedLimiter parentCheck) {
+    super(parentCheck, RestartCheck.BreakSpeedStartMeta.class);
   }
 
   @PacketSubscription(
@@ -46,7 +46,7 @@ public final class BreakSpeedStartCheck extends MetaCheckPart<BreakSpeedLimiter,
   public void receiveBlockAction(PacketEvent event) {
     Player player = event.getPlayer();
     User user = userOf(player);
-    BreakSpeedStartCheck.BreakSpeedStartMeta meta = metaOf(user);
+    RestartCheck.BreakSpeedStartMeta meta = metaOf(user);
     UserMetaClientData clientData = user.meta().clientData();
 
     PacketContainer packet = event.getPacket();

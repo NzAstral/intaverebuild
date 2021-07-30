@@ -20,10 +20,10 @@ import java.util.List;
 import static de.jpx3.intave.detect.checks.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.event.packet.PacketId.Client.*;
 
-public final class PlacementPacketOrderAnalyzer extends MetaCheckPart<PlacementAnalysis, PlacementPacketOrderAnalyzer.PlacementOrderMeta> {
+public final class PacketOrderAnalyzer extends MetaCheckPart<PlacementAnalysis, PacketOrderAnalyzer.PlacementOrderMeta> {
   private final IntavePlugin plugin;
 
-  public PlacementPacketOrderAnalyzer(PlacementAnalysis parentCheck) {
+  public PacketOrderAnalyzer(PlacementAnalysis parentCheck) {
     super(parentCheck, PlacementOrderMeta.class);
     plugin = IntavePlugin.singletonInstance();
   }

@@ -74,7 +74,7 @@ public final class RootStage extends CommandStage {
             MathHelper.formatDouble(timing.averageCallDurationInMillis(), 8)
         );
         if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
-          message = ChatColor.GRAY + ChatColor.stripColor(message);
+          message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
         }
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
       });
@@ -112,7 +112,7 @@ public final class RootStage extends CommandStage {
           + ChatColor.WHITE
         );
         if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
-          message = ChatColor.GRAY + ChatColor.stripColor(message);
+          message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
         }
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
       });
@@ -149,7 +149,7 @@ public final class RootStage extends CommandStage {
             MathHelper.formatDouble(timing.averageCallDurationInMillis(), 8)
         );
         if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
-          message = ChatColor.GRAY + ChatColor.stripColor(message);
+          message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
         }
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
       });

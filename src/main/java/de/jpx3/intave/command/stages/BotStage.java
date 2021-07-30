@@ -30,11 +30,11 @@ public final class BotStage extends CommandStage {
   public void spawn(CommandSender commandSender, Player targetPlayer, Type type) {
     User target = UserRepository.userOf(targetPlayer);
     if (MinecraftVersions.VER1_13_0.atOrAbove()) {
-      commandSender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Intave Bots are currently unavailable for your server version. Please wait for upcoming updates.");
+      commandSender.sendMessage(IntavePlugin.prefix() + "Intave Bots are currently unavailable for your server version. Please wait for upcoming updates.");
       return;
     }
     if (target.meta().attackData().activeMiningStrategy != null) {
-      commandSender.sendMessage(IntavePlugin.prefix() + ChatColor.GRAY + "This player already has a bot assigned");
+      commandSender.sendMessage(IntavePlugin.prefix() + "This player already has a bot assigned");
       return;
     }
     switch (type) {
@@ -48,7 +48,7 @@ public final class BotStage extends CommandStage {
         MiningStrategy.EMULATION_HEAVY.apply(target);
         break;
     }
-    commandSender.sendMessage(IntavePlugin.prefix() + ChatColor.GRAY + "Summoned bot to " + ChatColor.RED + target.player().getName());
+    commandSender.sendMessage(IntavePlugin.prefix() + "Summoned bot to " + ChatColor.RED + target.player().getName());
   }
 
   @KeepEnumInternalNames

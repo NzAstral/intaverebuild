@@ -25,10 +25,10 @@ import static de.jpx3.intave.detect.checks.world.PlacementAnalysis.COMMON_FLAG_M
 import static de.jpx3.intave.event.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.event.packet.PacketId.Client.POSITION_LOOK;
 
-public final class PlacementRotationSpeedAnalyzer extends MetaCheckPart<PlacementAnalysis, PlacementRotationSpeedAnalyzer.RotationSpeedMeta> {
+public final class RotationSpeedAnalyzer extends MetaCheckPart<PlacementAnalysis, RotationSpeedAnalyzer.RotationSpeedMeta> {
   private final IntavePlugin plugin;
 
-  public PlacementRotationSpeedAnalyzer(PlacementAnalysis parentCheck) {
+  public RotationSpeedAnalyzer(PlacementAnalysis parentCheck) {
     super(parentCheck, RotationSpeedMeta.class);
     plugin = IntavePlugin.singletonInstance();
   }

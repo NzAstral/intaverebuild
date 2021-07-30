@@ -30,13 +30,13 @@ import static de.jpx3.intave.detect.checks.world.PlacementAnalysis.COMMON_FLAG_M
 import static de.jpx3.intave.event.packet.PacketId.Client.BLOCK_PLACE;
 import static de.jpx3.intave.event.packet.PacketId.Client.USE_ITEM;
 
-public final class PlacementSpeedAnalyzer extends MetaCheckPart<PlacementAnalysis, PlacementSpeedAnalyzer.PlacementSpeedMeta> {
+public final class SpeedAnalyzer extends MetaCheckPart<PlacementAnalysis, SpeedAnalyzer.PlacementSpeedMeta> {
   private final static int CHECK_LENGTH = 8;
   private final static int DIRECTION_EVAL_LENGTH = 5;
 
   private final IntavePlugin plugin;
 
-  public PlacementSpeedAnalyzer(PlacementAnalysis parentCheck) {
+  public SpeedAnalyzer(PlacementAnalysis parentCheck) {
     super(parentCheck, PlacementSpeedMeta.class);
     this.plugin = IntavePlugin.singletonInstance();
   }
