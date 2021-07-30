@@ -57,10 +57,10 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
   protected FakePlayerBody(
     Player observer,
     int entityId, int attributes,
-    WrappedGameProfile wrappedGameProfile,
+    WrappedGameProfile profile,
     String listedPrefix, String prefix
   ) {
-    super(entityId, wrappedGameProfile);
+    super(entityId, profile);
     this.observer = observer;
     this.attributes = attributes;
     this.listedPrefix = listedPrefix;
@@ -69,11 +69,11 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
 
   protected void spawn(Location spawn) {
     PacketContainer spawnPacket = create(PacketType.Play.Server.NAMED_ENTITY_SPAWN);
-    WrappedGameProfile gameProfile = profile();
+    WrappedGameProfile profile = profile();
     WrappedDataWatcher dataWatcher = dataWatcher();
     spawnPacket.getModifier()
       .write(0, identifier())
-      .write(1, gameProfile.getUUID())
+      .write(1, profile.getUUID())
       .write(5, compressRotation(spawn.getYaw()))
       .write(6, compressRotation(spawn.getPitch()));
     pushLocationToPacket(spawnPacket, spawn, 0);
@@ -82,11 +82,11 @@ public abstract class FakePlayerBody extends FakePlayerIdentity {
     }
     METADATA.forEach((index, object) -> metadataAccept(dataWatcher, index, object.getClass(), object));
     spawnPacket.getDataWatcherModifier().write(0, dataWatcher);
-    String tabListName = listedPrefix + gameProfile.getName();
-    addToTabList(this.observer, gameProfile, tabListName);
+    String tabListName = listedPrefix + profile.getName();
+    addToTabList(observer, profile, tabListName);
     send(spawnPacket);
     if (!hasAttribute(attributes, IN_TABLIST)) {
-      removeFromTabList(this.observer, this.profile());
+      removeFromTabList(observer, profile());
     }
     if (hasAttribute(attributes, INVISIBLE)) {
       updateVisibility(observer, this, true);

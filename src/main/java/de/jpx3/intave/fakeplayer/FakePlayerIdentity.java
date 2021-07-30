@@ -5,12 +5,12 @@ import com.comphenix.protocol.wrappers.WrappedGameProfile;
 
 public abstract class FakePlayerIdentity {
   private final int identifier;
-  private final WrappedGameProfile wrappedGameProfile;
-  private final WrappedDataWatcher wrappedDataWatcher = new WrappedDataWatcher();
+  private final WrappedGameProfile profile;
+  private final WrappedDataWatcher dataWatcher = new WrappedDataWatcher();
 
-  protected FakePlayerIdentity(int identifier, WrappedGameProfile wrappedGameProfile) {
+  protected FakePlayerIdentity(int identifier, WrappedGameProfile profile) {
     this.identifier = identifier;
-    this.wrappedGameProfile = wrappedGameProfile;
+    this.profile = profile;
   }
 
   public int identifier() {
@@ -18,10 +18,10 @@ public abstract class FakePlayerIdentity {
   }
 
   public WrappedGameProfile profile() {
-    return wrappedGameProfile;
+    return profile;
   }
 
   public WrappedDataWatcher dataWatcher() {
-    return wrappedDataWatcher;
+    return dataWatcher;
   }
 }

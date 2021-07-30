@@ -12,7 +12,7 @@ public final class FakePlayerEventService {
   }
 
   static {
-    String className = "de.jpx3.intave.fakeplayer.FakePlayerScoreboardAccessor";
+    String className = "de.jpx3.intave.fakeplayer.ScoreboardAccessor";
     PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), className);
   }
 

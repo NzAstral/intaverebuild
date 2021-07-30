@@ -28,13 +28,12 @@ public final class TablistMutator {
 
   private static void addToTabList(
     Player player,
-    WrappedGameProfile wrappedGameProfile,
+    WrappedGameProfile profile,
     WrappedChatComponent wrappedChatComponent
   ) {
     PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.PLAYER_INFO);
     PlayerInfoData playerInfoData = new PlayerInfoData(
-      wrappedGameProfile,
-      ThreadLocalRandom.current().nextInt(20, 200),
+      profile, ThreadLocalRandom.current().nextInt(20, 200),
       EnumWrappers.NativeGameMode.SURVIVAL,
       wrappedChatComponent
     );
@@ -51,13 +50,12 @@ public final class TablistMutator {
 
   public static void removeFromTabList(
     Player player,
-    WrappedGameProfile wrappedGameProfile
+    WrappedGameProfile profile
   ) {
     PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.PLAYER_INFO);
-    WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromText(wrappedGameProfile.getName());
+    WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromText(profile.getName());
     PlayerInfoData playerInfoData = new PlayerInfoData(
-      wrappedGameProfile,
-      ThreadLocalRandom.current().nextInt(20, 200),
+      profile, ThreadLocalRandom.current().nextInt(20, 200),
       EnumWrappers.NativeGameMode.SURVIVAL,
       wrappedChatComponent
     );

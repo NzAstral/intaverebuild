@@ -51,17 +51,17 @@ public final class FakePlayer extends FakePlayerBody {
   FakePlayer(
     Movement movement,
     Player observer,
-    WrappedGameProfile wrappedGameProfile,
+    WrappedGameProfile profile,
     String tabListPrefix,
     String prefix,
     int entityId,
     int attributes,
     Consumer<FakePlayer> attackSubscriber
   ) {
-    super(observer, entityId, attributes, wrappedGameProfile, tabListPrefix, prefix);
+    super(observer, entityId, attributes, profile, tabListPrefix, prefix);
     this.user = UserRepository.userOf(observer);
     this.movement = movement;
-    this.wrappedGameProfile = wrappedGameProfile;
+    this.wrappedGameProfile = profile;
     this.observer = observer;
     this.attributes = attributes;
     this.actions = loadActions();
@@ -311,8 +311,7 @@ public final class FakePlayer extends FakePlayerBody {
     private String prefix = "";
     private Movement movement = null;
     private int attributes = 0;
-    private Consumer<FakePlayer> attackSubscriber = fakePlayer -> {
-    };
+    private Consumer<FakePlayer> attackSubscriber = fakePlayer -> {};
 
     Builder(Player observer) {
       this.observer = observer;
@@ -387,7 +386,7 @@ public final class FakePlayer extends FakePlayerBody {
       if (movement == null) {
         floating();
       }
-      if (identifier < 0) {
+      if (identifier <= 0) {
         identifier = IdentifierReserve.acquireNew();
       }
       if (gameProfile == null) {
