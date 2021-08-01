@@ -229,7 +229,6 @@ public final class PacketEntityTypeResolver {
     if(entity.getType() == EntityType.ZOMBIE || entity.getType() == EntityType.PIG_ZOMBIE) {
       Zombie zombie = (Zombie) entity;
       if(zombie.isBaby()) {
-        Bukkit.broadcastMessage("baby zombie");
         // setting the hitbox of the zombie to a normal zombie hitbox which is the same as a player hitbox
         hitBoxBoundaries = HitBoxBoundaries.player();
       }
