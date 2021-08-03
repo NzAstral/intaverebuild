@@ -219,28 +219,23 @@ public final class UserMetaMovementData {
     if (!boundingBoxSetup) {
       setupDefaults();
     }
-
     jumpMotion = MovementContext.jumpMotionFor(player, jumpUpwardsMotion());
     lastPositionX = positionX;
     lastPositionY = positionY;
     lastPositionZ = positionZ;
-
     if (sprintResetNextTick) {
       ReflectiveDataWatcherAccess.setDataWatcherFlag(player, ReflectiveDataWatcherAccess.WATCHER_SPRINT_ID, true);
       sprintResetNextTick = false;
     }
-
     if (hasMovement) {
       StructureModifier<Double> modifier = packet.getDoubles();
       positionX = modifier.read(0);
       positionY = modifier.read(1);
       positionZ = modifier.read(2);
       blockOnPosition = BukkitBlockAccess.cacheAppliedTypeAccess(user, player.getWorld(), positionX, positionY - frictionPosSubtraction, positionZ);
-
       motionX = positionX - verifiedPositionX;
       motionY = positionY - verifiedPositionY;
       motionZ = positionZ - verifiedPositionZ;
-
       boolean falling = motionY() <= 0.0D;
       if (falling && EffectLogic.isPotionSlowFallingActive(player)) {
         artificialFallDistance = 0f;
@@ -512,24 +507,7 @@ public final class UserMetaMovementData {
 
   public void setSprinting(boolean sprinting) {
     this.sprinting = sprinting;
-//    applySprintingAttribute(user, sprinting);
   }
-
-//  private static final UUID SPEED_MODIFIER_SPRINTING_UUID = UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
-//  private final static WrappedAttributeModifier SPEED_MODIFIER_SPRINTING = WrappedAttributeModifier.newBuilder(SPEED_MODIFIER_SPRINTING_UUID).name("Sprinting speed boost").amount(0.3F).operation(WrappedAttributeModifier.Operation.ADD_PERCENTAGE).build();
-//
-//  private void applySprintingAttribute(User user, boolean sprintToggle) {
-//    UserMetaAbilityData abilityData = user.meta().abilityData();
-//    WrappedAttribute attribute = abilityData.findAttribute("generic.movementSpeed");
-//    player.sendMessage("Manual attribute update");
-//    if (attribute != null) {
-//      List<WrappedAttributeModifier> attributeModifiers = abilityData.modifiersOf(attribute);
-//      attributeModifiers.removeIf(attributeModifier -> attributeModifier.getUUID().equals(SPEED_MODIFIER_SPRINTING_UUID));
-//      if (sprintToggle) {
-//        attributeModifiers.add(SPEED_MODIFIER_SPRINTING);
-//      }
-//    }
-//  }
 
   public void dismountRidingEntity() {
     if (!hasRidingEntity()) {

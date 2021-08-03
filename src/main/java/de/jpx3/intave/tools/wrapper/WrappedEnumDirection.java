@@ -101,23 +101,17 @@ public enum WrappedEnumDirection {
         if (this != WEST && this != EAST) {
           return this.rotateX();
         }
-
         return this;
-
       case Y:
         if (this != UP && this != DOWN) {
           return this.rotateY();
         }
-
         return this;
-
       case Z:
         if (this != NORTH && this != SOUTH) {
           return this.rotateZ();
         }
-
         return this;
-
       default:
         throw new IllegalStateException("Unable to get CW facing for axis " + axis);
     }
@@ -130,16 +124,12 @@ public enum WrappedEnumDirection {
     switch (this) {
       case NORTH:
         return EAST;
-
       case EAST:
         return SOUTH;
-
       case SOUTH:
         return WEST;
-
       case WEST:
         return NORTH;
-
       default:
         throw new IllegalStateException("Unable to get Y-rotated facing of " + this);
     }
@@ -152,18 +142,14 @@ public enum WrappedEnumDirection {
     switch (this) {
       case NORTH:
         return DOWN;
-
       case EAST:
       case WEST:
       default:
         throw new IllegalStateException("Unable to get X-rotated facing of " + this);
-
       case SOUTH:
         return UP;
-
       case UP:
         return NORTH;
-
       case DOWN:
         return SOUTH;
     }
@@ -176,17 +162,13 @@ public enum WrappedEnumDirection {
     switch (this) {
       case EAST:
         return DOWN;
-
       case SOUTH:
       default:
         throw new IllegalStateException("Unable to get Z-rotated facing of " + this);
-
       case WEST:
         return UP;
-
       case UP:
         return EAST;
-
       case DOWN:
         return WEST;
     }
@@ -199,16 +181,12 @@ public enum WrappedEnumDirection {
     switch (this) {
       case NORTH:
         return WEST;
-
       case EAST:
         return NORTH;
-
       case SOUTH:
         return EAST;
-
       case WEST:
         return SOUTH;
-
       default:
         throw new IllegalStateException("Unable to get CCW facing of " + this);
     }
@@ -292,16 +270,13 @@ public enum WrappedEnumDirection {
   public static WrappedEnumDirection getFacingFromVector(float p_176737_0_, float p_176737_1_, float p_176737_2_) {
     WrappedEnumDirection enumfacing = NORTH;
     float f = Float.MIN_VALUE;
-
     for (WrappedEnumDirection enumfacing1 : values()) {
       float f1 = p_176737_0_ * (float) enumfacing1.directionVec.xCoord + p_176737_1_ * (float) enumfacing1.directionVec.yCoord + p_176737_2_ * (float) enumfacing1.directionVec.zCoord;
-
       if (f1 > f) {
         f = f1;
         enumfacing = enumfacing1;
       }
     }
-
     return enumfacing;
   }
 
@@ -338,11 +313,9 @@ public enum WrappedEnumDirection {
   static {
     for (WrappedEnumDirection enumfacing : values()) {
       VALUES[enumfacing.index] = enumfacing;
-
       if (enumfacing.getAxis().isHorizontal()) {
         HORIZONTALS[enumfacing.horizontalIndex] = enumfacing;
       }
-
       NAME_LOOKUP.put(enumfacing.getName2().toLowerCase(), enumfacing);
     }
   }
