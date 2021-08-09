@@ -50,8 +50,6 @@ public final class AbilityMetadata {
       this.unsynchronizedHealth = this.health;
       setupDefaultGameMode(player.getGameMode());
 
-      player.setWalkSpeed(0.2f);
-
       this.walkSpeed = player.getWalkSpeed() / 2.0f;
       this.flySpeed = player.getFlySpeed() / 2.0f;
 
