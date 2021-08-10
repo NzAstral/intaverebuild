@@ -34,8 +34,7 @@ public final class BlockProperties {
   }
 
   public static Property ofType(Material material) {
-    Property property = registry.get(material);
-    return property == null ? DEFAULT_PROPERTY : property;
+    return registry.getOrDefault(material, DEFAULT_PROPERTY);
   }
 
   public static final class Property {

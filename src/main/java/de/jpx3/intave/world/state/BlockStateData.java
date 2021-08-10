@@ -43,8 +43,8 @@ public abstract class BlockStateData<T> {
     private static <T> T invokeSpecialResolve(Block block, BlockStateData<T> blockStateData) {
       CraftBlock craftBlock = (CraftBlock) block;
       CraftBlockData craftBlockData = (CraftBlockData) craftBlock.getBlockData();
-      IBlockState<?> blockState = (IBlockState<?>) blockStateData.convert();
       IBlockData state = craftBlockData.getState();
+      IBlockState<?> blockState = (IBlockState<?>) blockStateData.convert();
       // containsKey
       if (state.b(blockState)) {
         //noinspection unchecked

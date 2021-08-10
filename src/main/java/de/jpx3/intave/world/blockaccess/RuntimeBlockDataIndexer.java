@@ -6,6 +6,7 @@ import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.logging.IntaveLogger;
 import de.jpx3.intave.patchy.PatchyLoadingInjector;
 import de.jpx3.intave.patchy.annotate.PatchyAutoTranslation;
+import de.jpx3.intave.world.state.BlockState;
 import net.minecraft.server.v1_14_R1.Block;
 import net.minecraft.server.v1_14_R1.IBlockData;
 import org.bukkit.Material;
@@ -21,6 +22,7 @@ public final class RuntimeBlockDataIndexer {
   private final static boolean required = MinecraftVersions.VER1_14_0.atOrAbove();
   private final static Map<Material, Map<Object, Integer>> blockDataIndex = new EnumMap<>(Material.class);
   private final static Map<Material, Map<Integer, Object>> blockDataRegister = new EnumMap<>(Material.class);
+  private final static Map<Material, Map<Integer, BlockState>> blockStates = new EnumMap<>(Material.class);
 
   static {
     if (required) {
@@ -32,7 +34,7 @@ public final class RuntimeBlockDataIndexer {
     if (!required) return;
     Arrays.stream(Material.values())
       .filter(Material::isBlock)
-      .forEach(type -> Indexer.index(type, blockDataIndex::put, blockDataRegister::put));
+      .forEach(type -> Indexer.index(type, blockDataIndex::put, blockDataRegister::put, blockStates::put));
   }
 
   public static Iterable<Object> variantsOfType(Material material) {
@@ -64,21 +66,24 @@ public final class RuntimeBlockDataIndexer {
     public static void index(
       Material type,
       BiConsumer<Material, Map<Object, Integer>> indexApply,
-      BiConsumer<Material, Map<Integer, Object>> registerApply
+      BiConsumer<Material, Map<Integer, Object>> registerApply,
+      BiConsumer<Material, Map<Integer, BlockState>> stateApply
     ) {
       CraftBlockData blockData = CraftBlockData.newData(type, null);
       Block block = blockData.getState().getBlock();
       Map<Object, Integer> index = new HashMap<>();
       Map<Integer, Object> register = new HashMap<>();
+      Map<Integer, BlockState> states = new HashMap<>();
       int id = 0;
       for (IBlockData nativeState : block.getStates().a()) {
-//        int id = Block.getCombinedId(nativeState);
         index.put(nativeState, id);
         register.put(id, nativeState);
+//        states.put(id, BlockState.builder().build());
         id++;
       }
       indexApply.accept(type, index);
       registerApply.accept(type, register);
+      stateApply.accept(type, states);
     }
   }
 }

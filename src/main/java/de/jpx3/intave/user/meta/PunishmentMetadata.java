@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import de.jpx3.intave.event.violation.AttackNerfStrategy;
 import de.jpx3.intave.event.violation.EntityNoDamageTickChanger;
 import de.jpx3.intave.tools.AccessHelper;
-import de.jpx3.intave.tools.CubicBezierCurve;
 import de.jpx3.intave.tools.annotate.Relocate;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -17,12 +16,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Relocate
 public final class PunishmentMetadata {
-  private final static Function<Double, Double> GARBAGE_HITS_RANDOM_DISTRIBUTION_CURVE = CubicBezierCurve.identityCurve(0,.8,1,.2).functionalMapBake(.005);
-
   public final static long DAMAGE_CANCEL_LIGHT_DURATION = 40_000;
   private final static long DAMAGE_CANCEL_MEDIUM_DURATION = 40_000;
   private final static long DAMAGE_CANCEL_HEAVY_DURATION = 5_000;
@@ -86,8 +82,16 @@ public final class PunishmentMetadata {
         if (lastValidAttack < delay) {
           event.setCancelled(true);
         } else {
-          double random = ThreadLocalRandom.current().nextDouble();
-          delay = (long) projectDistribution(GARBAGE_HITS_RANDOM_DISTRIBUTION_CURVE.apply(random), 0, 1, 550, 700);
+          int random = ThreadLocalRandom.current().nextInt(-10, 10);
+          if (random < 0) {
+            delay = 550;
+          } else if (random < 5) {
+            delay = 600;
+          } else if (random < 8) {
+            delay = 650;
+          } else {
+            delay = 700;
+          }
           lastTimeValidHurttimeAttack.put(entityId, AccessHelper.now());
         }
       })
@@ -95,10 +99,6 @@ public final class PunishmentMetadata {
     for (AttackNerfer attackNerfer : attackNerfers) {
       this.attackNerfersMap.put(attackNerfer.type, attackNerfer);
     }
-  }
-
-  private double projectDistribution(double value, double fromLower, double fromHigher, double toLower, double toHigher) {
-    return (value - fromLower) / (fromHigher - fromLower) * (toHigher - toLower) + toLower;
   }
 
   private void performEntityHurtTimeChange(Entity entity) {

@@ -494,7 +494,8 @@ public class DefaultSimulator extends Simulator {
     if (clientData.protocolVersion() >= VER_1_14 && movementData.pose() != Pose.FALL_FLYING) {
       int soulSandModifier = PlayerEnchantmentHelper.resolveSoulSpeedModifier(player);
       if (soulSandModifier == 0 || !movementData.blockOnPositionSoulSpeedAffected()) {
-        float speedFactor = BlockProperties.ofType(BukkitBlockAccess.cacheAppliedTypeAccess(user, world, positionX, positionY - 0.5000001, positionZ)).speedFactor();
+        Material type = BukkitBlockAccess.cacheAppliedTypeAccess(user, world, positionX, positionY - 0.5000001, positionZ);
+        float speedFactor = BlockProperties.ofType(type).speedFactor();
         context.motionX *= speedFactor;
         context.motionZ *= speedFactor;
       }
