@@ -24,7 +24,7 @@ import de.jpx3.intave.user.meta.AttackMetadata;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
-import de.jpx3.intave.world.blockaccess.BlockDataAccess;
+import de.jpx3.intave.world.blockaccess.BlockInnerAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import de.jpx3.intave.world.raytrace.Raytracing;
 import org.bukkit.Material;
@@ -76,7 +76,7 @@ public final class RotationSnapHeuristic extends MetaCheckPart<Heuristics, Rotat
     if (blockPosition != null) {
       if (blockPlaceDirection != 255) {
         Material clickedType = BukkitBlockAccess.blockAccess(blockPosition.toLocation(player.getWorld())).getType();
-        boolean clickable = BlockDataAccess.isClickable(clickedType);
+        boolean clickable = BlockInnerAccess.isClickable(clickedType);
 
         if (!clickable) {
           RotationSnapHeuristicMeta meta = metaOf(user);

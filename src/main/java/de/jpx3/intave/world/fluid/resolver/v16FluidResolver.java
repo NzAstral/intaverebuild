@@ -18,18 +18,25 @@ public final class v16FluidResolver extends FluidEngine {
   protected WrappedFluid fluidAt(User user, int x, int y, int z) {
     MovementMetadata movementData = user.meta().movement();
     World world = (World) movementData.nmsWorld();
-    if (!world.isChunkLoaded(x >> 4, z >> 4)) {
+    IBlockAccess blockAccess = world.getChunkProvider().c(x >> 4, z >> 4);
+    if (blockAccess == null) {
       return WrappedFluid.empty();
     }
-    Fluid fluid = world.getFluid(new BlockPosition(x, y, z));
+    Fluid fluid = blockAccess.getFluid(new BlockPosition(x, y, z));
+    FluidTag fluidTag = resolveFluidTagOf(fluid);
+    if (fluidTag == FluidTag.EMPTY) {
+      return WrappedFluid.empty();
+    }
     float height = fluid.d();
-    FluidTag fluidTag = fluid.isEmpty() ? FluidTag.EMPTY : resolveFluidTagOf(fluid);
     return WrappedFluid.construct(fluidTag, height);
   }
 
   @PatchyAutoTranslation
   @PatchyTranslateParameters
   private FluidTag resolveFluidTagOf(Fluid fluid) {
+    if (fluid.isEmpty()) {
+      return FluidTag.EMPTY;
+    }
     //noinspection unchecked
     if (fluid.a((Tag<FluidType>) FluidTag.WATER.nativeTag())) {
       return FluidTag.WATER;

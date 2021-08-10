@@ -8,7 +8,9 @@ import net.minecraft.server.v1_13_R2.Chunk;
 import net.minecraft.server.v1_13_R2.IBlockData;
 import net.minecraft.server.v1_13_R2.Item;
 import net.minecraft.server.v1_13_R2.WorldServer;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -16,6 +18,16 @@ import org.bukkit.inventory.ItemStack;
 
 @PatchyAutoTranslation
 public final class v13BlockAccessor implements BlockAccessor {
+  @Override
+  public Material typeAccess(Block block) {
+    return block.getType();
+  }
+
+  @Override
+  public int dataAccess(Block block) {
+    return block.getData();
+  }
+
   @Override
   @PatchyAutoTranslation
   public float blockDamage(Player player, ItemStack itemInHand, BlockPosition blockPosition) {

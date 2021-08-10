@@ -18,6 +18,10 @@ public final class BlockTypeAccess {
   public static final Material NETHER_PORTAL = resolveFrom("PORTAL", "NETHER_PORTAL");
   public static final Material SKULL = resolveFrom("SKULL", "LEGACY_SKULL");
 
+  public static void setup() {
+
+  }
+
   private static Material resolveFrom(String name, String alternativeName) {
     Material material = Material.getMaterial(name);
     if (material != null) {
@@ -30,9 +34,9 @@ public final class BlockTypeAccess {
       throw new IntaveInternalException("Unable to find block " + name + " or " + alternativeName);
     }
   }
-
   private static final FileTypeTranslator translator = new VerTraFileTypeTranslator();
   private static final TypeTranslations typeTranslations;
+
   static {
     typeTranslations = translator.fromResource("/mappings/bb-mappings");
   }
@@ -51,7 +55,7 @@ public final class BlockTypeAccess {
    */
   @Deprecated
   public static Material typeAccess(Block block) {
-    return block.getType();
+    return BlockAccessProvider.blockAccessor().typeAccess(block);
   }
 
   /**

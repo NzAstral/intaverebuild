@@ -36,6 +36,10 @@ Chunk -> {
   17 -> "net/minecraft/world/level/chunk/Chunk"
 }
 
+ChunkProviderServer -> {
+  17 -> "net/minecraft/server/level/ChunkProviderServer"
+}
+
 DataWatcher -> {
   17 -> "net/minecraft/network/syncher/DataWatcher"
 }
@@ -140,6 +144,10 @@ IRegistry -> {
 
 IWorldReader -> {
   17 -> "net/minecraft/world/level/IWorldReader"
+}
+
+Material -> {
+  17 -> "net/minecraft/world/level/material/Material"
 }
 
 MinecraftServer -> {

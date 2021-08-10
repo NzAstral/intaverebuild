@@ -4,11 +4,13 @@ public final class WrappedFluid {
   private final static WrappedFluid EMPTY = WrappedFluid.construct(FluidTag.EMPTY, 0);
 
   private final FluidTag fluidTag;
+  private final boolean empty;
   private final float height;
 
   private WrappedFluid(FluidTag fluidTag, float height) {
     this.fluidTag = fluidTag;
     this.height = height;
+    this.empty = fluidTag == FluidTag.EMPTY;
   }
 
   public FluidTag fluidTag() {
@@ -16,11 +18,12 @@ public final class WrappedFluid {
   }
 
   public boolean isIn(FluidTag fluidTag) {
-    return this.fluidTag == fluidTag;
+    return !empty && this.fluidTag == fluidTag;
   }
 
   public boolean isEmpty() {
-    return fluidTag == FluidTag.EMPTY;
+//    return fluidTag == FluidTag.EMPTY;
+    return empty;
   }
 
   public float height() {

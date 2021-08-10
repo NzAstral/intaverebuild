@@ -16,7 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static de.jpx3.intave.lib.asm.ClassReader.SKIP_FRAMES;
+import static de.jpx3.intave.lib.asm.ClassWriter.COMPUTE_FRAMES;
 import static de.jpx3.intave.lib.asm.Opcodes.*;
+import static de.jpx3.intave.lib.asm.Type.OBJECT;
 
 final class PatchyTranslator {
   public static final String TRANSLATION_MARKER_ANNOTATION_PATH = slashify(PatchyAutoTranslation.class.getName());
@@ -80,6 +83,15 @@ final class PatchyTranslator {
         methodInsnNode.owner = instructionTarget.owner;
         methodInsnNode.name = instructionTarget.name;
         methodInsnNode.desc = instructionTarget.desc;
+      } else if (instruction instanceof LdcInsnNode) {
+        LdcInsnNode ldcInsnNode = (LdcInsnNode) instruction;
+        Object cst = ldcInsnNode.cst;
+        if (cst instanceof Type) {
+          Type type = (Type) cst;
+          if (type.getSort() == OBJECT) {
+            ldcInsnNode.cst = typeTranslate(type);
+          }
+        }
       } else if (instruction instanceof TypeInsnNode) {
         TypeInsnNode typeInsnNode = (TypeInsnNode) instruction;
         typeInsnNode.desc = translate(typeInsnNode.desc);
@@ -161,7 +173,6 @@ final class PatchyTranslator {
         output = Locator.patchyConvert(input);
       }
     }
-//    System.out.println("[Patchy] " + input + " -> " + output);
     return output;
   }
 
@@ -171,7 +182,7 @@ final class PatchyTranslator {
       dimensions = input.getDimensions();
       input = input.getElementType();
     }
-    if (input.getSort() == Type.OBJECT) {
+    if (input.getSort() == OBJECT) {
       input = Type.getObjectType(translate(input.getInternalName()));
     }
     return input.convertToArrayType(dimensions);
@@ -207,12 +218,12 @@ final class PatchyTranslator {
   private static ClassNode classNodeOf(byte[] inputBytes) {
     ClassReader cr = new ClassReader(inputBytes);
     ClassNode classNode = new ClassNode();
-    cr.accept(classNode, 4);
+    cr.accept(classNode, SKIP_FRAMES);
     return classNode;
   }
 
   private static byte[] byteArrayOf(ClassNode classNode) {
-    ClassWriter classWriter = new ClassWriter(3);
+    ClassWriter classWriter = new ClassWriter(COMPUTE_FRAMES);
     classNode.accept(classWriter);
     return classWriter.toByteArray();
   }

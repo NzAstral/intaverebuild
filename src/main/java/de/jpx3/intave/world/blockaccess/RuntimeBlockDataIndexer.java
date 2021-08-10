@@ -1,5 +1,6 @@
 package de.jpx3.intave.world.blockaccess;
 
+import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.logging.IntaveLogger;
@@ -32,21 +33,19 @@ public final class RuntimeBlockDataIndexer {
     Arrays.stream(Material.values())
       .filter(Material::isBlock)
       .forEach(type -> Indexer.index(type, blockDataIndex::put, blockDataRegister::put));
-//    AtomicInteger blocks = new AtomicInteger(), artificialIds = new AtomicInteger();
-//    blockDataIndex.forEach((material, objectIntegerMap) -> {
-//      blocks.incrementAndGet();
-//      artificialIds.addAndGet(objectIntegerMap.size());
-//    });
-//    String message = "Indexed " + artificialIds.get() + " block-data keys for " + blocks.get() + " blocks";
-//    IntaveLogger.logger().info(message);
   }
 
-  public static int variantsOfType(Material material) {
-    return blockDataIndex.get(material).size();
+  public static Iterable<Object> variantsOfType(Material material) {
+    return ImmutableList.copyOf(blockDataIndex.get(material).keySet());
   }
 
   public static int indexOfModernState(Material type, Object rawBlockData) {
-    return blockDataIndex.get(type).get(rawBlockData);
+    Map<Object, Integer> indexMap = blockDataIndex.get(type);
+    Integer integer = indexMap.get(rawBlockData);
+    if (integer == null) {
+      throw new IllegalStateException("Unable to find block " + type + "/" + rawBlockData);
+    }
+    return integer;
   }
 
   public static Object modernStateFromIndex(Material type, int blockState) {

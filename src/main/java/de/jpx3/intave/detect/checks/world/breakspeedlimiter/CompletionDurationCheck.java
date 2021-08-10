@@ -25,6 +25,7 @@ import de.jpx3.intave.user.meta.InventoryMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.world.blockaccess.BlockDataAccess;
+import de.jpx3.intave.world.blockaccess.BlockInnerAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -59,7 +60,7 @@ public final class CompletionDurationCheck extends MetaCheckPart<BreakSpeedLimit
       BlockPosition blockPosition = meta.targetBlockPosition;
 
       float blockDamage = clientData.flyingPacketStream()
-        ? BlockDataAccess.blockDamage(player, itemInHand, blockPosition)
+        ? BlockInnerAccess.blockDamage(player, itemInHand, blockPosition)
         : resolveBlockDamageOnGround(player, itemInHand, blockPosition);
       meta.curBlockDamageMP += blockDamage;
       meta.maximumBlockDamage = Math.max(meta.maximumBlockDamage, blockDamage);
@@ -91,7 +92,7 @@ public final class CompletionDurationCheck extends MetaCheckPart<BreakSpeedLimit
 
     switch (digType) {
       case START_DESTROY_BLOCK: {
-        float blockDamage = BlockDataAccess.blockDamage(player, heldItem, blockPosition);
+        float blockDamage = BlockInnerAccess.blockDamage(player, heldItem, blockPosition);
         meta.breakProcess = true;
         meta.breakProcessStartTime = AccessHelper.now();
         meta.curBlockDamageMP = blockDamage;
@@ -201,7 +202,7 @@ public final class CompletionDurationCheck extends MetaCheckPart<BreakSpeedLimit
   ) {
     boolean onGroundBefore = ReflectiveEntityAccess.onGround(player);
     ReflectiveEntityAccess.setOnGround(player, true);
-    float blockDamage = BlockDataAccess.blockDamage(player, itemInHand, blockPosition);
+    float blockDamage = BlockInnerAccess.blockDamage(player, itemInHand, blockPosition);
     ReflectiveEntityAccess.setOnGround(player, onGroundBefore);
     return blockDamage;
   }

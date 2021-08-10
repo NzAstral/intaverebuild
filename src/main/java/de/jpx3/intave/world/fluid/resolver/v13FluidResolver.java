@@ -13,7 +13,6 @@ import net.minecraft.server.v1_13_R2.*;
 
 @PatchyAutoTranslation
 public final class v13FluidResolver extends FluidEngine {
-
   @Override
   @PatchyAutoTranslation
   protected WrappedFluid fluidAt(User user, int x, int y, int z) {
@@ -23,15 +22,20 @@ public final class v13FluidResolver extends FluidEngine {
       return WrappedFluid.empty();
     }
     Fluid fluid = world.getFluid(new BlockPosition(x, y, z));
+    FluidTag fluidTag = resolveFluidTagOf(fluid);
+    if (fluidTag == FluidTag.EMPTY) {
+      return WrappedFluid.empty();
+    }
     float height = fluid.getHeight();
-    boolean empty = fluid.e();
-    FluidTag fluidTag = empty ? FluidTag.EMPTY : resolveFluidTagOf(fluid);
     return WrappedFluid.construct(fluidTag, height);
   }
 
   @PatchyAutoTranslation
   @PatchyTranslateParameters
   private FluidTag resolveFluidTagOf(Fluid fluid) {
+    if (fluid.e()) {
+      return FluidTag.EMPTY;
+    }
     //noinspection unchecked
     if (fluid.a((Tag<FluidType>) FluidTag.WATER.nativeTag())) {
       return FluidTag.WATER;

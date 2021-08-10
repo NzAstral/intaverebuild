@@ -12,6 +12,7 @@ import de.jpx3.intave.tools.wrapper.WrappedEnumDirection;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.world.blockaccess.BlockDataAccess;
+import de.jpx3.intave.world.blockaccess.BlockInnerAccess;
 import de.jpx3.intave.world.blockaccess.BlockTypeAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import de.jpx3.intave.world.blockshape.OCBlockShapeAccess;
@@ -117,7 +118,7 @@ public final class InteractionEmulator implements EventProcessor {
     World world = interaction.world();
     Location blockAgainstLocation = interaction.targetBlock().toLocation(world);
     Location defaultPlacementLocation = blockAgainstLocation.clone().add(WrappedEnumDirection.getFront(interaction.targetDirection()).getDirectionVec().convertToBukkitVec());
-    boolean replace = BlockDataAccess.replacementPlace(world, player, new BlockPosition(blockAgainstLocation.toVector()));
+    boolean replace = BlockInnerAccess.replacementPlace(world, player, new BlockPosition(blockAgainstLocation.toVector()));
     Location blockPlacementLocation = replace ? blockAgainstLocation : defaultPlacementLocation;
     Material itemTypeInHand = interaction.itemTypeInHand();
     int blockX = blockPlacementLocation.getBlockX();

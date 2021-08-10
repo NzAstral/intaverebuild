@@ -26,15 +26,16 @@ public final class ReflectiveAccess {
   public static void setup() {
     ReflectiveBlockAccess.setup();
     ReflectiveEntityHitBoxAccess.setup();
-    PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), "de.jpx3.intave.reflect.ReflectiveHandleAccess");
-    PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), "de.jpx3.intave.reflect.ReflectiveEntityAccess");
-    PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), "de.jpx3.intave.reflect.ReflectiveScoreboardAccess");
+    ClassLoader classLoader = IntavePlugin.class.getClassLoader();
+    PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.reflect.ReflectiveHandleAccess");
+    PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.reflect.ReflectiveEntityAccess");
+    PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.reflect.ReflectiveScoreboardAccess");
 
     // DataWatcher
     if (DATA_WATCHER_NEW_ACCESS_VER) {
-      PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), "de.jpx3.intave.reflect.datawatcher.NewDataWatcherAccess");
+      PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.reflect.datawatcher.NewDataWatcherAccess");
     } else {
-      PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), "de.jpx3.intave.reflect.datawatcher.LegacyDataWatcherAccess");
+      PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.reflect.datawatcher.LegacyDataWatcherAccess");
     }
   }
 

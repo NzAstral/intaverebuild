@@ -75,6 +75,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     }
 
     appendCheckPart(new PreAttackHeuristic(this));
+//    appendCheckPart(new RotationAngleHeuristic(this));
 
     appendCheckPart(new ReshapedJumpHeuristic(this));
     appendCheckPart(new RotationAccuracyYawHeuristic(this));

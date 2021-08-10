@@ -1,47 +1,99 @@
 package de.jpx3.intave.world.blockaccess;
 
 import com.comphenix.protocol.wrappers.BlockPosition;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.patchy.annotate.PatchyAutoTranslation;
+import de.jpx3.intave.patchy.annotate.PatchyTranslateParameters;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
-import net.minecraft.server.v1_14_R1.Chunk;
+import net.minecraft.server.v1_14_R1.ChunkProviderServer;
+import net.minecraft.server.v1_14_R1.IBlockAccess;
 import net.minecraft.server.v1_14_R1.IBlockData;
-import net.minecraft.server.v1_14_R1.Item;
 import net.minecraft.server.v1_14_R1.WorldServer;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_14_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_14_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 @PatchyAutoTranslation
 public final class v14BlockAccessor implements BlockAccessor {
+  static {
+    checkVersion();
+  }
+
+  @PatchyAutoTranslation
+  public static void checkVersion() {
+    try {
+      ChunkProviderServer.class.getMethod("c", int.class, int.class);
+    } catch (NoSuchMethodException exception) {
+      throw new IllegalStateException("Please update your minecraft version", exception);
+    }
+  }
+
+  @Override
+  @PatchyAutoTranslation
+  public Material typeAccess(Block block) {
+    WorldServer worldServer = ((CraftWorld) block.getWorld()).getHandle();
+    IBlockAccess blockAccess = worldServer.getChunkProvider().c(block.getX() >> 4, block.getZ() >> 4);
+    net.minecraft.server.v1_14_R1.BlockPosition blockPosition = ofBlock(block);
+    return blockAccess == null ? Material.AIR : CraftMagicNumbers.getMaterial(blockAccess.getType(blockPosition).getBlock());
+  }
+
+  @Override
+  @PatchyAutoTranslation
+  public int dataAccess(Block block) {
+    throw new UnsupportedOperationException("This minecraft version does not support block data");
+  }
+
   @Override
   @PatchyAutoTranslation
   public float blockDamage(Player player, ItemStack itemInHand, BlockPosition nativeBlockPosition) {
     WorldServer worldServer = ((CraftWorld) player.getWorld()).getHandle();
-    Chunk chunk = worldServer.getChunkIfLoaded(nativeBlockPosition.getX() >> 4, nativeBlockPosition.getZ() >> 4);
-    if (chunk == null) {
+    IBlockAccess blockAccess = worldServer.getChunkProvider().c(nativeBlockPosition.getX() >> 4, nativeBlockPosition.getZ() >> 4);
+    if (blockAccess == null) {
       return 0.0f;
     }
-    net.minecraft.server.v1_14_R1.BlockPosition blockPosition = new net.minecraft.server.v1_14_R1.BlockPosition(nativeBlockPosition.getX(), nativeBlockPosition.getY(), nativeBlockPosition.getZ());
-    IBlockData blockData = chunk.getType(blockPosition);
+    net.minecraft.server.v1_14_R1.BlockPosition blockPosition = ofNative(nativeBlockPosition);
+    IBlockData blockData = blockAccess.getType(blockPosition);
     return blockData.getBlock().getDamage(blockData, ((CraftPlayer) player).getHandle(), worldServer, blockPosition);
   }
+
+  private final static boolean INVENTORY_VIA_GETTER = MinecraftVersions.VER1_17_0.atOrAbove();
 
   @Override
   @PatchyAutoTranslation
   public boolean replacementPlace(World world, Player player, BlockPosition nativeBlockPosition) {
     WorldServer worldServer = ((CraftWorld) world).getHandle();
-    Chunk chunk = worldServer.getChunkIfLoaded(nativeBlockPosition.getX() >> 4, nativeBlockPosition.getZ() >> 4);
-    if (chunk == null) {
+    IBlockAccess blockAccess = worldServer.getChunkProvider().c(nativeBlockPosition.getX() >> 4, nativeBlockPosition.getZ() >> 4);
+    if (blockAccess == null) {
       return false;
     }
     User user = UserRepository.userOf(player);
     int heldItemType = user.meta().inventory().handSlot();
-    net.minecraft.server.v1_14_R1.BlockPosition blockPosition = new net.minecraft.server.v1_14_R1.BlockPosition(nativeBlockPosition.getX(), nativeBlockPosition.getY(), nativeBlockPosition.getZ());
-    IBlockData blockData = chunk.getType(blockPosition);
-    Item heldItem = ((CraftPlayer) player).getHandle().inventory.getItem(heldItemType).getItem();
+    net.minecraft.server.v1_14_R1.BlockPosition blockPosition = ofNative(nativeBlockPosition);
+    IBlockData blockData = blockAccess.getType(blockPosition);
+    Object heldItem;
+    if(INVENTORY_VIA_GETTER) {
+      heldItem = ((org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer) player).getHandle().getInventory().getItem(heldItemType).getItem();
+    } else {
+      heldItem = ((CraftPlayer) player).getHandle().inventory.getItem(heldItemType).getItem();
+    }
     return blockData.getMaterial().isReplaceable() && blockData.getBlock().getItem().getItem() == heldItem;
+  }
+
+  @PatchyAutoTranslation
+  @PatchyTranslateParameters
+  private net.minecraft.server.v1_14_R1.BlockPosition ofBlock(Block block) {
+    return new net.minecraft.server.v1_14_R1.BlockPosition(block.getX(), block.getY(), block.getZ());
+  }
+
+  @PatchyAutoTranslation
+  @PatchyTranslateParameters
+  private net.minecraft.server.v1_14_R1.BlockPosition ofNative(BlockPosition blockPosition) {
+    return new net.minecraft.server.v1_14_R1.BlockPosition(blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
   }
 }

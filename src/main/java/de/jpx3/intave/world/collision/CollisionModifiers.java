@@ -19,8 +19,8 @@ public final class CollisionModifiers {
     CollisionModifier modifier;
     try {
       modifier = modifierClass.newInstance();
-    } catch (InstantiationException | IllegalAccessException exception) {
-      throw new IllegalStateException("Unable to load collision modifier " + modifierClass);
+    } catch (InstantiationException | IllegalAccessException | Error exception) {
+      throw new IllegalStateException("Unable to load collision modifier " + modifierClass, exception);
     }
     for (Material value : Material.values()) {
       if (modifier.matches(value)) {

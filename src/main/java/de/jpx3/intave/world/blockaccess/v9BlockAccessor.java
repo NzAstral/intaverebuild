@@ -4,7 +4,9 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import de.jpx3.intave.patchy.annotate.PatchyAutoTranslation;
 import net.minecraft.server.v1_9_R2.Chunk;
 import net.minecraft.server.v1_9_R2.WorldServer;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_9_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -12,6 +14,16 @@ import org.bukkit.inventory.ItemStack;
 
 @PatchyAutoTranslation
 public final class v9BlockAccessor implements BlockAccessor {
+  @Override
+  public Material typeAccess(Block block) {
+    return block.getType();
+  }
+
+  @Override
+  public int dataAccess(Block block) {
+    return block.getData();
+  }
+
   @Override
   @PatchyAutoTranslation
   public float blockDamage(Player player, ItemStack itemInHand, BlockPosition blockPosition) {

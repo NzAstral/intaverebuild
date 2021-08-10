@@ -31,6 +31,7 @@ import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.InventoryMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.world.blockaccess.BlockDataAccess;
+import de.jpx3.intave.world.blockaccess.BlockInnerAccess;
 import de.jpx3.intave.world.blockaccess.BlockTypeAccess;
 import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import de.jpx3.intave.world.blockshape.OCBlockShapeAccess;
@@ -90,7 +91,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
 
     Material clickedType = BukkitBlockAccess.blockAccess(blockPosition.toLocation(player.getWorld())).getType();
-    boolean clickableInteraction = BlockDataAccess.isClickable(clickedType);
+    boolean clickableInteraction = BlockInnerAccess.isClickable(clickedType);
     Material heldItemType = user.meta().inventory().heldItemType();
     boolean interactionIsPlacement = heldItemType != Material.AIR && heldItemType.isBlock() && !clickableInteraction && !abilityMetadata.inGameMode(GameMode.ADVENTURE);
 
@@ -137,7 +138,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
 
     EnumWrappers.PlayerDigType playerDigType = packet.getPlayerDigTypes().readSafely(0);
-    float blockDamage = BlockDataAccess.blockDamage(player, user.meta().inventory().heldItem(), blockPosition);
+    float blockDamage = BlockInnerAccess.blockDamage(player, user.meta().inventory().heldItem(), blockPosition);
     boolean instantBreak = blockDamage >= 1.0f || abilityData.inGameMode(PlayerAbilityEvaluator.GameMode.CREATIVE);
     boolean breakBlock = instantBreak || playerDigType == STOP_DESTROY_BLOCK;
 
@@ -358,7 +359,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
             World world = player.getWorld();
             Material material = user.meta().inventory().heldItemType();
             int dat = 0;
-            boolean replace = BlockDataAccess.replacementPlace(world, player, new BlockPosition(raycastLocation.toVector()));
+            boolean replace = BlockInnerAccess.replacementPlace(world, player, new BlockPosition(raycastLocation.toVector()));
             Location placementLocation = replace ? raycastLocation : raycastLocation.clone().add(raycastResult.sideHit.getDirectionVec().convertToBukkitVec());
             boolean raytraceCollidesWithPosition = material.isBlock() && Collision.playerInImaginaryBlock(
               user, world, placementLocation.getBlockX(), placementLocation.getBlockY(), placementLocation.getBlockZ(),
@@ -423,7 +424,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     boolean mustFlag = false;
     String message, details;
     if (type == InteractionType.BREAK) {
-      boolean longBreakDuration = BlockDataAccess.blockDamage(player, user.meta().inventory().heldItem(), interaction.targetBlock()) < 0.8;
+      boolean longBreakDuration = BlockInnerAccess.blockDamage(player, user.meta().inventory().heldItem(), interaction.targetBlock()) < 0.8;
       String typeName = shortenTypeName(targetLocationBlockType);
       String append = "";
       if (hitMiss || (raycastLocation.getBlockX() == 0 && raycastLocation.getBlockY() == 0 && raycastLocation.getBlockZ() == 0)) {
@@ -440,7 +441,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
         append = "invalid block face";
         vl = longBreakDuration ? 20 : 15;
       }
-      float blockDamage = BlockDataAccess.blockDamage(player, user.meta().inventory().heldItem(), interaction.targetBlock());
+      float blockDamage = BlockInnerAccess.blockDamage(player, user.meta().inventory().heldItem(), interaction.targetBlock());
       boolean instantBreak = blockDamage == Float.POSITIVE_INFINITY || blockDamage >= 1.0f || user.meta().abilities().inGameMode(PlayerAbilityEvaluator.GameMode.CREATIVE);
       if (instantBreak) {
         vl = 0;
