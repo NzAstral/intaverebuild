@@ -25,10 +25,12 @@ public final class ModuleLoader {
   }
 
   public Collection<Module> loadRequests() {
-    return classPick(this::readyToLoad).stream().map(this::instanceOf).peek(module -> {
-      module.setPlugin(IntavePlugin.singletonInstance());
-      module.setModuleSettings(pendingModuleClasses.remove(module.getClass()));
-    }).collect(Collectors.toList());
+    return classPick(this::readyToLoad).stream().map(this::instanceOf).peek(this::initiate).collect(Collectors.toList());
+  }
+
+  private void initiate(Module module) {
+    module.setPlugin(IntavePlugin.singletonInstance());
+    module.setModuleSettings(pendingModuleClasses.remove(module.getClass()));
   }
 
   private <T> T instanceOf(Class<T> klass) {

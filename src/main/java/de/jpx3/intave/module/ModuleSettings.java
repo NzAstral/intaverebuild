@@ -42,7 +42,7 @@ public final class ModuleSettings {
     }
 
     public Builder requiresProtocolLib() {
-      return requires(Requirements.requiresProtocolLib());
+      return requires(Requirements.protocolLib());
     }
 
     public Builder requires(Requirement requirement) {

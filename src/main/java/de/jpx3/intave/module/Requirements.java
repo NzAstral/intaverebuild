@@ -7,7 +7,7 @@ public final class Requirements {
     return new NoRequirement();
   }
 
-  public static Requirement requiresProtocolLib() {
+  public static Requirement protocolLib() {
     return requiresPlugin("ProtocolLib");
   }
 
