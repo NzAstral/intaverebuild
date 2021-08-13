@@ -27,6 +27,10 @@ public final class Modules {
   }
 
   public <T extends Module> T find(Class<? extends Module> moduleClass) {
-    return pool.lookup(moduleClass);
+    T module = pool.lookup(moduleClass);
+    if (module == null) {
+      throw new IllegalStateException("Unable to find module " + moduleClass + ", is it loaded?");
+    }
+    return module;
   }
 }

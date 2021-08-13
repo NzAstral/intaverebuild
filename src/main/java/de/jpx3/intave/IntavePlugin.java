@@ -822,6 +822,10 @@ public final class IntavePlugin extends JavaPlugin {
     this.access = access;
   }
 
+  public Modules modules() {
+    return modules;
+  }
+
   public IntaveAccessService accessService() {
     return accessService;
   }
@@ -850,6 +854,7 @@ public final class IntavePlugin extends JavaPlugin {
     return configurationService;
   }
 
+  @Deprecated
   public EventService eventService() {
     return eventService;
   }
@@ -858,14 +863,17 @@ public final class IntavePlugin extends JavaPlugin {
     return fakePlayerEventService;
   }
 
+  @Deprecated
   public BukkitEventLinker eventLinker() {
     return eventLinker;
   }
 
+  @Deprecated
   public PacketSubscriptionLinker packetSubscriptionLinker() {
     return packetSubscriptionLinker;
   }
 
+  @Deprecated
   public ViolationProcessor violationProcessor() {
     return this.violationProcessor;
   }

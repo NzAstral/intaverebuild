@@ -18,6 +18,7 @@ public abstract class Module implements EventProcessor {
     this.plugin = plugin;
   }
 
+  @Deprecated
   public ModuleSettings moduleSettings() {
     return moduleSettings;
   }
