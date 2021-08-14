@@ -15,13 +15,28 @@ import de.jpx3.intave.detect.checks.world.BreakSpeedLimiter;
 import de.jpx3.intave.detect.checks.world.InteractionRaytrace;
 import de.jpx3.intave.detect.checks.world.PlacementAnalysis;
 import de.jpx3.intave.tools.annotate.Relocate;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.*;
 
 /**
- * A {@link CheckService} that initializes,
+ * A {@link CheckService} initializes, holds and links implementation classes of class {@link Check}.
+ * Every instance of the implementation class of class {@link Check} must be singleton throughout the entire
+ * lifespan of our application - ensured by the utilizing of a class-as-key-to-instance principle.
+ *
+ * It will instantiate all known implementations of class {@link Check} with {@link CheckService#setup()}, following
+ * command linkage, to find and link any subscriptions within the instantiated {@link Check}.<br>
+ * For the lifespan of the application, a {@link CheckService} will hold these checks, and
+ * as the references are mostly immutable, pre-render different access caches allowing fast {@link Check} lookups
+ * via {@link CheckService#searchCheck(String)} and {@link CheckService#searchCheck(Class)}.
+ * Once {@link CheckService#reset()} is called (when the application terminates), it will terminate all subscriptions and
+ * clear all check-references.
+ *
+ * @see CheckLinker
+ *
+ * @see Check
+ * @see CheckPart
+ * @see MetaCheck
+ * @see MetaCheckPart
  */
 @Relocate
 public final class CheckService {
@@ -38,6 +53,9 @@ public final class CheckService {
     checkLinker = new CheckLinker(this.plugin);
   }
 
+  /**
+   * Load known checks, bake quick access, and link packet- and bukkit-subscriptions
+   */
   public void setup() {
     addCheck(Physics.class);
     addCheck(InteractionRaytrace.class);
@@ -56,6 +74,9 @@ public final class CheckService {
     checkLinker.linkPacketEventSubscriptions(checks);
   }
 
+  /**
+   * Remove packet- and bukkit-subscriptions, reset quick access, remove checks
+   */
   public void reset() {
     checkLinker.removeBukkitEventSubscriptions(checks);
     checkLinker.removePacketEventSubscriptions(checks);
@@ -65,7 +86,7 @@ public final class CheckService {
     nameRequestCache.clear();
   }
 
-  public void addCheck(Class<? extends Check> checkClass) {
+  private void addCheck(Class<? extends Check> checkClass) {
     try {
       Check check;
       try {
@@ -80,11 +101,11 @@ public final class CheckService {
     }
   }
 
-  public void addCheck(Check check) {
+  private void addCheck(Check check) {
     checks.add(check);
   }
 
-  public void bakeQuickAccess() {
+  private void bakeQuickAccess() {
     classRequestCache = new HashMap<>();
     nameRequestCache = new HashMap<>();
     checkNames = new ArrayList<>();
@@ -99,13 +120,19 @@ public final class CheckService {
     checks = ImmutableList.copyOf(checks);
   }
 
-  public void resetQuickAccess() {
+  private void resetQuickAccess() {
     classRequestCache = new HashMap<>();
     nameRequestCache = new HashMap<>();
     checkNames = new ArrayList<>();
   }
 
-
+  /**
+   * Lookup a {@link Check} by its intrinsically unique {@code class}.
+   * @param checkClass the corresponding check class
+   * @param <T> the corresponding check type
+   * @throws IllegalStateException when the check could not be found
+   * @return the check
+   */
   public <T extends Check> T searchCheck(Class<T> checkClass) {
     Check check = classRequestCache.get(checkClass);
     if (check == null) {
@@ -121,6 +148,13 @@ public final class CheckService {
     return (T) check;
   }
 
+  /**
+   * Lookup a {@link Check} by its name.
+   * @param checkName the corresponding check name
+   * @param <T> the corresponding check type
+   * @throws IllegalStateException when the check could not be found
+   * @return the check
+   */
   public <T extends Check> T searchCheck(String checkName) {
     Check check = nameRequestCache.get(checkName.toLowerCase());
     if (check == null) {
@@ -136,31 +170,20 @@ public final class CheckService {
     return (T) check;
   }
 
+  /**
+   * Checks whether a check with the given name exists in cache.
+   * @param checkName the name of the check
+   * @return {@code true} if it contains the check, {@code false} if it doesn't
+   */
   public boolean hasCheck(String checkName) {
     return nameRequestCache.containsKey(checkName.toLowerCase());
   }
 
-  public void enterConfiguration(CheckConfiguration checkConfiguration) {
-    YamlConfiguration configuration = plugin.configurationService().configuration();
-    String checkSectionPath = "check." + checkConfiguration.check().configurationKey();
-    ConfigurationSection checkSection = configuration.getConfigurationSection(checkSectionPath);
-    if (checkSection == null) {
-      checkConfiguration.setSettings(new HashMap<>());
-      return;
-    }
-    Map<String, Object> mappings = new HashMap<>();
-    Set<String> keys = checkSection.getKeys(true);
-    for (String key : keys) {
-      mappings.putIfAbsent(key, checkSection.get(key));
-    }
-    checkConfiguration.setSettings(mappings);
-  }
-
-  public List<String> checkNames() {
-    return checkNames;
-  }
-
-  public List<Check> checks() {
+  /**
+   * Retrieves a {@link Collection} of the instances of all implementations of the {@link Check} class.
+   * @return all checks
+   */
+  public Collection<Check> checks() {
     return checks;
   }
 }

@@ -11,22 +11,31 @@ import de.jpx3.intave.event.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.event.packet.PacketSubscription;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
- * A {@link Check} provides a skeletal architecture for both detection algorithms and detection clusters.<br>
+ * A {@link Check} provides a skeletal architecture for both detection algorithms and detection clusters.<br />
  * It is stored, linked, unlinked and deleted by a {@link CheckService}, where it is
- * externally made accessible. All instances of complete implementation classes must be a singleton, as they will be addressed by {@code class} from the {@link CheckService}.
- * {@link Check}s have intrinsic properties, their unique name, their unique configuration key, whether the check is enabled,
+ * made accessible to external modules. <br> All instances of complete implementation classes must be singleton,
+ * as they can only be addressed and distinguished by {@code class}.
+ * They have a unique name, a unique configuration key, an enabled state,
  * a {@link CheckConfiguration} and {@link CheckStatistics}.
- * Instances hold a reference to the singleton instance of the {@link IntavePlugin} class and are equipped with a {@link Check#userOf(Player)} utility method.
- * It holds subordinate {@link CheckPart}s, as well as an {@link Check#appendCheckPart(CheckPart)} method to append them to themself.
+ * Instances hold a reference to the singleton instance of the {@link IntavePlugin} class and are equipped
+ * with a {@link Check#userOf(Player)} utility method.
+ * Instances of the class hold subordinate {@link CheckPart}s, as well as an {@link Check#appendCheckPart(CheckPart)}
+ * method to append {@link CheckPart}s to themself.
+ * <br />
+ * <br />
+ * A {@link Check} is either a <i>detection algorithm itself</i> or severs as a <i>detection cluster</i>.
+ * Once a single {@link CheckPart} is added, the {@link Check} must become a <i>detection cluster</i> and must not contain code for detection,
+ * though it still can and should have code to interpret, delay, contextualize or analyse the gathered data, as long as it comes from the held {@link CheckPart}s.
+ * <br />
+ * <br />
  *
  * @see de.jpx3.intave.detect.CheckPart
  * @see de.jpx3.intave.detect.MetaCheck
@@ -55,9 +64,25 @@ import java.util.function.Consumer;
     this.statistics = new CheckStatistics();
     this.checkConfiguration = new CheckConfiguration(this);
     this.perTrustFactorStatistics = new EnumMap<>(TrustFactor.class);
-    plugin.checkService().enterConfiguration(checkConfiguration);
+    this.enterConfiguration();
     this.enabled = checkConfiguration.settings().boolBy("enabled");
     this.mitigationStrategy = checkConfiguration.settings().mitigationStrategy();
+  }
+
+  private void enterConfiguration() {
+    YamlConfiguration configuration = plugin.configurationService().configuration();
+    String checkSectionPath = "check." + configurationKey();
+    ConfigurationSection checkSection = configuration.getConfigurationSection(checkSectionPath);
+    if (checkSection == null) {
+      checkConfiguration.setSettings(new HashMap<>());
+      return;
+    }
+    Map<String, Object> mappings = new HashMap<>();
+    Set<String> keys = checkSection.getKeys(true);
+    for (String key : keys) {
+      mappings.putIfAbsent(key, checkSection.get(key));
+    }
+    checkConfiguration.setSettings(mappings);
   }
 
   /**
@@ -174,10 +199,11 @@ import java.util.function.Consumer;
   }
 
   /**
-   * Returns whether the {@link CheckLinker} in the {@link CheckService},
+   * Returns whether the {@link CheckLinker} in the {@link CheckService}
    * should link the underlying {@link EventProcessor} and therefore whether all methods annotated with
    * {@link PacketSubscription} and {@link BukkitEventSubscription} should subscribe their corresponding frameworks.
-   * The {@link InteractionRaytrace}, {@link Timer} and {@link Physics} check always returns {@code true}, as it *must* be linked.
+   * The {@link InteractionRaytrace}, {@link Timer} and {@link Physics} check override this method to always return
+   * {@code true}, as they are intrinsically required to be linked.
    * @return whether internal subscriptions should be linked
    */
   public boolean performLinkage() {
