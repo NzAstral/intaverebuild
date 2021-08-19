@@ -117,7 +117,7 @@ public class WrappedEntity implements Cloneable {
    * This method applies if the given entity has an instance of LivingEntity. Packets: (All types of movement packets)
    * FLYING, LOOK, POSITION, POSITION_LOOK
    */
-  private void onLivingUpdate() {
+  void onLivingUpdate() {
     if (entityTypeData.isLivingEntity()) {
       if (position.newPosRotationIncrements > 0) {
         double newPosX = position.posX + (position.newPosX - position.posX) / (double) position.newPosRotationIncrements;

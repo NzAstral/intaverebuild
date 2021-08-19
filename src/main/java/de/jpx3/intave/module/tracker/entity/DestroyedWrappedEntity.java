@@ -4,4 +4,8 @@ public class DestroyedWrappedEntity extends WrappedEntity {
   public DestroyedWrappedEntity() {
     super(0, null, false);
   }
+
+  @Override
+  void onLivingUpdate() {
+  }
 }
