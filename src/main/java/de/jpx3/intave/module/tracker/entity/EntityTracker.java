@@ -87,7 +87,7 @@ public final class EntityTracker extends Module {
     List<WrappedEntity> validEntities = new ArrayList<>();
     for (WrappedEntity entity : synchronizeData.synchronizedEntityMap().values()) {
       boolean firstSurvive = false;
-      if (entity.entityTypeData.isLivingEntity()) {
+      if (entity.entityTypeData != null && entity.entityTypeData.isLivingEntity()) {
         WrappedEntity.EntityPositionContext positions = entity.position;
         location.setX(positions.posX);
         location.setY(positions.posY);
