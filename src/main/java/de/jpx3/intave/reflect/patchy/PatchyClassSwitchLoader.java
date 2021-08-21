@@ -3,10 +3,7 @@ package de.jpx3.intave.reflect.patchy;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.access.IntaveInternalException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 public final class PatchyClassSwitchLoader<T> {
@@ -72,8 +69,7 @@ public final class PatchyClassSwitchLoader<T> {
   }
 
   private Optional<MinecraftVersion> selectedVersion() {
-    // sort please
-    return minecraftVersions.stream().filter(version -> version.atOrAbove()).sorted().findFirst();
+    return minecraftVersions.stream().filter(version -> version.atOrAbove()).max(Comparator.naturalOrder());
   }
 
   private String nameOf(MinecraftVersion version) {

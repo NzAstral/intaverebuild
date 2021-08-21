@@ -12,6 +12,7 @@ import de.jpx3.intave.detect.checks.movement.physics.MotionVector;
 import de.jpx3.intave.detect.checks.movement.physics.Pose;
 import de.jpx3.intave.detect.checks.movement.physics.Simulator;
 import de.jpx3.intave.detect.checks.movement.physics.Simulators;
+import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.SinusCache;
 import de.jpx3.intave.module.tracker.entity.WrappedEntity;
 import de.jpx3.intave.reflect.access.ReflectiveDataWatcherAccess;
@@ -164,12 +165,14 @@ public final class MovementMetadata {
   public MovementMetadata(Player player, User user) {
     this.player = player;
     this.user = user;
-    if (player != null) {
-      this.elytraFlying = flyingWithElytra(player);
-    }
   }
 
   public void setup() {
+    if (player != null) {
+      Synchronizer.synchronize(() -> {
+        this.elytraFlying = flyingWithElytra(player);
+      });
+    }
     applyPlayerStats();
     updateWorld();
     applyPlayerLocation();

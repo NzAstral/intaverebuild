@@ -3,12 +3,15 @@ package de.jpx3.intave.module.tracker.entity;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.reflect.EquivalentConverter;
+import com.comphenix.protocol.wrappers.BukkitConverters;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
+import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.event.feedback.Callback;
 import de.jpx3.intave.fakeplayer.FakePlayer;
 import de.jpx3.intave.module.Module;
@@ -25,6 +28,7 @@ import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.world.wrapper.WrappedMathHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -32,10 +36,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static de.jpx3.intave.event.feedback.FeedbackService.TransactionOptions.APPEND_ON_OVERFLOW;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION;
@@ -668,14 +669,16 @@ public final class EntityTracker extends Module {
     entity.health = health;
   }
 
+  private final static Map<World, EquivalentConverter<Entity>> ENTITY_CONVERTER = GarbageCollector.watch(new HashMap<>());
+
   @Nullable
   public static Entity serverEntityByIdentifier(Player player, int entityID) {
-    for (Entity entity : player.getWorld().getEntities()) {
-      if (entity.getEntityId() == entityID) {
-        return entity;
-      }
+    if (entityID < 0) {
+      return null;
     }
-    return null;
+    EquivalentConverter<Entity> converter =
+      ENTITY_CONVERTER.computeIfAbsent(player.getWorld(), BukkitConverters::getEntityConverter);
+    return converter.getSpecific(entityID);
   }
 
   @Nullable
