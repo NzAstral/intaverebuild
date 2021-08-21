@@ -29,11 +29,36 @@ public final class PacketSubscriptionLinker extends Module {
   private final Map<PacketType, SCOWAList<FilteringPacketAdapter>> internalPacketListenerMappings = new ConcurrentHashMap<>();
   private final List<WeakReferencePacketAdapter> internalPacketListener = new ArrayList<>();
   private final List<WeakReferencePacketAdapter> externalPacketListener = new ArrayList<>();
-  private final InjectionService customInjector;
+  private InjectionService customInjector;
 
   public PacketSubscriptionLinker(IntavePlugin plugin) {
     this.plugin = plugin;
+  }
+
+  @Override
+  public void enable() {
     this.customInjector = new InjectionService(plugin);
+  }
+
+  @Override
+  public void disable() {
+    for (WeakReferencePacketAdapter packetListener : internalPacketListener) {
+      unlinkAdapter(packetListener);
+      packetListener.tryRemovePluginReference();
+    }
+    internalPacketListener.clear();
+    for (WeakReferencePacketAdapter packetListener : externalPacketListener) {
+      unlinkAdapter(packetListener);
+      packetListener.tryRemovePluginReference();
+    }
+    externalPacketListener.clear();
+    ProtocolLibrary.getProtocolManager().removePacketListeners(plugin);
+    internalPacketListenerMappings.values().forEach(SCOWAList::clear);
+    internalPacketListenerMappings.clear();
+    customEngineListenerMappings.values().forEach(SCOWAList::clear);
+    customEngineListenerMappings.clear();
+    customInjector.reset();
+    customInjector.uninjectAll();
   }
 
   public void linkSubscriptionsIn(PacketEventSubscriber subscriber) {
@@ -54,26 +79,6 @@ public final class PacketSubscriptionLinker extends Module {
     if (plugin.isEnabled()) {
       refreshLinkages();
     }
-  }
-
-  public void disable() {
-    for (WeakReferencePacketAdapter packetListener : internalPacketListener) {
-      unlinkAdapter(packetListener);
-      packetListener.tryRemovePluginReference();
-    }
-    internalPacketListener.clear();
-    for (WeakReferencePacketAdapter packetListener : externalPacketListener) {
-      unlinkAdapter(packetListener);
-      packetListener.tryRemovePluginReference();
-    }
-    externalPacketListener.clear();
-    ProtocolLibrary.getProtocolManager().removePacketListeners(plugin);
-    internalPacketListenerMappings.values().forEach(SCOWAList::clear);
-    internalPacketListenerMappings.clear();
-    customEngineListenerMappings.values().forEach(SCOWAList::clear);
-    customEngineListenerMappings.clear();
-    customInjector.reset();
-    customInjector.uninjectAll();
   }
 
   public void refreshLinkages() {

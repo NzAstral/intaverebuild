@@ -235,7 +235,7 @@ public interface User {
   /**
    * Overrides the constraint for a message-channel.
    * It constrains the messages of the message-channel to only be sent
-   * when the player causing the message obeys certain constrains, specified via {@link Predicate<Player>}.
+   * when the player causing the message obeys certain constrains, specified via {@link Predicate} of type {@link Player}.
    * @param channel the selected channel
    * @param constraint the player contraint
    */

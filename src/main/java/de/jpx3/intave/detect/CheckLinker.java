@@ -12,8 +12,8 @@ import java.util.function.Consumer;
  * The methods {@link CheckLinker#linkBukkitEventSubscriptions(Collection)} and {@link CheckLinker#linkPacketEventSubscriptions(Collection)}
  * take {@link Collection}s of {@link Check}s and forward them to the {@link PacketSubscriptionLinker} and the {@link BukkitEventSubscriptionLinker}.
  * The {@link CheckLinker#removeBukkitEventSubscriptions(Collection)} and {@link CheckLinker#removePacketEventSubscriptions(Collection)} undo this procedure again.
- * <br />
- * <br />
+ * <br>
+ * <br>
  * Note: {@link CheckPart}s of a {@link Check} are not necessarily affected by {@link Check#performLinkage()}.
  * Although they *do* just forward their {@link CheckPart#enabled()} method to {@link Check#enabled()},
  * they could override it, meaning that a {@link CheckPart} can be active while its parent {@link Check} is not.

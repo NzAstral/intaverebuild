@@ -5,5 +5,5 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 public interface BlockPlacePermissionCheck {
-  boolean hasPermission(Player player, World world, boolean mainHand, int blockX, int blockY, int blockZ, int enumDirection, Material type, byte data);
+  boolean hasPermission(Player player, World world, boolean mainHand, int blockX, int blockY, int blockZ, int enumDirection, Material type, int data);
 }

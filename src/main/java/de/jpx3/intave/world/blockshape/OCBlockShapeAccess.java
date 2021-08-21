@@ -1,15 +1,19 @@
 package de.jpx3.intave.world.blockshape;
 
-/**
- * Class generated using IntelliJ IDEA
- * Created by Richard Strunk 2021
- */
+import de.jpx3.intave.user.User;
 
-public interface OCBlockShapeAccess extends OverrideBlockShapeAccess, CachedBlockShapeAccess {
-  default void applyFrom(OCBlockShapeAccess priorBlockShapeAccess) {
-    indexedReplacements().clear();
-    locatedReplacements().clear();
-    indexedReplacements().putAll(priorBlockShapeAccess.indexedReplacements());
-    locatedReplacements().putAll(priorBlockShapeAccess.locatedReplacements());
-  }
+/**
+ * A override cached block shape access - or {@link OCBlockShapeAccess} - merges
+ * {@link CachedBlockShapeAccess} featuring methods for type caching and
+ * {@link OverrideBlockShapeAccess}, featuring methods for type override and
+ * {@link BlockShapeAccess} for basic access.
+ *
+ * @see User
+ * @see BlockShape
+ * @see BlockShapeAccess
+ * @see OverrideBlockShapeAccess
+ * @see CachedBlockShapeAccess
+ * @see MultiChunkKeyOCBlockShapeAccess
+ */
+public interface OCBlockShapeAccess extends OverrideBlockShapeAccess, CachedBlockShapeAccess, BlockShapeAccess {
 }

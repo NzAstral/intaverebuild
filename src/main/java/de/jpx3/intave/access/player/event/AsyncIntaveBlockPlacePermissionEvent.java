@@ -13,7 +13,7 @@ public final class AsyncIntaveBlockPlacePermissionEvent extends IntaveEvent impl
   private int blockX, blockY, blockZ;
   private int enumDirection;
   private Material type;
-  private byte data;
+  private int variant;
   private boolean cancelled;
 
   protected AsyncIntaveBlockPlacePermissionEvent() {
@@ -25,7 +25,7 @@ public final class AsyncIntaveBlockPlacePermissionEvent extends IntaveEvent impl
     boolean mainHand,
     int blockX, int blockY, int blockZ,
     int enumDirection,
-    Material type, byte data
+    Material type, int variant
   ) {
     this.player = player;
     this.world = world;
@@ -35,7 +35,7 @@ public final class AsyncIntaveBlockPlacePermissionEvent extends IntaveEvent impl
     this.blockZ = blockZ;
     this.enumDirection = enumDirection;
     this.type = type;
-    this.data = data;
+    this.variant = variant;
     this.cancelled = false;
   }
 
@@ -71,8 +71,8 @@ public final class AsyncIntaveBlockPlacePermissionEvent extends IntaveEvent impl
     return type;
   }
 
-  public byte data() {
-    return data;
+  public int variant() {
+    return variant;
   }
 
   @Override

@@ -206,7 +206,7 @@ public final class Collision {
   }
 
   public static boolean playerInImaginaryBlock(User user, World world, int posX, int posY, int posZ, Material type, int data) {
-    List<WrappedAxisAlignedBB> boundingBoxes = user.blockShapeAccess().constructBlock(world, posX, posY, posZ, type, data);
+    List<WrappedAxisAlignedBB> boundingBoxes = boundingBoxResolver.resolve(world, user.player(), type, data, posX, posY, posZ);
     if (boundingBoxes == null || boundingBoxes.isEmpty()) {
       return false;
     }

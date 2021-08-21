@@ -16,11 +16,6 @@ public final class BlankUserOCBlockShapeAccess implements OCBlockShapeAccess {
   }
 
   @Override
-  public List<WrappedAxisAlignedBB> constructBlock(World world, int posX, int posY, int posZ, Material type, int blockState) {
-    return Collections.emptyList();
-  }
-
-  @Override
   public Material resolveType(int chunkX, int chunkZ, int posX, int posY, int posZ) {
     return Material.AIR;
   }
@@ -43,7 +38,7 @@ public final class BlankUserOCBlockShapeAccess implements OCBlockShapeAccess {
   }
 
   @Override
-  public void override(World world, int posX, int posY, int posZ, Material type, int blockState) {
+  public void override(World world, int posX, int posY, int posZ, Material type, int variant) {
   }
 
   @Override

@@ -19,21 +19,21 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /**
- * A {@link Check} provides a skeletal architecture for both detection algorithms and detection clusters.<br />
+ * A {@link Check} provides a skeletal architecture for both detection algorithms and detection clusters.<br>
  * It is stored, linked, unlinked and deleted by a {@link CheckService}, where it is
  * made accessible to external modules. <br> All instances of implementation classes must be singleton,
  * only to be addressed and distinguished by their {@code class}.
  * They hold a unique name in {@link String} that should equal their classname, a unique configuration key, an enabled state,
  * a {@link CheckConfiguration} and {@link CheckStatistics}.
- * <br />
- * <br />
+ * <br>
+ * <br>
  * Instances of the class hold subordinate {@link CheckPart}s, as well as an {@link Check#appendCheckPart(CheckPart)}
  * method to append {@link CheckPart}s to themself.
  * A {@link Check} is either a <i>detection algorithm</i> itself or serves as a <i>detection cluster</i>.
  * Once a single {@link CheckPart} is added, the {@link Check} must become a <i>detection cluster</i> and must not contain code for detection though it still can (and probably should)
  * have code to interpret, delay, contextualize or analyse the gathered data, as long as it comes from the held {@link CheckPart}s.
- * <br />
- * <br />
+ * <br>
+ * <br>
  *
  * @see de.jpx3.intave.detect.CheckPart
  * @see de.jpx3.intave.detect.CheckService

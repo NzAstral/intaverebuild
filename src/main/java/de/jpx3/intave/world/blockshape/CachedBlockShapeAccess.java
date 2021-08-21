@@ -1,18 +1,27 @@
 package de.jpx3.intave.world.blockshape;
 
-import org.bukkit.Material;
-import org.bukkit.World;
-
 /**
  * Class generated using IntelliJ IDEA
  * Created by Richard Strunk 2021
  */
 
 public interface CachedBlockShapeAccess extends BlockShapeAccess {
+  /**
+   * Invalidate all caches
+   */
   void identityInvalidate();
 
+  /**
+   * Invalidate resolver caches
+   */
   void invalidate();
 
+  /**
+   * Invalidate all blocks around a specified position
+   * @param posX the x coordinate of the selected block
+   * @param posY the y coordinate of the selected block
+   * @param posZ the z coordinate of the selected block
+   */
   default void invalidate(int posX, int posY, int posZ) {
     invalidate0(posX + 1, posY, posZ);
     invalidate0(posX - 1, posY, posZ);
@@ -23,9 +32,11 @@ public interface CachedBlockShapeAccess extends BlockShapeAccess {
     invalidate0(posX, posY, posZ);
   }
 
+  /**
+   * Invalidate a specific block
+   * @param posX the x coordinate of the selected block
+   * @param posY the y coordinate of the selected block
+   * @param posZ the z coordinate of the selected block
+   */
   void invalidate0(int posX, int posY, int posZ);
-
-  void override(World world, int posX, int posY, int posZ, Material type, int blockState);
-
-  void invalidateOverridesInBounds(int chunkXMinPos, int chunkXMaxPos, int chunkZMinPos, int chunkZMaxPos);
 }

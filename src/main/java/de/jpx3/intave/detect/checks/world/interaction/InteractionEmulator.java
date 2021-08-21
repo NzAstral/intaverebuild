@@ -132,17 +132,17 @@ public final class InteractionEmulator implements EventProcessor {
       return EmulationResult.FAILED;
     }
     Material replacementType = interaction.itemTypeInHand();
-    byte shape = 0;
+    int variant = 0;
     EnumWrappers.Hand hand = interaction.hand();
     boolean access = WorldPermission.blockPlacePermission(
       player, world,
       hand == null || hand == EnumWrappers.Hand.MAIN_HAND,
       blockX, blockY, blockZ, interaction.targetDirection(), replacementType,
-      shape
+      variant
     );
     if (access) {
       OCBlockShapeAccess blockShapeAccess = userOf(player).blockShapeAccess();
-      blockShapeAccess.override(world, blockX, blockY, blockZ, replacementType, shape);
+      blockShapeAccess.override(world, blockX, blockY, blockZ, replacementType, variant);
       // enforce block reset later
       Synchronizer.packetSynchronize(() -> {
         Synchronizer.synchronize(() -> blockShapeAccess.invalidateOverride(blockX, blockY, blockZ));

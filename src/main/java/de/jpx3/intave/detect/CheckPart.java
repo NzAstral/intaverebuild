@@ -10,8 +10,8 @@ import org.bukkit.entity.Player;
  * By holding a parent {@link Check} reference, it constrains
  * itself to only be bound to one parent {@link Check}.
  * A check part can by itself state whether it wants to be enabled and linked (see {@link CheckPart#enabled()}).
- * <br />
- * <br />
+ * <br>
+ * <br>
  * Note: {@link CheckPart}s of a {@link Check} are not necessarily affected by {@link Check#performLinkage()}.
  * Although they *do* just forward their {@link CheckPart#enabled()} method to {@link Check#enabled()},
  * they could override it, meaning that a {@link CheckPart} can be active while its parent {@link Check} is not.

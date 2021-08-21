@@ -174,15 +174,15 @@ public final class MultiChunkKeyOCBlockShapeAccess implements OCBlockShapeAccess
   }
 
   @Override
-  public void override(World world, int posX, int posY, int posZ, Material type, int blockState) {
+  public void override(World world, int posX, int posY, int posZ, Material type, int variant) {
     invalidateOverride(posX, posY, posZ);
     BlockShape blockShape;
     if (type == Material.AIR) {
       blockShape = EMPTY_CACHE_ENTRY;
     } else {
       blockShape = new BlockShape(
-        constructBlock(world, posX, posY, posZ, type, blockState),
-        type, blockState
+        boundingBoxResolver.resolve(world, player, type, variant, posX, posY, posZ),
+        type, variant
       );
     }
     long key = bigKey(posX, posY, posZ);
@@ -212,12 +212,6 @@ public final class MultiChunkKeyOCBlockShapeAccess implements OCBlockShapeAccess
   public BlockShape overrideOf(int posX, int posY, int posZ) {
     long key = bigKey(posX, posY, posZ);
     return indexedReplacements.get(key);
-  }
-
-  @Override
-  public List<WrappedAxisAlignedBB> constructBlock(World world, int posX, int posY, int posZ, Material type, int blockState) {
-    BoundingBoxAccessFlowStudy.incremLookups();
-    return boundingBoxResolver.resolve(world, player, type, blockState, posX, posY, posZ);
   }
 
   @Override

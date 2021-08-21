@@ -18,11 +18,11 @@ public final class EventPlacePermissionResolver implements BlockPlacePermissionC
     Player player, World world,
     boolean mainHand,
     int blockX, int blockY, int blockZ,
-    int enumDirection, Material type, byte data
+    int enumDirection, Material type, int variant
   ) {
     AsyncIntaveBlockPlacePermissionEvent event = plugin.customEventService().invokeEvent(
       AsyncIntaveBlockPlacePermissionEvent.class,
-      x -> x.copy(player, world, mainHand, blockX, blockY, blockZ, enumDirection, type, data)
+      x -> x.copy(player, world, mainHand, blockX, blockY, blockZ, enumDirection, type, variant)
     );
     return !event.isCancelled();
   }
