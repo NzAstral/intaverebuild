@@ -22,7 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import static de.jpx3.intave.reflect.access.ReflectiveDataWatcherAccess.WATCHER_BLOCKING_ID;
 
 @Relocate
-public final class DoublePredictionSimulationProcessor implements SimulationProcessor {
+public final class PredictionSimulationProcessor implements SimulationProcessor {
   private final static double REQUIRED_ACCURACY_FOR_QUICK_PROC_EXIT = 0.001;
   private final static double REQUIRED_PREDICTION_ACCURACY_FOR_PRED_BIAS_PROCEED = 0.1;
 
@@ -109,7 +109,7 @@ public final class DoublePredictionSimulationProcessor implements SimulationProc
     inventoryData.setHandActive(false);
     ItemStack itemStack = inventoryData.heldItem();
 
-    if (itemStack != null && !ItemProperties.isSwordItem(user.player(), itemStack)) {
+    if (itemStack != null && !ItemProperties.isSwordItem(itemStack)) {
       boolean ignoredItem = itemStack.getType() == Material.BOW;
       boolean combatUpdate = user.meta().protocol().combatUpdate();
       int threshold = combatUpdate ? 5 : 3;
