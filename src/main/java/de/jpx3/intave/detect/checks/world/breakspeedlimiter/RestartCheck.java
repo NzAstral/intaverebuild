@@ -77,8 +77,7 @@ public final class RestartCheck extends MetaCheckPart<BreakSpeedLimiter, Restart
               ViolationProcessor violationProcessor = IntavePlugin.singletonInstance().violationProcessor();
               Violation violation = Violation.builderFor(BreakSpeedLimiter.class)
                 .forPlayer(player).withMessage(message).withDetails(details)
-                .withVL(1)
-                .build();
+                .withVL(1).build();
               ViolationContext violationContext = violationProcessor.processViolation(violation);
               if (violationContext.shouldCounterThreat()) {
                 event.setCancelled(true);

@@ -87,7 +87,7 @@ public final class ConnectionHealthTelemetry implements PacketEventSubscriber {
     }
 
     if (!remainingPingPackets.containsKey(id)) {
-      IntaveLogger.logger().error(player.getName() + " sent KAI " + id + ", but expected one of " + remainingPingPackets);
+      IntaveLogger.logger().error(player.getName() + " sent KAI " + id + ", but expected one of " + remainingPingPackets.keySet());
       user.synchronizedDisconnect("Unknown keep-alive identifier");
       return;
     }

@@ -353,6 +353,7 @@ public final class IntavePlugin extends JavaPlugin {
           String keyResponse = properties.get("exchange-key");
           // verify the server integrity
           boolean validResponse = false;
+          // don't optimize please - otherwise we will have JVM Crashes
           long receivedMSB = 0;
           long receivedLSB = 0;
           if (keyResponse != null) {

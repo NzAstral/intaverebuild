@@ -136,7 +136,7 @@ public final class ViolationProcessor {
       violationLevelData.detectionCounter = 0;
       violationLevelData.detectionCounterReset = AccessHelper.now();
     }
-    if (violationLevelData.detectionCounter++ > 500) {
+    if (violationLevelData.detectionCounter++ > 300) {
       user.synchronizedDisconnect("You are sending too many packets :[");
     }
   }

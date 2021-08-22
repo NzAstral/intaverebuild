@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class VariantCachePipe implements ResolverPipeline {
   private final ResolverPipeline forward;
-  private final Map<Material, ReferenceMap<Integer, List<WrappedAxisAlignedBB>>> cache = MemoryWatchdog.watch("variant-cache", new ConcurrentHashMap<>());
+  private final Map<Material, Map<Integer, List<WrappedAxisAlignedBB>>> cache = MemoryWatchdog.watch("variant-cache", new ConcurrentHashMap<>());
 
   public VariantCachePipe(ResolverPipeline forward) {
     this.forward = forward;

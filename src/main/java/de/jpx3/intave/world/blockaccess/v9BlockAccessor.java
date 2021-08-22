@@ -27,7 +27,7 @@ public final class v9BlockAccessor implements BlockAccessor {
 
   @Override
   public Object blockHandle(Block block) {
-    return CraftMagicNumbers.getBlock(block);
+    return CraftMagicNumbers.getBlock(block).getBlockData();
   }
 
   @Override

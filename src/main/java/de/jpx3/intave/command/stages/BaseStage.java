@@ -45,10 +45,9 @@ public final class BaseStage extends CommandStage {
     if (user.receives(MessageChannel.VERBOSE)) {
       if (selectedPlayers != null && !user.hasChannelConstraint(MessageChannel.VERBOSE)) {
         List<UUID> uniqueIds = Arrays.stream(selectedPlayers).map(Entity::getUniqueId).distinct().collect(Collectors.toList());
-        String names = Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> s + " ").collect(Collectors.joining()).trim();
         user.setChannelConstraint(MessageChannel.VERBOSE, player1 -> uniqueIds.contains(player1.getUniqueId()));
-        String target = ChatColor.RED + names;
-        player.sendMessage(IntavePlugin.prefix() + "You have specified verbose output to " + target);
+        String names = ChatColor.RED + describePlayerList(Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> ChatColor.RED + s).collect(Collectors.toList()));
+        player.sendMessage(IntavePlugin.prefix() + "You have specified verbose output to " + names);
         return;
       }
     }
@@ -64,11 +63,22 @@ public final class BaseStage extends CommandStage {
         player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving verbose output for " + target);
       } else {
         List<UUID> uniqueIds = Arrays.stream(selectedPlayers).map(Entity::getUniqueId).distinct().collect(Collectors.toList());
-        String names = Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> s + " ").collect(Collectors.joining()).trim();
         user.setChannelConstraint(MessageChannel.VERBOSE, player1 -> uniqueIds.contains(player1.getUniqueId()));
-        String target = ChatColor.RED + names;
-        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving verbose output for: " + target);
+        String names = ChatColor.RED + describePlayerList(Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> ChatColor.RED + s).collect(Collectors.toList()));
+        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now" + IntavePlugin.defaultColor() + " receiving verbose output for " + names);
       }
+    }
+  }
+
+  private static String describePlayerList(List<String> elements) {
+    int size = elements.size();
+    String defaultColor = IntavePlugin.defaultColor();
+    if(size == 0) {
+      return defaultColor + "nobody";
+    } else if (size == 1) {
+      return elements.get(0);
+    } else {
+      return defaultColor + String.join(defaultColor + ", ", elements.subList(0, size - 1)) + defaultColor + " and " + elements.get(size - 1);
     }
   }
 

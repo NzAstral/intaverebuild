@@ -370,8 +370,14 @@ final class PlayerUser implements User {
     }
   }
 
+  private boolean disconnectQueued = false;
+
   @Override
   public void synchronizedDisconnect(String reason) {
+    if (disconnectQueued) {
+      return;
+    }
+    disconnectQueued = true;
     IntaveLogger.logger().info("Queuing manual disconnect of player " + player().getName() + " for \"" + reason + "\"");
     IntaveLogger.logger().info("This measure is a security-constraint necessity, but feel free to contact us if this happens too often");
     Synchronizer.synchronize(() -> {
