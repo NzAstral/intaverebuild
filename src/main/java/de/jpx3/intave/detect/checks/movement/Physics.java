@@ -65,7 +65,7 @@ public final class Physics extends Check {
     super("Physics", "physics");
     this.plugin = plugin;
     this.decrementer = new CheckViolationLevelDecrementer(this, VL_DECREMENT_PER_VALID_MOVE * 20);
-    this.simulationProcessor = new DoublePredictionSimulationProcessor();
+    this.simulationProcessor = new PredictionSimulationProcessor();
     this.simulationEvaluator = new SimulationEvaluator();
 
     highToleranceMode = configuration().settings().boolBy("high-tolerance", false);

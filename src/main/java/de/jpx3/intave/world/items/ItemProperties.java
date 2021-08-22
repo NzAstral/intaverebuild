@@ -2,6 +2,7 @@ package de.jpx3.intave.world.items;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.event.dispatch.PlayerAbilityTracker;
@@ -9,6 +10,8 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.AbilityMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
+import joptsimple.internal.Strings;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -17,19 +20,20 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static de.jpx3.intave.adapter.MinecraftVersions.VER1_13_0;
-import static de.jpx3.intave.adapter.MinecraftVersions.VER1_9_0;
+import static de.jpx3.intave.adapter.MinecraftVersions.*;
 import static de.jpx3.intave.world.items.Enchantments.tridentRiptideEnchanted;
 
 public final class ItemProperties {
   public static final Material ITEM_TRIDENT = materialByName("TRIDENT");
-  private static final List<Material> materialUseItemList = Lists.newArrayList();
-  private static final List<Material> materialSwordItemList = Lists.newArrayList();
-  private static final List<Material> materialPotionList = Lists.newArrayList();
-  private static final List<Material> foodLevelConstraintFoodItems = Lists.newArrayList();
-  private static final List<Material> nonFoodLevelConstraintFoodItems = Lists.newArrayList();
+  private static final Set<Material> materialUseItems = Sets.newHashSet();
+  private static final Set<Material> materialSwordItems = Sets.newHashSet();
+  private static final Set<Material> materialTrapdoorItems = Sets.newHashSet();
+  private static final Set<Material> materialPotionItems = Sets.newHashSet();
+  private static final Set<Material> foodLevelConstraintFoodItems = Sets.newHashSet();
+  private static final Set<Material> nonFoodLevelConstraintFoodItems = Sets.newHashSet();
 
   public static void setup() {
     try {
@@ -60,42 +64,25 @@ public final class ItemProperties {
     materialListConvert(nonFoodLevelConstraintFoodItemNames, nonFoodLevelConstraintFoodItems);
   }
 
-  private static void materialListConvert(List<String> input, List<Material> output) {
+  private static void materialListConvert(List<String> input, Set<Material> output) {
     input.stream().map(ItemProperties::materialByName).forEach(output::add);
   }
 
   private static void loadDefaultUseItems(MinecraftVersion serverVersion) {
     if (serverVersion.isAtLeast(VER1_13_0)) {
-      materialUseItemList.add(resolveTrident());
+      materialUseItems.add(materialByName("TRIDENT"));
     }
     if (serverVersion.isAtLeast(VER1_9_0)) {
-      materialUseItemList.add(resolveShield());
-    }/* else {
-      materialUseItemList.addAll(resolveSwords());
-    }*/
-
-    materialSwordItemList.addAll(resolveSwords());
-    materialUseItemList.add(resolveBow());
+      materialUseItems.add(materialByName("SHIELD"));
+    }
+    materialTrapdoorItems.addAll(materialsMatching("TRAP_DOOR"));
+    materialTrapdoorItems.addAll(materialsMatching("TRAPDOOR"));
+    materialSwordItems.addAll(materialsMatching("SWORD"));
+    materialUseItems.add(Material.BOW);
   }
 
   private static void loadPotions() {
-    materialPotionList.add(Material.POTION);
-  }
-
-  private static List<Material> resolveSwords() {
-    return materialsMatching("SWORD");
-  }
-
-  private static Material resolveTrident() {
-    return materialByName("TRIDENT");
-  }
-
-  private static Material resolveShield() {
-    return materialByName("SHIELD");
-  }
-
-  private static Material resolveBow() {
-    return Material.BOW;
+    materialPotionItems.add(Material.POTION);
   }
 
   public static boolean canItemBeUsed(Player player, @Nullable ItemStack itemStack) {
@@ -110,8 +97,8 @@ public final class ItemProperties {
       return false;
     }
 
-    boolean useItem = materialUseItemList.contains(type);
-    boolean potion = materialPotionList.contains(type);
+    boolean useItem = materialUseItems.contains(type);
+    boolean potion = materialPotionItems.contains(type);
     return useItem || potion || foodConsumable(player, type);
   }
 
@@ -128,10 +115,13 @@ public final class ItemProperties {
     return nonFoodLevelConstraintFoodItems.contains(type);
   }
 
-  public static boolean isSwordItem(Player player, @Nullable ItemStack itemStack) {
+  public static boolean isSwordItem(@Nullable ItemStack itemStack) {
     Material type = itemStack == null ? Material.AIR : itemStack.getType();
-    boolean itemSword = materialSwordItemList.contains(type);
-    return itemSword;
+    return materialSwordItems.contains(type);
+  }
+
+  public static boolean isTrapdoor(Material material) {
+    return materialTrapdoorItems.contains(material);
   }
 
   private static boolean tridentUsable(User user, ItemStack itemStack) {

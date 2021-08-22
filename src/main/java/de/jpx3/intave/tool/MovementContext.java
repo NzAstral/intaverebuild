@@ -10,6 +10,7 @@ import de.jpx3.intave.world.blockaccess.BukkitBlockAccess;
 import de.jpx3.intave.world.blockphysic.BlockProperties;
 import de.jpx3.intave.world.blockphysic.MaterialMagic;
 import de.jpx3.intave.world.collision.Collision;
+import de.jpx3.intave.world.items.ItemProperties;
 import de.jpx3.intave.world.wrapper.WrappedAxisAlignedBB;
 import de.jpx3.intave.world.wrapper.WrappedMathHelper;
 import org.bukkit.Location;
@@ -149,7 +150,7 @@ public final class MovementContext {
       WrappedMathHelper.floor(positionY),
       WrappedMathHelper.floor(positionZ)
     );
-    if (clientData.combatUpdate() && type.name().contains("TRAP_DOOR") && canGoThroughTrapDoorOnLadder(user, block)) {
+    if (clientData.combatUpdate() && ItemProperties.isTrapdoor(type) && canGoThroughTrapDoorOnLadder(user, block)) {
       return true;
     }
     return BlockProperties.ofType(type).climbable();

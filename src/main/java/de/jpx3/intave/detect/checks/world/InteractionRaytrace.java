@@ -133,7 +133,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
 
     ItemStack heldItemStack = inventoryData.heldItem();
-    if (ItemProperties.isSwordItem(player, heldItemStack) && player.getGameMode() == GameMode.CREATIVE) {
+    if (ItemProperties.isSwordItem(heldItemStack) && player.getGameMode() == GameMode.CREATIVE) {
       event.setCancelled(true);
       return;
     }
