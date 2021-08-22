@@ -659,6 +659,9 @@ public final class EntityTracker extends Module {
       }
       if (index == requiredIndex) {
         Object rawValue = watchableObject.getRawValue();
+        if (rawValue instanceof OptionalInt) {
+          rawValue = ((OptionalInt) rawValue).orElse(0);
+        }
         return ((Number) rawValue).floatValue();
       }
     }

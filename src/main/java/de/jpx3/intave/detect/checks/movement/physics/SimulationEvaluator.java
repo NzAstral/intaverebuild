@@ -136,8 +136,12 @@ public final class SimulationEvaluator {
       multiplier = 100;
     }
 
-    if (pose == Pose.FALL_FLYING && movementData.motionY() >= 0 && movementData.onGround) {
-      multiplier *= 0.1;
+    if (pose == Pose.FALL_FLYING) {
+      if (movementData.motionY() >= 0 && movementData.onGround) {
+        multiplier *= 0.1;
+      } else {
+        multiplier *= 0.25;
+      }
     }
 
     if (criticalWeb) {
@@ -280,8 +284,12 @@ public final class SimulationEvaluator {
     }
 
     Pose pose = movementData.pose();
-    if (pose == Pose.FALL_FLYING && movementData.motionY() >= 0 && movementData.onGround) {
-      abuseHorizontally *= 0.3;
+    if (pose == Pose.FALL_FLYING) {
+      if (movementData.motionY() >= 0 && movementData.onGround) {
+        abuseHorizontally *= 0.3;
+      } else {
+        abuseHorizontally *= 0.6;
+      }
     }
 
     boolean movedTooQuicklyCheckable = distanceMoved > 0.3 || violationLevelData.physicsInvalidMovementsInRow >= 8;
