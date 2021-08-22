@@ -479,6 +479,7 @@ public final class IntavePlugin extends JavaPlugin {
       SSLConnectionVerifier.setup();
       BlockVariantRegister.prepareIndex();
 
+      BoundingBoxResolver.setup();
       WrappedEntity.setup();
       ReflectiveAccess.setup();
       UserRepository.setup();
@@ -493,7 +494,6 @@ public final class IntavePlugin extends JavaPlugin {
       BlockTypeAccess.setup();
       CollisionModifiers.setup();
       ViaVersionAdapter.setup();
-      BoundingBoxResolver.setup();
       WorldPermission.setup();
       BlockPhysics.setup();
       BlockProperties.setup();
