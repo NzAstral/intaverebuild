@@ -40,7 +40,7 @@ public final class FallDamageMethodContainer extends ReducedMethodContainer {
       methodType = MethodType.methodType(Void.TYPE, Float.TYPE, Float.TYPE);
     }
     try {
-      fallDamageInvokeMethod = MethodHandles.publicLookup().findVirtual(entityLivingClass, methodName, methodType);
+      fallDamageInvokeMethod = MethodHandles.lookup().findVirtual(entityLivingClass, methodName, methodType);
     } catch (NoSuchMethodException | IllegalAccessException exception) {
       throw new IllegalStateException(exception);
     }

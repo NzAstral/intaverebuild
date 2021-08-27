@@ -33,7 +33,7 @@ public final class AttributeTracker extends Module {
       StructureModifier<List<WrappedAttribute>> attributeModifier = packet.getAttributeCollectionModifier();
       List<WrappedAttribute> attributes = filterAttributes(attributeModifier.read(0));
       attributeModifier.write(0, attributes);
-      Modules.feedback().singleSynchronize(player, attributes, (player1, target) -> target.forEach(attribute -> receivedAttribute(user, attribute)));
+      Modules.feedback().synchronize(player, attributes, (player1, target) -> target.forEach(attribute -> receivedAttribute(user, attribute)));
     }
   }
 

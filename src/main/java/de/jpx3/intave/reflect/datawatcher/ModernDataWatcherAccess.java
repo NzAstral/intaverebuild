@@ -12,10 +12,10 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.Field;
 
 @PatchyAutoTranslation
-public final class NewDataWatcherAccess implements DataWatcherAccess {
+public final class ModernDataWatcherAccess implements DataWatcherAccess {
   private final Field livingFlags;
 
-  public NewDataWatcherAccess() {
+  public ModernDataWatcherAccess() {
     Field field = searchField();
     field.setAccessible(true);
     livingFlags = field;

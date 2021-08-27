@@ -14,10 +14,10 @@ import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.reflect.Lookup;
 import de.jpx3.intave.reflect.access.ReflectiveAccess;
 import de.jpx3.intave.reflect.access.ReflectiveHandleAccess;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
-import de.jpx3.intave.reflect.hitbox.ReflectiveEntityHitBoxAccess;
-import de.jpx3.intave.reflect.hitbox.typeaccess.DualEntityTypeAccess;
-import de.jpx3.intave.reflect.hitbox.typeaccess.EntityTypeData;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
+import de.jpx3.intave.reflect.entity.size.HitboxSizeAccess;
+import de.jpx3.intave.reflect.entity.type.EntityTypeData;
+import de.jpx3.intave.reflect.entity.type.EntityTypeDataAccessor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Zombie;
@@ -81,12 +81,12 @@ public final class EntityTypeResolver {
         try {
           int deadEntityType = packet.getIntegers().read(9);
           String name = nameByDeadEntityType(deadEntityType);
-          HitBoxBoundaries boundaries = hitboxBoundariesByDeadEntityType(deadEntityType);
+          HitboxSize boundaries = hitboxBoundariesByDeadEntityType(deadEntityType);
           return new EntityTypeData(name, boundaries, -1, false);
         } catch (FieldAccessException exception) {
           IntaveLogger.logger().info("unknown entity entityID: " + entityId);
         }
-        return new EntityTypeData("could not be created", HitBoxBoundaries.zero(), -2, false);
+        return new EntityTypeData("could not be created", HitboxSize.zero(), -2, false);
       } else {
         EntityType entityType = packet.getEntityTypeModifier().read(0);
         Class<? extends Entity> entityClass = entityType.getEntityClass();
@@ -95,7 +95,7 @@ public final class EntityTypeResolver {
           // still necessary?
           IntaveLogger.logger().info("Zero BoundingBox 2 (Entity " + entityClassName+ ")");
         }
-        return new EntityTypeData(entityClassName, HitBoxBoundaries.zero(), -2, false);
+        return new EntityTypeData(entityClassName, HitboxSize.zero(), -2, false);
       }
     }
   }
@@ -116,11 +116,11 @@ public final class EntityTypeResolver {
           return entityTypeDataOfDataWatcher(dataWatcher);
         } else {
           int entityTypeId = packet.getIntegers().read(1);
-          return DualEntityTypeAccess.resolveFromId(entityTypeId, true);
+          return EntityTypeDataAccessor.resolveFromId(entityTypeId, true);
         }
       } else {
         int entityTypeId = packet.getIntegers().read(1);
-        return DualEntityTypeAccess.resolveFromId(entityTypeId, true);
+        return EntityTypeDataAccessor.resolveFromId(entityTypeId, true);
       }
     }
   }
@@ -136,7 +136,7 @@ public final class EntityTypeResolver {
       if (isChild == null) {
         return null;
       } else {
-        EntityTypeData entityTypeData = DualEntityTypeAccess.resolveFromId(entityTypeId, false);
+        EntityTypeData entityTypeData = EntityTypeDataAccessor.resolveFromId(entityTypeId, false);
         if (isChild) {
           return convertHitboxBoundariesToBaby(entityTypeData);
         } else {
@@ -210,12 +210,12 @@ public final class EntityTypeResolver {
   }
 
   private EntityTypeData convertHitboxBoundariesToBaby(EntityTypeData entityTypeData) {
-    HitBoxBoundaries hitBoxBoundaries = HitBoxBoundaries.of(entityTypeData.hitBoxBoundaries().width() * 0.5f, entityTypeData.hitBoxBoundaries().length() * 0.5f);
-    return new EntityTypeData(entityTypeData.entityName(), hitBoxBoundaries, entityTypeData.entityTypeId(), entityTypeData.isLivingEntity());
+    HitboxSize hitBoxSize = HitboxSize.of(entityTypeData.hitBoxBoundaries().width() * 0.5f, entityTypeData.hitBoxBoundaries().length() * 0.5f);
+    return new EntityTypeData(entityTypeData.entityName(), hitBoxSize, entityTypeData.entityTypeId(), entityTypeData.isLivingEntity());
   }
 
-  public HitBoxBoundaries hitBoxBoundariesByBukkitEntity(Entity bukkitEntity) {
-    return ReflectiveEntityHitBoxAccess.boundariesOf(bukkitEntity);
+  public HitboxSize hitBoxBoundariesByBukkitEntity(Entity bukkitEntity) {
+    return HitboxSizeAccess.dimensionsOf(bukkitEntity);
   }
 
   public String entityNameByBukkitEntity(Entity entity) {
@@ -223,18 +223,18 @@ public final class EntityTypeResolver {
   }
 
   public EntityTypeData entityTypeDataOfBukkitEntity(Entity entity) {
-    HitBoxBoundaries hitBoxBoundaries = hitBoxBoundariesByBukkitEntity(entity);
+    HitboxSize hitBoxSize = hitBoxBoundariesByBukkitEntity(entity);
     String name = entityNameByBukkitEntity(entity);
 
     if(entity.getType() == EntityType.ZOMBIE || entity.getType() == EntityType.PIG_ZOMBIE) {
       Zombie zombie = (Zombie) entity;
       if(zombie.isBaby()) {
         // setting the hitbox of the zombie to a normal zombie hitbox which is the same as a player hitbox
-        hitBoxBoundaries = HitBoxBoundaries.player();
+        hitBoxSize = HitboxSize.player();
       }
     }
 
-    return new EntityTypeData(name, hitBoxBoundaries, entity.getType().getTypeId(), !entity.isDead());
+    return new EntityTypeData(name, hitBoxSize, entity.getType().getTypeId(), !entity.isDead());
   }
 
   public boolean dataWatchesIncludesEntity(WrappedDataWatcher dataWatcher) {
@@ -243,10 +243,10 @@ public final class EntityTypeResolver {
 
   private EntityTypeData entityTypeDataOfDataWatcher(WrappedDataWatcher dataWatcher) {
     Object entity = entityOfDataWatcher(dataWatcher);
-    HitBoxBoundaries hitBoxBoundaries = ReflectiveEntityHitBoxAccess.boundariesOf(entity);
+    HitboxSize hitBoxSize = HitboxSizeAccess.dimensionsOf(entity);
     String name = entityNameOf(entity);
     int entityTypeId = entityTypeIdOfDataWatcher(dataWatcher);
-    return new EntityTypeData(name, hitBoxBoundaries, entityTypeId);
+    return new EntityTypeData(name, hitBoxSize, entityTypeId);
   }
 
   private int entityTypeIdOfDataWatcher(WrappedDataWatcher dataWatcher) {
@@ -324,10 +324,10 @@ public final class EntityTypeResolver {
     return "null";
   }
 
-  private HitBoxBoundaries hitboxBoundariesByDeadEntityType(int deadEntityType) {
+  private HitboxSize hitboxBoundariesByDeadEntityType(int deadEntityType) {
     switch (deadEntityType) {
       case 1:
-        return HitBoxBoundaries.of(1.5F, 0.6F);
+        return HitboxSize.of(1.5F, 0.6F);
       case 2:
       case 61:
       case 62:
@@ -337,27 +337,27 @@ public final class EntityTypeResolver {
       case 75:
       case 76:
       case 90:
-        return HitBoxBoundaries.of(0.25F, 0.25F);
+        return HitboxSize.of(0.25F, 0.25F);
       case 10:
-        return HitBoxBoundaries.of(0.98F, 0.7F);
+        return HitboxSize.of(0.98F, 0.7F);
       case 50:
       case 70:
-        return HitBoxBoundaries.of(0.98F, 0.98F);
+        return HitboxSize.of(0.98F, 0.98F);
       case 51:
-        return HitBoxBoundaries.of(2.0F, 2.0F);
+        return HitboxSize.of(2.0F, 2.0F);
       case 63:
-        return HitBoxBoundaries.of(3.0F, 3.0F);
+        return HitboxSize.of(3.0F, 3.0F);
       case 64:
       case 66:
-        return HitBoxBoundaries.of(0.3125F, 0.3125F);
+        return HitboxSize.of(0.3125F, 0.3125F);
       case 77:
-        return HitBoxBoundaries.of(0.5F, 0.5F);
+        return HitboxSize.of(0.5F, 0.5F);
       case 78:
-        return HitBoxBoundaries.of(0.5F, 1.975F);
+        return HitboxSize.of(0.5F, 1.975F);
     }
     if (IntaveControl.DISABLE_LICENSE_CHECK) {
       IntaveLogger.logger().info("Zero BoundingBox 1");
     }
-    return HitBoxBoundaries.zero();
+    return HitboxSize.zero();
   }
 }

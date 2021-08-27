@@ -1,7 +1,7 @@
 package de.jpx3.intave.module.tracker.entity;
 
 import de.jpx3.intave.detect.checks.movement.physics.Pose;
-import de.jpx3.intave.reflect.hitbox.typeaccess.EntityTypeData;
+import de.jpx3.intave.reflect.entity.type.EntityTypeData;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.world.wrapper.WrappedMathHelper;

@@ -48,7 +48,7 @@ public final class BlockUpdateTracker extends Module {
       StructureModifier<int[]> integerArrays = packet.getIntegerArrays();
       int[] xArr = integerArrays.read(0).clone();
       int[] zArr = integerArrays.read(1).clone();
-      Modules.feedback().singleSynchronize(
+      Modules.feedback().synchronize(
         player, null,
         (player1, target) -> {
           for (int i = 0; i < xArr.length; i++) {
@@ -60,7 +60,7 @@ public final class BlockUpdateTracker extends Module {
     } else {
       int x = packet.getIntegers().read(0);
       int z = packet.getIntegers().read(1);
-      Modules.feedback().singleSynchronize(
+      Modules.feedback().synchronize(
         player, null,
         (player1, target) -> chunkInvalidate(player, x, z),
         APPEND_ON_OVERFLOW | SELF_SYNCHRONIZATION
@@ -193,7 +193,7 @@ public final class BlockUpdateTracker extends Module {
 
     World world = player.getWorld();
     if (transactionSynchronize) {
-      Modules.feedback().singleSynchronize(player, null, (player1, target) -> {
+      Modules.feedback().synchronize(player, null, (player1, target) -> {
         for (int i = 0; i < blockPositions.size(); i++) {
           BlockPosition blockPosition = blockPositions.get(i);
           WrappedBlockData blockData = blockDataList.get(i);

@@ -76,7 +76,14 @@ public final class AbilityMetadata {
   public void setupAttributes() {
     PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.UPDATE_ATTRIBUTES);
     boolean atLeastMinecraft16 = MinecraftVersions.VER1_16_0.atOrAbove();
-    attributeModifiers.put(WrappedAttribute.newBuilder().attributeKey(keyTranslation("generic.movementSpeed")).baseValue(atLeastMinecraft16 ? (double) 0.1F : 0.1).packet(packet).build(), new CopyOnWriteArrayList<>());
+    WrappedAttribute attribute = reduceNumberPrecision(
+      WrappedAttribute.newBuilder()
+        .attributeKey(keyTranslation("generic.movementSpeed"))
+        .baseValue(atLeastMinecraft16 ? (double) 0.1F : 0.1)
+        .packet(packet)
+        .build()
+    );
+    attributeModifiers.put(attribute, new CopyOnWriteArrayList<>());
   }
 
   public double attributeValue(String key) {
@@ -101,8 +108,19 @@ public final class AbilityMetadata {
   }
 
   public List<WrappedAttributeModifier> modifiersOf(WrappedAttribute attribute) {
-    attribute = attribute.withModifiers(Collections.emptyList());
+    attribute = reduceNumberPrecision(attribute.withModifiers(Collections.emptyList()));
     return attributeModifiers.computeIfAbsent(attribute, x -> new CopyOnWriteArrayList<>());
+  }
+
+  private WrappedAttribute reduceNumberPrecision(WrappedAttribute input) {
+    double baseValue = reducePrecision(input.getBaseValue());
+    return WrappedAttribute.newBuilder(input).baseValue(baseValue).build();
+  }
+
+  private final static double REDUCE_APPLIER = 1000d;
+
+  private double reducePrecision(double input) {
+    return Math.round(input * REDUCE_APPLIER) / REDUCE_APPLIER;
   }
 
   public WrappedAttribute findAttribute(String key) {

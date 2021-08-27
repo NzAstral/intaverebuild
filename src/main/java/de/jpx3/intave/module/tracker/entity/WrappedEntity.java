@@ -7,8 +7,8 @@ import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.module.feedback.FeedbackTracker;
 import de.jpx3.intave.module.feedback.PendingCountingFeedbackTracker;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
-import de.jpx3.intave.reflect.hitbox.typeaccess.EntityTypeData;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
+import de.jpx3.intave.reflect.entity.type.EntityTypeData;
 import de.jpx3.intave.tool.AccessHelper;
 import de.jpx3.intave.world.wrapper.WrappedAxisAlignedBB;
 import de.jpx3.intave.world.wrapper.WrappedMathHelper;
@@ -414,7 +414,7 @@ public class WrappedEntity {
 
   public static final class Destroyed extends WrappedEntity {
     public Destroyed() {
-      super(0, new EntityTypeData("destroyed", HitBoxBoundaries.zero(),-1, false), false);
+      super(0, new EntityTypeData("destroyed", HitboxSize.zero(),-1, false), false);
     }
 
     @Override

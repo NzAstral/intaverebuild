@@ -19,7 +19,7 @@ import de.jpx3.intave.fakeplayer.FakePlayer;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.feedback.FeedbackSender;
 import de.jpx3.intave.reflect.access.ReflectiveHandleAccess;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
 import de.jpx3.intave.tool.AccessHelper;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.ConnectionMetadata;
@@ -66,7 +66,7 @@ final class PlayerUser implements User {
   private final List<MessageChannel> receivingUserChannels = new ArrayList<>();
   private final Map<MessageChannel, Predicate<Player>> channelConstraints = Maps.newEnumMap(MessageChannel.class);
   private final Map<Material, Material> typeTranslations = Maps.newHashMap();
-  private final Map<Pose, HitBoxBoundaries> poseSizes;
+  private final Map<Pose, HitboxSize> poseSizes;
   private final OCBlockShapeAccess blockShapeAccess;
   private boolean ignoreNextInboundPacket;
   private boolean ignoreNextOutboundPacket;
@@ -341,7 +341,7 @@ final class PlayerUser implements User {
   }
 
   @Override
-  public HitBoxBoundaries sizeOf(Pose pose) {
+  public HitboxSize sizeOf(Pose pose) {
     return poseSizes.get(pose);
   }
 
@@ -404,10 +404,10 @@ final class PlayerUser implements User {
   public void refreshSprintState() {
     Player player = player();
     FeedbackSender feedbackSender = Modules.feedback();
-    feedbackSender.singleSynchronize(player, null, (player1, target) -> {
+    feedbackSender.synchronize(player, null, (player1, target) -> {
       sendStatsUpdate(player, 0, 0);
-      feedbackSender.singleSynchronize(player, null, (player2, target1) -> {
-        feedbackSender.singleSynchronize(player, null, (player3, target2) -> {
+      feedbackSender.synchronize(player, null, (player2, target1) -> {
+        feedbackSender.synchronize(player, null, (player3, target2) -> {
           sendStatsUpdate(player, player.getFoodLevel(), player.getSaturation());
         }, SELF_SYNCHRONIZATION);
       }, SELF_SYNCHRONIZATION);

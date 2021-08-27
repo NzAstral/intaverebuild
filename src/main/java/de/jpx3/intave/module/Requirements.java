@@ -1,5 +1,7 @@
 package de.jpx3.intave.module;
 
+import com.comphenix.protocol.ProtocolLibrary;
+
 import java.util.Arrays;
 
 public final class Requirements {
@@ -8,7 +10,7 @@ public final class Requirements {
   }
 
   public static Requirement protocolLib() {
-    return requiresPlugin("ProtocolLib");
+    return requiresPlugin("ProtocolLib").and(() -> ProtocolLibrary.getProtocolManager() != null);
   }
 
   public static Requirement intaveEnabled() {

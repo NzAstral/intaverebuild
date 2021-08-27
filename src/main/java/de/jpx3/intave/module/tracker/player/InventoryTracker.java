@@ -117,7 +117,7 @@ public final class InventoryTracker extends Module {
 
     if (!clientDoesNotSendCloseWindow) {
       Modules.feedback()
-        .singleSynchronize(player, user, this::openInventory);
+        .synchronize(player, user, this::openInventory);
       inventoryData.forceInventoryOnClickOpen = true;
     } else {
       inventoryData.forceInventoryOnClickOpen = false;
@@ -163,7 +163,7 @@ public final class InventoryTracker extends Module {
     Player player = event.getPlayer();
     User user = UserRepository.userOf(player);
     Modules.feedback()
-      .singleSynchronize(player, user, this::closeInventory);
+      .synchronize(player, user, this::closeInventory);
   }
 
   @PacketSubscription(

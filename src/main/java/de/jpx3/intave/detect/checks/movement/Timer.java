@@ -103,7 +103,7 @@ public final class Timer extends MetaCheck<Timer.TimerData> {
     if (delta > 500) {
       timerData.lastLagSpike = AccessHelper.now();
       Synchronizer.synchronize(() -> {
-        Modules.feedback().singleSynchronize(player, null, (player1, target) -> {
+        Modules.feedback().synchronize(player, null, (player1, target) -> {
           // Lag spike - requesting feedback to reset balance
           timerData.timerBalance = Math.max(0, timerData.timerBalance);
         });

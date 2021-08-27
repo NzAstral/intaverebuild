@@ -3,18 +3,6 @@ package de.jpx3.intave.module;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.annotate.Native;
-import de.jpx3.intave.module.dispatch.AttackDispatcher;
-import de.jpx3.intave.module.dispatch.MovementDispatcher;
-import de.jpx3.intave.module.feedback.FeedbackReceiver;
-import de.jpx3.intave.module.feedback.FeedbackSender;
-import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriptionLinker;
-import de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker;
-import de.jpx3.intave.module.tracker.block.BlockUpdateTracker;
-import de.jpx3.intave.module.tracker.entity.EntityTracker;
-import de.jpx3.intave.module.tracker.player.AbilityTracker;
-import de.jpx3.intave.module.tracker.player.EffectTracker;
-import de.jpx3.intave.module.tracker.player.InventoryTracker;
-import de.jpx3.intave.module.warning.ClientWarningModule;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -24,69 +12,73 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class ModuleLoader {
-  private final Map<Class<? extends Module>, ModuleSettings> pendingModuleClasses = new HashMap<>();
+  private final Map<String, ModuleSettings> pendingModuleClasses = new HashMap<>();
 
   @Native
   public void setup() {
     // linker
-    prepareModule(BukkitEventSubscriptionLinker.class, ModuleSettings.builder().doNotLinkSubscriptions().bootAt(BootSegment.STAGE_3).build());
-    prepareModule(PacketSubscriptionLinker.class, ModuleSettings.builder().doNotLinkSubscriptions().requiresProtocolLib().requires(Requirements.intaveEnabled()).bootAt(BootSegment.STAGE_6).build());
+    prepareModule("de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriptionLinker", ModuleSettings.builder().doNotLinkSubscriptions().bootAt(BootSegment.STAGE_3).build());
+    prepareModule("de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker", ModuleSettings.builder().doNotLinkSubscriptions().requireProtocolLib().requires(Requirements.intaveEnabled()).bootAt(BootSegment.STAGE_6).build());
 
     // feedback
-    prepareModule(FeedbackSender.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
-    prepareModule(FeedbackReceiver.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.feedback.FeedbackSender", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.feedback.FeedbackReceiver", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
 
     // tracker
-    prepareModule(AbilityTracker.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
-    prepareModule(BlockUpdateTracker.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
-    prepareModule(EffectTracker.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
-    prepareModule(EntityTracker.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
-    prepareModule(InventoryTracker.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.tracker.player.AbilityTracker", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.tracker.block.BlockUpdateTracker", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.tracker.player.EffectTracker", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.tracker.entity.EntityTracker", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.tracker.player.InventoryTracker", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
 
     // dispatch
-    prepareModule(AttackDispatcher.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_10).build());
-    prepareModule(MovementDispatcher.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_10).build());
+    prepareModule("de.jpx3.intave.module.dispatch.AttackDispatcher", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_10).build());
+    prepareModule("de.jpx3.intave.module.dispatch.MovementDispatcher", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_10).build());
 
     // misc
-    prepareModule(ClientWarningModule.class, ModuleSettings.builder().requiresProtocolLib().bootAt(BootSegment.STAGE_7).build());
+    prepareModule("de.jpx3.intave.module.warning.ClientWarningModule", ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build());
   }
 
-  private void prepareModule(Class<? extends Module> moduleClass) {
-    prepareModule(moduleClass, ModuleSettings.of());
+  private void prepareModule(String moduleClass) {
+    pendingModuleClasses.put(moduleClass, ModuleSettings.def());
   }
 
-  private void prepareModule(Class<? extends Module> moduleClass, ModuleSettings settings) {
+  private void prepareModule(String moduleClass, ModuleSettings settings) {
     pendingModuleClasses.put(moduleClass, settings);
   }
 
-  public Collection<Module> loadRequests() {
-    return classPick(this::readyToLoad).stream().map(this::instanceOf).peek(this::initiate).collect(Collectors.toList());
+  public Collection<Module> loadRequests(BootSegment bootSegment) {
+    return classPick(segment -> readyToLoad(bootSegment, segment))
+      .stream().map(this::instanceOf).map(o -> (Module) o)
+      .peek(this::initiate).collect(Collectors.toList());
+  }
+
+  private boolean readyToLoad(BootSegment segment, ModuleSettings moduleSettings) {
+    return segment.equals(moduleSettings.bootSegment()) && moduleSettings.requirementsFulfilled();
   }
 
   private void initiate(Module module) {
     module.setPlugin(IntavePlugin.singletonInstance());
-    module.setModuleSettings(pendingModuleClasses.remove(module.getClass()));
+    module.setModuleSettings(pendingModuleClasses.remove(module.getClass().getName()));
   }
 
-  private <T> T instanceOf(Class<T> klass) {
+  @SuppressWarnings("unchecked")
+  private <T> T instanceOf(String className) {
     try {
+      Class<?> klass = Class.forName(className);
       try {
-        return klass.getConstructor(IntavePlugin.class).newInstance(IntavePlugin.singletonInstance());
+        return (T) klass.getConstructor(IntavePlugin.class).newInstance(IntavePlugin.singletonInstance());
       } catch (InvocationTargetException internalException) {
         throw new IntaveInternalException(internalException);
       } catch (Exception exception) {
-        return klass.newInstance();
+        return (T) klass.newInstance();
       }
-    } catch (InstantiationException | IllegalAccessException exception) {
+    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException exception) {
       throw new IllegalStateException(exception);
     }
   }
 
-  private boolean readyToLoad(ModuleSettings moduleSettings) {
-    return moduleSettings.requirementsFulfilled();
-  }
-
-  private Collection<Class<? extends Module>> classPick(
+  private Collection<String> classPick(
     Predicate<ModuleSettings> predicate
   ) {
     return pendingModuleClasses.entrySet().stream()

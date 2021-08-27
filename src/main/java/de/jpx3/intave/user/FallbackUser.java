@@ -8,7 +8,7 @@ import de.jpx3.intave.connect.shadow.ShadowPacketDataLink;
 import de.jpx3.intave.detect.checks.movement.physics.Pose;
 import de.jpx3.intave.event.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.fakeplayer.FakePlayer;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.permission.ExpiringPermissionCache;
@@ -33,7 +33,7 @@ final class FallbackUser implements User {
   private final PermissionCache permissionCache;
   private final ComplexColliderProcessor complexColliderProcessor;
   private final SimpleColliderProcessor simpleColliderProcessor;
-  private final Map<Pose, HitBoxBoundaries> poseSizes;
+  private final Map<Pose, HitboxSize> poseSizes;
   private OCBlockShapeAccess blockShapeAccess;
   private CustomClientSupportConfig customClientSupportConfig = CustomClientSupportConfig.createDefault();
 
@@ -233,7 +233,7 @@ final class FallbackUser implements User {
   }
 
   @Override
-  public HitBoxBoundaries sizeOf(Pose pose) {
+  public HitboxSize sizeOf(Pose pose) {
     return poseSizes.get(pose);
   }
 

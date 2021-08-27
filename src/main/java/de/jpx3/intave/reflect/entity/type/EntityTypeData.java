@@ -1,10 +1,10 @@
-package de.jpx3.intave.reflect.hitbox.typeaccess;
+package de.jpx3.intave.reflect.entity.type;
 
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
 
 public final class EntityTypeData {
   private final String entityName;
-  private final HitBoxBoundaries hitBoxBoundaries;
+  private final HitboxSize hitBoxSize;
   private final int entityTypeId;
   private final boolean isLivingEntity;
 
@@ -12,16 +12,16 @@ public final class EntityTypeData {
   This Constructor will be removed in the future, so please don't make new usages with it.
    */
   @Deprecated
-  public EntityTypeData(String entityName, HitBoxBoundaries hitBoxBoundaries, int entityTypeId) {
+  public EntityTypeData(String entityName, HitboxSize hitBoxSize, int entityTypeId) {
     this.entityName = entityName;
-    this.hitBoxBoundaries = hitBoxBoundaries;
+    this.hitBoxSize = hitBoxSize;
     this.entityTypeId = entityTypeId;
     this.isLivingEntity = true;
   }
 
-  public EntityTypeData(String entityName, HitBoxBoundaries hitBoxBoundaries, int entityTypeId, boolean isLivingEntity) {
+  public EntityTypeData(String entityName, HitboxSize hitBoxSize, int entityTypeId, boolean isLivingEntity) {
     this.entityName = entityName;
-    this.hitBoxBoundaries = hitBoxBoundaries;
+    this.hitBoxSize = hitBoxSize;
     this.entityTypeId = entityTypeId;
     this.isLivingEntity = isLivingEntity;
   }
@@ -38,7 +38,7 @@ public final class EntityTypeData {
     return entityTypeId;
   }
 
-  public HitBoxBoundaries hitBoxBoundaries() {
-    return hitBoxBoundaries;
+  public HitboxSize hitBoxBoundaries() {
+    return hitBoxSize;
   }
 }

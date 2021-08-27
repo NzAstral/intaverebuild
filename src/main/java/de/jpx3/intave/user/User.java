@@ -9,7 +9,7 @@ import de.jpx3.intave.detect.MetaCheck;
 import de.jpx3.intave.detect.MetaCheckPart;
 import de.jpx3.intave.detect.checks.movement.physics.Pose;
 import de.jpx3.intave.event.mitigate.AttackNerfStrategy;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
 import de.jpx3.intave.trustfactor.TrustFactorConfiguration;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MetadataBundle;
@@ -282,12 +282,12 @@ public interface User {
   int latencyJitter();
 
   /**
-   * Retrieve the {@link HitBoxBoundaries} of a {@link Pose}.
+   * Retrieve the {@link HitboxSize} of a {@link Pose}.
    * This is {@link User}-dependant due to changes of boundaries between Minecraft versions.
    * @param pose the selected pose
    * @return the hitbox boundaries
    */
-  HitBoxBoundaries sizeOf(Pose pose);
+  HitboxSize sizeOf(Pose pose);
 
   /**
    * Clear any relevant type translations of the user

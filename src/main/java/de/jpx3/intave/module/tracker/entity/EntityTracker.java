@@ -20,8 +20,8 @@ import de.jpx3.intave.module.feedback.FeedbackCallback;
 import de.jpx3.intave.module.feedback.FeedbackTracker;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
-import de.jpx3.intave.reflect.hitbox.typeaccess.EntityTypeData;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
+import de.jpx3.intave.reflect.entity.type.EntityTypeData;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.AbilityMetadata;
@@ -237,9 +237,9 @@ public final class EntityTracker extends Module {
         entityName = "Player";
       }
 
-      HitBoxBoundaries hitBoxBoundaries = HitBoxBoundaries.player();
+      HitboxSize hitBoxSize = HitboxSize.player();
       entityIsPlayer = true;
-      entityTypeData = new EntityTypeData(entityName, hitBoxBoundaries, 105, true);
+      entityTypeData = new EntityTypeData(entityName, hitBoxSize, 105, true);
     }
     if (entityTypeData == null) {
       if (IntaveControl.DISABLE_LICENSE_CHECK) {
@@ -288,7 +288,7 @@ public final class EntityTracker extends Module {
     ConnectionMetadata synchronizeData = user.meta().connection();
     WrappedEntity wrappedEntity = synchronizeData.synchronizedEntityMap().get(entityID);
     if (wrappedEntity instanceof WrappedEntityFirework) {
-      Modules.feedback().singleSynchronize(player, entityID, this::processEntityDestroy, wrappedEntity.feedbackTracker(), APPEND_ON_OVERFLOW);
+      Modules.feedback().tracedSingleSynchronize(player, entityID, this::processEntityDestroy, wrappedEntity.feedbackTracker(), APPEND_ON_OVERFLOW);
     } else {
       processEntityDestroy(player, entityID);
     }
@@ -367,9 +367,9 @@ public final class EntityTracker extends Module {
 
       if (entity.doubleVerification) {
         FeedbackCallback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
-        Modules.feedback().doubleSynchronize(player, event, event, task, verificationTask, feedbackTracker, feedbackTracker);
+        Modules.feedback().tracedDoubleSynchronize(player, event, event, task, verificationTask, feedbackTracker, feedbackTracker);
       } else {
-        Modules.feedback().singleSynchronize(player, event, task, feedbackTracker);
+        Modules.feedback().tracedSingleSynchronize(player, event, task, feedbackTracker);
       }
     } else {
       entity.handleEntityTeleport(packet);
@@ -422,9 +422,9 @@ public final class EntityTracker extends Module {
       FeedbackTracker tracker = entity.feedbackTracker();
       if (entity.doubleVerification) {
         FeedbackCallback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
-        Modules.feedback().doubleSynchronize(player, event, event, task, verificationTask, tracker, tracker);
+        Modules.feedback().tracedDoubleSynchronize(player, event, event, task, verificationTask, tracker, tracker);
       } else {
-        Modules.feedback().singleSynchronize(player, event, task, tracker);
+        Modules.feedback().tracedSingleSynchronize(player, event, task, tracker);
       }
     } else {
       entity.handleEntityMovement(packet);
@@ -585,7 +585,7 @@ public final class EntityTracker extends Module {
     boolean synchronize = entity.clientSynchronized && entity.tracingEnabled();
     if (synchronize) {
       FeedbackCallback<WrappedEntity> task = (p, e) -> updateDeadState(e);
-      Modules.feedback().singleSynchronize(player, entity, task, entity.feedbackTracker());
+      Modules.feedback().tracedSingleSynchronize(player, entity, task, entity.feedbackTracker());
     } else {
       updateDeadState(entity);
     }
@@ -635,7 +635,7 @@ public final class EntityTracker extends Module {
         boolean synchronize = entity.clientSynchronized && entity.tracingEnabled();
         if (synchronize) {
           FeedbackTracker tracker = entity.feedbackTracker();
-          Modules.feedback().singleSynchronize(player, entity, (p, e) -> updateHealthState(e, health), tracker);
+          Modules.feedback().tracedSingleSynchronize(player, entity, (p, e) -> updateHealthState(e, health), tracker);
         } else {
           updateHealthState(entity, health);
         }
@@ -648,7 +648,7 @@ public final class EntityTracker extends Module {
     if (health != null) {
       AbilityMetadata abilityData = UserRepository.userOf(player).meta().abilities();
       abilityData.unsynchronizedHealth = health;
-      Modules.feedback().singleSynchronize(player, health, (p, retrievedHealth) -> {
+      Modules.feedback().synchronize(player, health, (p, retrievedHealth) -> {
         abilityData.health = retrievedHealth;
         abilityData.ticksToLastHealthUpdate = 0;
       });

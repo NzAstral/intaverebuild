@@ -59,9 +59,18 @@ public final class FeedbackReceiver extends Module {
     Thread.getAllStackTraces().forEach((thread, stackTraceElements) -> {
       if (thread.getName().contains("Netty")) {
         System.out.println("Thread:" + thread.getName());
-        Exception exception = new Exception();
-        exception.setStackTrace(stackTraceElements);
-        exception.printStackTrace();
+        boolean containsIntave = false;
+        for (StackTraceElement stackTraceElement : stackTraceElements) {
+          if (stackTraceElement.getClassName().contains("Intave")) {
+            containsIntave = true;
+            break;
+          }
+        }
+        if (containsIntave) {
+          Exception exception = new Exception();
+          exception.setStackTrace(stackTraceElements);
+          exception.printStackTrace();
+        }
       }
     });
   }

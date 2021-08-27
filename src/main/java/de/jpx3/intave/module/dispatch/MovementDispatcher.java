@@ -170,7 +170,7 @@ public final class MovementDispatcher extends Module {
 
   private void synchronizeRespawn(Player player) {
     Modules.feedback()
-      .singleSynchronize(player, UserRepository.userOf(player), (p, user) -> {
+      .synchronize(player, UserRepository.userOf(player), (p, user) -> {
         MovementMetadata movement = user.meta().movement();
         ProtocolMetadata protocol = user.meta().protocol();
         movement.sneaking = false;
@@ -196,7 +196,7 @@ public final class MovementDispatcher extends Module {
   public void sentExplosion(PacketEvent event) {
     Player player = event.getPlayer();
     PacketContainer packet = event.getPacket();
-    Modules.feedback().singleSynchronize(player, packet.getFloat(), (player1, floats) -> {
+    Modules.feedback().synchronize(player, packet.getFloat(), (player1, floats) -> {
       User user = UserRepository.userOf(player1);
       MovementMetadata movementData = user.meta().movement();
       Float motionX = floats.read(1);
@@ -556,7 +556,7 @@ public final class MovementDispatcher extends Module {
       movement.elytraFlying = g;
       movement.updatePose();
     };
-    Modules.feedback().singleSynchronize(player, gliding, callback);
+    Modules.feedback().synchronize(player, gliding, callback);
   }
 
   @BukkitEventSubscription(priority = EventPriority.LOWEST)
@@ -603,7 +603,7 @@ public final class MovementDispatcher extends Module {
       }
 
       movementData.emulationVelocity = velocity.clone();
-      Modules.feedback().singleSynchronize(player, velocity, this::receiveVelocity);
+      Modules.feedback().synchronize(player, velocity, this::receiveVelocity);
     }
   }
 

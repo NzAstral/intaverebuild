@@ -265,20 +265,19 @@ public final class Physics extends Check {
     double receivedMotionX = movementData.motionX();
     double receivedMotionY = movementData.motionY();
     double receivedMotionZ = movementData.motionZ();
+    double predictedX = context.motionX;
+    double predictedY = context.motionY;
+    double predictedZ = context.motionZ;
+    double differenceX = predictedX - receivedMotionX;
+    double differenceY = predictedY - receivedMotionY;
+    double differenceZ = predictedZ - receivedMotionZ;
+    double distance = MathHelper.hypot3d(differenceX, differenceY, differenceZ);
     double receivedPositionX = movementData.positionX;
     double receivedPositionY = movementData.positionY;
     double receivedPositionZ = movementData.positionZ;
     double positionX = movementData.verifiedPositionX;
     double positionY = movementData.verifiedPositionY;
     double positionZ = movementData.verifiedPositionZ;
-    double predictedX = context.motionX;
-    double predictedY = context.motionY;
-    double predictedZ = context.motionZ;
-
-    double differenceX = predictedX - receivedMotionX;
-    double differenceY = predictedY - receivedMotionY;
-    double differenceZ = predictedZ - receivedMotionZ;
-    double distance = MathHelper.hypot3d(differenceX, differenceY, differenceZ);
 
     boolean onLadderCurrent = MovementHelper.isOnLadder(user, positionX, positionY, positionZ);
     boolean onLadder = onLadderCurrent | movementData.onLadderLast;

@@ -19,7 +19,7 @@ public final class Modules {
 
   @Native
   public static void proceedBoot(BootSegment bootSegment) {
-    loader.loadRequests().forEach(pool::loadModule);
+    loader.loadRequests(bootSegment).forEach(pool::loadModule);
     pool.bootRequests(bootSegment).forEach(pool::enableModule);
   }
 

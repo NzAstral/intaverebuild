@@ -33,7 +33,7 @@ public final class AbilityTracker extends Module {
     Player player = event.getPlayer();
     PacketContainer packet = event.getPacket();
     Integer entityID = packet.getIntegers().read(0);
-    Modules.feedback().singleSynchronize(player, entityID, this::synchronizeCameraUpdate);
+    Modules.feedback().synchronize(player, entityID, this::synchronizeCameraUpdate);
   }
 
   private void synchronizeCameraUpdate(Player player, int entityID) {
@@ -85,17 +85,17 @@ public final class AbilityTracker extends Module {
 
     Float walkingSpeed = packet.getFloat().readSafely(1);
     if (walkingSpeed != null) {
-      Modules.feedback().singleSynchronize(player, walkingSpeed, this::retrieveWalkingSpeed);
+      Modules.feedback().synchronize(player, walkingSpeed, this::retrieveWalkingSpeed);
     }
 
     Float flySpeed = packet.getFloat().readSafely(0);
     if (flySpeed != null) {
-      Modules.feedback().singleSynchronize(player, flySpeed, this::retrieveFlyingSpeed);
+      Modules.feedback().synchronize(player, flySpeed, this::retrieveFlyingSpeed);
     }
 
     Boolean allowedFlight = packet.getBooleans().read(2);
     if (allowedFlight != null) {
-      Modules.feedback().singleSynchronize(player, allowedFlight, this::retrieveAllowedFlight);
+      Modules.feedback().synchronize(player, allowedFlight, this::retrieveAllowedFlight);
     }
   }
 
@@ -135,7 +135,7 @@ public final class AbilityTracker extends Module {
     int gameTypeIdentifier = WrappedMathHelper.floor_float(value + 0.5F);
     GameMode gameMode = gameModeOf(gameTypeIdentifier);
     abilityData.setPendingGameMode(gameMode);
-    Modules.feedback().singleSynchronize(
+    Modules.feedback().synchronize(
       player, gameMode,
       ((player1, target) -> UserRepository.userOf(player1).meta().abilities().setGameMode(target))
     );

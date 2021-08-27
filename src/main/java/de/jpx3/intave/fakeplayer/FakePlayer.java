@@ -218,7 +218,7 @@ public final class FakePlayer extends FakePlayerBody {
     super.movementTeleport(to, onGround);
     movement.registerTeleport(to);
     Modules.feedback()
-      .singleSynchronize(observer, to, (player, target) -> {
+      .synchronize(observer, to, (player, target) -> {
         User user = UserRepository.userOf(player);
         AttackMetadata attackData = user.meta().attack();
         attackData.fakePlayerLastReportedX = target.getX();
@@ -230,7 +230,7 @@ public final class FakePlayer extends FakePlayerBody {
   public void movementUpdate(Location to, Location prevLocation, boolean onGround) {
     super.movementUpdate(to, prevLocation, onGround);
     Modules.feedback()
-      .singleSynchronize(observer, to, (player, target) -> {
+      .synchronize(observer, to, (player, target) -> {
         User user = UserRepository.userOf(player);
         AttackMetadata attackData = user.meta().attack();
         attackData.fakePlayerLastReportedX = target.getX();

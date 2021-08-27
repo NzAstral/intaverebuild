@@ -38,7 +38,7 @@ public final class EffectTracker extends Module {
       return;
     }
     PotionEffectType potionEffectType = effectIdOf(packet);
-    Modules.feedback().singleSynchronize(player, potionEffectType, this::receiveEffectRemoval);
+    Modules.feedback().synchronize(player, potionEffectType, this::receiveEffectRemoval);
   }
 
   private final boolean EFFECT_ACCESS = MinecraftVersions.VER1_9_0.atOrAbove();
@@ -84,7 +84,7 @@ public final class EffectTracker extends Module {
       potionEffectAmplifier,
       potionEffectDuration
     );
-    Modules.feedback().singleSynchronize(player, effectOutput, this::receiveEffect);
+    Modules.feedback().synchronize(player, effectOutput, this::receiveEffect);
   }
 
   private void receiveEffectRemoval(Player player, PotionEffectType potionEffectType) {

@@ -1,7 +1,7 @@
 package de.jpx3.intave.detect.checks.movement.physics;
 
 import com.google.common.collect.ImmutableMap;
-import de.jpx3.intave.reflect.hitbox.HitBoxBoundaries;
+import de.jpx3.intave.reflect.entity.size.HitboxSize;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.world.wrapper.WrappedAxisAlignedBB;
@@ -17,26 +17,26 @@ public enum Pose {
 
   ;
 
-  private static final Map<Pose, HitBoxBoundaries> SIZE_BY_POSE = ImmutableMap.<Pose, HitBoxBoundaries>builder()
-    .put(STANDING, HitBoxBoundaries.player())
-    .put(SLEEPING, HitBoxBoundaries.of(0.2f, 0.2f))
-    .put(FALL_FLYING, HitBoxBoundaries.of(0.6f, 0.6f))
-    .put(SWIMMING, HitBoxBoundaries.of(0.6f, 0.6f))
+  private static final Map<Pose, HitboxSize> SIZE_BY_POSE = ImmutableMap.<Pose, HitboxSize>builder()
+    .put(STANDING, HitboxSize.player())
+    .put(SLEEPING, HitboxSize.of(0.2f, 0.2f))
+    .put(FALL_FLYING, HitboxSize.of(0.6f, 0.6f))
+    .put(SWIMMING, HitboxSize.of(0.6f, 0.6f))
     .build();
 
-  public static final Map<Pose, HitBoxBoundaries> AT_LEAST_1_8_POSE = ImmutableMap.<Pose, HitBoxBoundaries>builder()
+  public static final Map<Pose, HitboxSize> AT_LEAST_1_8_POSE = ImmutableMap.<Pose, HitboxSize>builder()
     .putAll(SIZE_BY_POSE)
-    .put(CROUCHING, HitBoxBoundaries.of(0.6f, 1.8f))
+    .put(CROUCHING, HitboxSize.of(0.6f, 1.8f))
     .build();
 
-  public static final Map<Pose, HitBoxBoundaries> AT_LEAST_1_9_POSE = ImmutableMap.<Pose, HitBoxBoundaries>builder()
+  public static final Map<Pose, HitboxSize> AT_LEAST_1_9_POSE = ImmutableMap.<Pose, HitboxSize>builder()
     .putAll(SIZE_BY_POSE)
-    .put(CROUCHING, HitBoxBoundaries.of(0.6f, 1.65f))
+    .put(CROUCHING, HitboxSize.of(0.6f, 1.65f))
     .build();
 
-  public static final Map<Pose, HitBoxBoundaries> AT_LEAST_1_13_POSE = ImmutableMap.<Pose, HitBoxBoundaries>builder()
+  public static final Map<Pose, HitboxSize> AT_LEAST_1_13_POSE = ImmutableMap.<Pose, HitboxSize>builder()
     .putAll(SIZE_BY_POSE)
-    .put(CROUCHING, HitBoxBoundaries.of(0.6f, 1.5f))
+    .put(CROUCHING, HitboxSize.of(0.6f, 1.5f))
     .build();
 
   public WrappedAxisAlignedBB boundingBoxOf(User user) {
@@ -61,7 +61,7 @@ public enum Pose {
     return size(user).length();
   }
 
-  private HitBoxBoundaries size(User user) {
+  private HitboxSize size(User user) {
     return user.sizeOf(this);
   }
 }

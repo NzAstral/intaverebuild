@@ -36,7 +36,7 @@ import de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker;
 import de.jpx3.intave.module.tracker.entity.WrappedEntity;
 import de.jpx3.intave.reflect.access.ReflectiveAccess;
 import de.jpx3.intave.reflect.access.ReflectiveTPSAccess;
-import de.jpx3.intave.reflect.hitbox.typeaccess.DualEntityTypeAccess;
+import de.jpx3.intave.reflect.entity.type.EntityTypeDataAccessor;
 import de.jpx3.intave.reflect.locate.Locator;
 import de.jpx3.intave.resource.EncryptedResource;
 import de.jpx3.intave.security.*;
@@ -180,7 +180,7 @@ public final class IntavePlugin extends JavaPlugin {
       ReflectiveTPSAccess.setup();
       Synchronizer.setup();
       ContextSecrets.setup();
-      DualEntityTypeAccess.setup();
+      EntityTypeDataAccessor.setup();
 
       trustFactorService = new TrustFactorService(this);
 

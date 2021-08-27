@@ -19,7 +19,11 @@ public final class ReflectiveTPSAccess {
       recentTps.setAccessible(true);
       tpsAccess = (double[]) recentTps.get(minecraftServer);
     } catch (IllegalAccessException | NoSuchFieldException exception) {
-      tpsAccess = new double[]{-1, -1, -1};
+      try {
+        Server.Spigot serverSpigot = Bukkit.getServer().spigot();
+        tpsAccess = (double[]) serverSpigot.getClass().getMethod("getTPS").invoke(serverSpigot);
+        return;
+      } catch (Exception ignored) {}
       exception.printStackTrace();
     }
   }
