@@ -82,7 +82,7 @@ public final class MovementMetadata {
   // Timestamps
   public long lastSneakingTimestamps, lastJumpTimestamps;
 
-  private volatile WrappedAxisAlignedBB boundingBox = WrappedAxisAlignedBB.fromBounds(0, 0, 0, 0,0,0);
+  private volatile WrappedAxisAlignedBB boundingBox = WrappedAxisAlignedBB.fromBounds(0, 0, 0, 0, 0, 0);
   private boolean boundingBoxSetup = false;
 
   public Vector emulationVelocity;
@@ -277,13 +277,13 @@ public final class MovementMetadata {
   }
 
   private Vector vectorForRotation(float yaw, float pitch) {
-    float f = pitch * ((float)Math.PI / 180F);
-    float f1 = -yaw * ((float)Math.PI / 180F);
+    float f = pitch * ((float) Math.PI / 180F);
+    float f1 = -yaw * ((float) Math.PI / 180F);
     float f2 = WrappedMathHelper.cos(f1);
     float f3 = WrappedMathHelper.sin(f1);
     float f4 = WrappedMathHelper.cos(f);
     float f5 = WrappedMathHelper.sin(f);
-    return new Vector(f3 * f4, -f5, (double)(f2 * f4));
+    return new Vector(f3 * f4, -f5, (double) (f2 * f4));
   }
 
   @IdoNotBelongHere
@@ -513,8 +513,10 @@ public final class MovementMetadata {
   }
 
   private void updateEntityActionStates() {
-    ProtocolMetadata clientData = user.meta().protocol();
-    InventoryMetadata inventoryData = user.meta().inventory();
+    MetadataBundle meta = user.meta();
+    AbilityMetadata abilities = meta.abilities();
+    ProtocolMetadata clientData = meta.protocol();
+    InventoryMetadata inventoryData = meta.inventory();
     sprintingAllowed = sprinting;
     if (sneaking && !clientData.sprintWhenSneaking()) {
       sprintingAllowed = false;
@@ -522,7 +524,7 @@ public final class MovementMetadata {
     if (inventoryData.inventoryOpen()) {
       sprintingAllowed = false;
     }
-    if (player.getFoodLevel() <= 5) {
+    if (abilities.foodLevel <= 6) {
       sprintingAllowed = false;
     }
   }

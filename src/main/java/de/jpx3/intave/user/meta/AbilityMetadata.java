@@ -38,6 +38,7 @@ public final class AbilityMetadata {
 
   public float unsynchronizedHealth;
   public float health;
+  public int foodLevel;
   public int ticksToLastHealthUpdate;
   public boolean hasViewEntity;
 
@@ -49,6 +50,7 @@ public final class AbilityMetadata {
       this.flying = player.isFlying();
       this.health = (float) player.getHealth();
       this.unsynchronizedHealth = this.health;
+      this.foodLevel = player.getFoodLevel();
       setupDefaultGameMode(player.getGameMode());
 
       this.walkSpeed = player.getWalkSpeed() / 2.0f;

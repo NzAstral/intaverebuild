@@ -382,7 +382,7 @@ final class PlayerUser implements User {
     IntaveLogger.logger().info("Queuing manual disconnect of player " + player().getName() + " for \"" + reason + "\"");
     IntaveLogger.logger().info("This measure is a security-constraint necessity, but feel free to contact us if this happens too often");
     Synchronizer.synchronize(() -> {
-      if(player().isOnline()) {
+      if (player().isOnline()) {
         player().kickPlayer(reason);
       }
     });
@@ -404,7 +404,7 @@ final class PlayerUser implements User {
   public void refreshSprintState() {
     Player player = player();
     FeedbackSender feedbackSender = Modules.feedback();
-    feedbackSender.synchronize(player, null, (player1, target) -> {
+    feedbackSender.synchronize(player, UserRepository.userOf(player), (player1, user) -> {
       sendStatsUpdate(player, 0, 0);
       feedbackSender.synchronize(player, null, (player2, target1) -> {
         feedbackSender.synchronize(player, null, (player3, target2) -> {
@@ -415,7 +415,7 @@ final class PlayerUser implements User {
   }
 
   private void sendStatsUpdate(Player player, int foodLevel, float saturationLevel) {
-    float healthScale = (float)(player.isHealthScaled() ? player.getHealth() * player.getHealthScale() / player.getMaxHealth() : player.getHealth());
+    float healthScale = (float) (player.isHealthScaled() ? player.getHealth() * player.getHealthScale() / player.getMaxHealth() : player.getHealth());
     PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.UPDATE_HEALTH);
     packet.getFloat().write(0, healthScale);
     packet.getFloat().write(1, saturationLevel);

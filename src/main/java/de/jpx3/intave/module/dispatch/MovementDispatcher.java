@@ -520,6 +520,25 @@ public final class MovementDispatcher extends Module {
     movementData.clientPressedJump = jumping;
   }
 
+  @PacketSubscription(
+    packetsOut = {
+      UPDATE_HEALTH
+    }
+  )
+  public void catchFoodUpdate(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = UserRepository.userOf(player);
+    FeedbackCallback<PacketContainer> callback = (x, packet) -> {
+      MetadataBundle meta = user.meta();
+      Integer foodLevel = packet.getIntegers().read(0);
+      if (foodLevel <= 6) {
+        meta.movement().sprinting = false;
+      }
+      meta.abilities().foodLevel = foodLevel;
+    };
+    Modules.feedback().synchronize(player, event.getPacket(), callback);
+  }
+
   private final boolean ELYTRA_SUPPORTED = MinecraftVersions.VER1_9_0.atOrAbove();
 
   @PacketSubscription(
