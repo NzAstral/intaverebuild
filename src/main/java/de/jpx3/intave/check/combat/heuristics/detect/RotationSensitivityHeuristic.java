@@ -85,16 +85,15 @@ public final class RotationSensitivityHeuristic extends MetaCheckPart<Heuristics
         heuristicMeta.decimalSpeedVL += 50;
         heuristicMeta.decimalSpeedVL = Math.min(heuristicMeta.decimalSpeedVL, 1000);
         if (heuristicMeta.decimalSpeedVL++ > 200) {
-          parentCheck().saveAnomaly(
-            player,
-            Anomaly.anomalyOf(
-              "113",
-              Confidence.NONE,
-              Anomaly.Type.KILLAURA,
-              "rotations have too few decimals, vl:" + (heuristicMeta.decimalSpeedVL / 200.0),
-              LIMIT_2 | DELAY_16s | SUGGEST_MINING
-            )
+          double violationLevel = heuristicMeta.decimalSpeedVL / 200.0;
+          Anomaly anomaly = Anomaly.anomalyOf(
+            "113",
+            violationLevel > 4 ? Confidence.PROBABLE : Confidence.NONE,
+            Anomaly.Type.KILLAURA,
+            "rotations have too few decimals, vl:" + violationLevel,
+            LIMIT_2 | DELAY_16s | SUGGEST_MINING
           );
+          parentCheck().saveAnomaly(player, anomaly);
         }
       } else if (heuristicMeta.decimalSpeedVL > 0){
         heuristicMeta.decimalSpeedVL--;
