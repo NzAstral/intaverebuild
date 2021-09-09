@@ -171,7 +171,7 @@ public final class EventService implements BukkitEventSubscriber {
     User user = UserRepository.userOf((Player) event.getEntity());
     InventoryMetadata inventory = user.meta().inventory();
 
-    if (inventory.blockNextArrow) {
+    if (inventory.blockNextArrow && !inventory.handActive()) {
       event.setCancelled(true);
       inventory.blockNextArrow = false;
     }

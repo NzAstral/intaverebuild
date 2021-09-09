@@ -113,19 +113,15 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
     InventoryMetadata inventoryData = meta.inventory();
 
     inventoryData.setHandActive(false);
-    Synchronizer.synchronize(() -> {
-      sendStopUseItemPacketToServer(user, inventoryData.heldItemType());
-    });
+    Material heldItemType = inventoryData.heldItemType();
+    sendStopUseItemPacketToServer(user, heldItemType);
   }
 
   private void sendStopUseItemPacketToServer(User user, Material type) {
     Player player = user.player();
     try {
       InventoryMetadata inventory = user.meta().inventory();
-
-      if (ItemProperties.isBow(type)) {
-        inventory.blockNextArrow = true;
-      }
+      inventory.blockNextArrow = ItemProperties.isBow(type);
 
       PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Client.BLOCK_DIG);
       packet.getBlockPositionModifier().write(0, new BlockPosition(0,0,0));
