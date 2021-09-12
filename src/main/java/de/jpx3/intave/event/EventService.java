@@ -18,6 +18,7 @@ import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.tracker.entity.EntityCollisionDisabler;
 import de.jpx3.intave.module.tracker.entity.LazyEntityCollisionService;
 import de.jpx3.intave.player.ItemProperties;
+import de.jpx3.intave.player.dmc.DamageController;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserLifetimeService;
 import de.jpx3.intave.user.UserRepository;
@@ -45,6 +46,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
 import static de.jpx3.intave.entity.datawatcher.DataWatcherAccess.WATCHER_BLOCKING_ID;
+import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier.BLOCKING;
 
 @Deprecated
 public final class EventService implements BukkitEventSubscriber {
@@ -147,8 +149,7 @@ public final class EventService implements BukkitEventSubscriber {
 
   @BukkitEventSubscription
   public void on(EntityDamageByEntityEvent event) {
-    Entity attacker = event.getDamager();
-    if (!(attacker instanceof Player ) || event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
+    if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
       return;
     }
     Entity attacked = event.getEntity();
@@ -157,9 +158,9 @@ public final class EventService implements BukkitEventSubscriber {
     }
     Player attackedPlayer = (Player) attacked;
     User user = UserRepository.userOf(attackedPlayer);
-    double blockingDamageAbsorption = event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING);
-    if (blockingDamageAbsorption != 0 && !user.meta().inventory().handActive()) {
-      event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
+    double blockingDamageAbsorption = event.getDamage(BLOCKING);
+    if (blockingDamageAbsorption < 0 && !user.meta().inventory().handActive()) {
+      DamageController.withNewDamageApplier(event, BLOCKING, current -> -0d);
     }
   }
 
@@ -170,7 +171,6 @@ public final class EventService implements BukkitEventSubscriber {
     }
     User user = UserRepository.userOf((Player) event.getEntity());
     InventoryMetadata inventory = user.meta().inventory();
-
     if (inventory.blockNextArrow && !inventory.handActive()) {
       event.setCancelled(true);
       inventory.blockNextArrow = false;

@@ -26,40 +26,40 @@ public final class LegacyComplexColliderProcessor implements ComplexColliderProc
     boolean step = false;
     if (movementData.onGround && movementData.sneaking) {
       BoundingBox boundingBox = movementData.boundingBox();
-      double d6;
-      for (d6 = 0.05D; context.motionX != 0.0D && Collision.nonePresent(player, boundingBox.offset(context.motionX, -1.0D, 0.0D)); startMotionX = context.motionX) {
-        if (context.motionX < d6 && context.motionX >= -d6) {
+      double size;
+      for (size = 0.05D; context.motionX != 0.0D && Collision.nonePresent(player, boundingBox.offset(context.motionX, -1.0D, 0.0D)); startMotionX = context.motionX) {
+        if (context.motionX < size && context.motionX >= -size) {
           context.motionX = 0.0D;
         } else if (context.motionX > 0.0D) {
-          context.motionX -= d6;
+          context.motionX -= size;
         } else {
-          context.motionX += d6;
+          context.motionX += size;
         }
       }
       for (; context.motionZ != 0.0D && Collision.nonePresent(player, boundingBox.offset(0.0D, -1.0D, context.motionZ)); startMotionZ = context.motionZ) {
-        if (context.motionZ < d6 && context.motionZ >= -d6) {
+        if (context.motionZ < size && context.motionZ >= -size) {
           context.motionZ = 0.0D;
         } else if (context.motionZ > 0.0D) {
-          context.motionZ -= d6;
+          context.motionZ -= size;
         } else {
-          context.motionZ += d6;
+          context.motionZ += size;
         }
       }
       for (; context.motionX != 0.0D && context.motionZ != 0.0D && Collision.nonePresent(player, boundingBox.offset(context.motionX, -1.0D, context.motionZ)); startMotionZ = context.motionZ) {
-        if (context.motionX < d6 && context.motionX >= -d6) {
+        if (context.motionX < size && context.motionX >= -size) {
           context.motionX = 0.0D;
         } else if (context.motionX > 0.0D) {
-          context.motionX -= d6;
+          context.motionX -= size;
         } else {
-          context.motionX += d6;
+          context.motionX += size;
         }
         startMotionX = context.motionX;
-        if (context.motionZ < d6 && context.motionZ >= -d6) {
+        if (context.motionZ < size && context.motionZ >= -size) {
           context.motionZ = 0.0D;
         } else if (context.motionZ > 0.0D) {
-          context.motionZ -= d6;
+          context.motionZ -= size;
         } else {
-          context.motionZ += d6;
+          context.motionZ += size;
         }
       }
     }

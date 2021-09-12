@@ -285,7 +285,7 @@ public final class Physics extends Check {
 
     // Entity collision check
     boolean collidedWithBoat = movementData.collidedWithBoat();
-    boolean skipVLCalculation = distance <= 1e-5;
+    boolean skipVLCalculation = distance <= 0.00001;
     double verticalViolationIncrease = skipVLCalculation ? 0 : simulationEvaluator.calculateVerticalViolationLevelIncrease(user, predictedY, onLadder, collidedWithBoat);
     double horizontalViolationIncrease = skipVLCalculation ? 0 : simulationEvaluator.calculateHorizontalViolationIncrease(user, predictedX, predictedZ, onLadder, collidedWithBoat);
 

@@ -24,7 +24,7 @@ import static de.jpx3.intave.IntaveControl.DISABLE_BLOCK_CACHING_ENTIRELY;
 public final class MultiChunkKeyBlockStateAccess implements BlockStateAccess {
   private final static int BUILD_LIMIT = 255;
   private final Player player;
-  private final ShapeResolverPipeline boundingBoxResolver;
+  private final ShapeResolverPipeline shapeResolver;
   private final Map<Long, BlockState> blockCache = new ConcurrentHashMap<>(4096);
   private final Map<Location, BlockState> locatedReplacements = new ConcurrentHashMap<>(64);
   private final Map<Long, BlockState> indexedReplacements = new ConcurrentHashMap<>(64);
@@ -35,7 +35,7 @@ public final class MultiChunkKeyBlockStateAccess implements BlockStateAccess {
     Player player, ShapeResolverPipeline resolver
   ) {
     this.player = player;
-    this.boundingBoxResolver = resolver;
+    this.shapeResolver = resolver;
   }
 
   @Override
@@ -150,7 +150,7 @@ public final class MultiChunkKeyBlockStateAccess implements BlockStateAccess {
     } else {
       BoundingBoxAccessFlowStudy.incremLookups();
       int variant = BlockVariantAccess.variantAccess(block);
-      BlockShape shape = boundingBoxResolver.resolve(world, player, type, variant, posX, posY, posZ);
+      BlockShape shape = shapeResolver.resolve(world, player, type, variant, posX, posY, posZ);
       return new BlockState(shape, type, variant);
     }
   }
@@ -179,7 +179,7 @@ public final class MultiChunkKeyBlockStateAccess implements BlockStateAccess {
     if (type == Material.AIR) {
       blockState = BlockState.empty();
     } else {
-      BlockShape shape = boundingBoxResolver.resolve(world, player, type, variant, posX, posY, posZ);
+      BlockShape shape = shapeResolver.resolve(world, player, type, variant, posX, posY, posZ);
       blockState = new BlockState(shape, type, variant);
     }
     long key = bigKey(posX, posY, posZ);
