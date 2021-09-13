@@ -245,7 +245,7 @@ public final class MovementMetadata {
       positionX = modifier.read(0);
       positionY = modifier.read(1);
       positionZ = modifier.read(2);
-      blockOnPosition = VolatileBlockAccess.safeTypeAccess(user, player.getWorld(), positionX, positionY - frictionPosSubtraction, positionZ);
+      blockOnPosition = VolatileBlockAccess.typeAccess(user, player.getWorld(), positionX, positionY - frictionPosSubtraction, positionZ);
       motionX = positionX - verifiedPositionX;
       motionY = positionY - verifiedPositionY;
       motionZ = positionZ - verifiedPositionZ;
@@ -456,7 +456,7 @@ public final class MovementMetadata {
   @IdoNotBelongHere
   private float jumpFactor() {
     World world = player.getWorld();
-    float f = jumpFactorOf(VolatileBlockAccess.safeTypeAccess(user, world, positionX, positionY, positionZ));
+    float f = jumpFactorOf(VolatileBlockAccess.typeAccess(user, world, positionX, positionY, positionZ));
     float f1 = jumpFactorOf(blockOnPosition());
     return (double) f == 1.0D ? f1 : f;
   }

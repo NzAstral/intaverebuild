@@ -3,13 +3,13 @@ package de.jpx3.intave.diagnostic;
 public final class ShapeAccessFlowStudy {
 
   // total number of bb access
-  public static int requests;
+  public static long requests;
 
   // total number of required lookups
-  public static int lookups;
+  public static long lookups;
 
   // total number of lookups, that didn't need to "ask the server"
-  public static int dynamic;
+  public static long dynamic;
 
   public static int green, yellow, red;
 

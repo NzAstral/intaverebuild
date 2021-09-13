@@ -52,7 +52,7 @@ public final class BlockTypeAccess {
 
   /**
    * This method performs a direct type lookup, which will be incorrect if the underlying chunk has not been loaded yet.
-   * To avoid this, use {@link VolatileBlockAccess#safeTypeAccess(User, World, int, int, int)} instead,
+   * To avoid this, use {@link VolatileBlockAccess#typeAccess(User, World, int, int, int)} instead,
    * providing fast performance, a robust cache implementation and stable fallback
    */
   @Deprecated
@@ -67,7 +67,7 @@ public final class BlockTypeAccess {
 
   /**
    * This method performs a direct type lookup, which will be incorrect if the underlying chunk has not been loaded yet.
-   * To avoid this, use {@link VolatileBlockAccess#safeTypeAccess(User, World, int, int, int)} instead,
+   * To avoid this, use {@link VolatileBlockAccess#typeAccess(User, World, int, int, int)} instead,
    * providing fast performance, a robust cache implementation and stable fallback
    */
   @Deprecated

@@ -39,10 +39,11 @@ public final class MultiChunkKeyBlockStateAccess implements BlockStateAccess {
   }
 
   @Override
-  public @NotNull BlockShape resolveShape(int chunkX, int chunkZ, int posX, int posY, int posZ) {
+  public @NotNull BlockShape resolveShape(int posX, int posY, int posZ) {
     if (posY < 0 || BUILD_LIMIT < posY) {
       return BlockShapes.empty();
     }
+    int chunkX = posX >> 4, chunkZ = posZ >> 4;
     ShapeAccessFlowStudy.requests++;
     if ((chunkX != this.chunkX || chunkZ != this.chunkZ)) {
       this.chunkX = chunkX;

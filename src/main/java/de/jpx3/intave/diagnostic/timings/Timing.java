@@ -38,8 +38,8 @@ public class Timing implements Cloneable, Comparable<Timing> {
   public void stop() {
     if (IntaveControl.USE_TIMINGS) {
       // end from before sync
-      long currentTimestamp = now();
-      totalTimingData.addDuration(currentTimestamp - lastStart.get());
+      long now = now();
+      totalTimingData.addDuration(now - lastStart.get());
       totalTimingData.increaseCallCount();
     }
   }
@@ -87,20 +87,20 @@ public class Timing implements Cloneable, Comparable<Timing> {
     return timingType == TimingType.PACKET_EVENT;
   }
 
-  public long getTotalDurationNanos() {
+  public long totalDurationNanos() {
     return totalTimingData.totalDuration();
   }
 
   public double totalDurationMillis() {
-    return getTotalDurationNanos() / 1000000d;
+    return totalDurationNanos() / 1000000d;
   }
 
   public long recordedCalls() {
     return totalTimingData.calls();
   }
 
-  public double getAverageCallDurationInNanos() {
-    return getTotalDurationNanos() / Math.max(1d, recordedCalls());
+  public double averageCallDurationInNanos() {
+    return totalDurationNanos() / Math.max(1d, recordedCalls());
   }
 
   public double averageCallDurationInMillis() {
@@ -113,7 +113,7 @@ public class Timing implements Cloneable, Comparable<Timing> {
 
   @Override
   public int compareTo(Timing o) {
-    return Long.compare(o.getTotalDurationNanos(), getTotalDurationNanos());
+    return Long.compare(o.totalDurationNanos(), totalDurationNanos());
   }
 
   @Override

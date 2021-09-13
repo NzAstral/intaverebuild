@@ -75,7 +75,7 @@ public final class BlockRotationAnalyzer extends MetaCheckPart<PlacementAnalysis
       return;
     }
 
-    Material clickedType = VolatileBlockAccess.safeTypeAccess(user, blockPosition.toLocation(player.getWorld()));
+    Material clickedType = VolatileBlockAccess.typeAccess(user, blockPosition.toLocation(player.getWorld()));
     boolean clickableInteraction = BlockInteractionAccess.isClickable(clickedType);
     Material heldItemType = user.meta().inventory().heldItemType();
     boolean interactionIsPlacement = heldItemType != Material.AIR && heldItemType.isBlock() && !clickableInteraction && !abilities.inGameMode(GameMode.ADVENTURE);

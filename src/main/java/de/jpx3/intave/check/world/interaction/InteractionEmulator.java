@@ -174,7 +174,7 @@ public final class InteractionEmulator implements EventProcessor {
     World world = player.getWorld();
     switch (itemTypeInHand) {
       case BUCKET: {
-        Material placementType = VolatileBlockAccess.safeTypeAccess(UserRepository.userOf(player), placementLocation);//placementLocation.getBlock().getType();
+        Material placementType = VolatileBlockAccess.typeAccess(UserRepository.userOf(player), placementLocation);//placementLocation.getBlock().getType();
         // remove liquid on location if exists
         if (MaterialMagic.isLiquid(placementType)) {
           // emulate

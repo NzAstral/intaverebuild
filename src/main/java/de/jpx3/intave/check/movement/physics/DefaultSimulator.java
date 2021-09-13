@@ -67,11 +67,11 @@ public class DefaultSimulator extends Simulator {
       boolean allowJumpInWater = false;
       if (clientData.waterUpdate() && inWater) {
         // Geht nicht anders
-        Material material = VolatileBlockAccess.safeTypeAccess(
+        Material material = VolatileBlockAccess.typeAccess(
           user, user.player().getWorld(),
           movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ
         );
-        int blockData = VolatileBlockAccess.safeVariantAccess(
+        int blockData = VolatileBlockAccess.variantAccess(
           user, user.player().getWorld(),
           movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ
         );
@@ -419,10 +419,10 @@ public class DefaultSimulator extends Simulator {
     int blockCollisionPosX = WrappedMathHelper.floor(positionX);
     int blockCollisionPosY = WrappedMathHelper.floor(positionY - 0.2f);
     int blockCollisionPosZ = WrappedMathHelper.floor(positionZ);
-    Material block = VolatileBlockAccess.safeTypeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
+    Material block = VolatileBlockAccess.typeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
 
     if (block == Material.AIR) {
-      Material blockBelow = VolatileBlockAccess.safeTypeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
+      Material blockBelow = VolatileBlockAccess.typeAccess(user, world, blockCollisionPosX, blockCollisionPosY, blockCollisionPosZ);
       if (blockBelow.name().contains("FENCE") || blockBelow.name().contains("WALL")) {
         block = blockBelow;
       }
@@ -474,7 +474,7 @@ public class DefaultSimulator extends Simulator {
       for (int y = blockPositionStartY; y <= blockPositionEndY; y++) {
         for (int z = blockPositionStartZ; z <= blockPositionEndZ; z++) {
           Location location = new Location(world, x, y, z);
-          Material material = VolatileBlockAccess.safeTypeAccess(user, world, x, y, z);
+          Material material = VolatileBlockAccess.typeAccess(user, world, x, y, z);
           Vector collisionVector = BlockPhysics.entityCollision(
             user, material,
             location,
@@ -493,7 +493,7 @@ public class DefaultSimulator extends Simulator {
     if (clientData.protocolVersion() >= VER_1_14 && movementData.pose() != Pose.FALL_FLYING) {
       int soulSandModifier = Enchantments.resolveSoulSpeedModifier(player);
       if (soulSandModifier == 0 || !movementData.blockOnPositionSoulSpeedAffected()) {
-        Material type = VolatileBlockAccess.safeTypeAccess(user, world, positionX, positionY - 0.5000001, positionZ);
+        Material type = VolatileBlockAccess.typeAccess(user, world, positionX, positionY - 0.5000001, positionZ);
         float speedFactor = BlockProperties.ofType(type).speedFactor();
         context.motionX *= speedFactor;
         context.motionZ *= speedFactor;

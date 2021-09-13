@@ -16,7 +16,7 @@ public final class BlockVariantAccess {
 
   /**
    * This method performs a direct type lookup, which will be quite heavy if the underlying chunk has not been loaded yet.
-   * To avoid this performance-bottleneck, use {@link VolatileBlockAccess#safeVariantAccess(User, World, double, double, double)} instead,
+   * To avoid this performance-bottleneck, use {@link VolatileBlockAccess#variantAccess(User, World, double, double, double)} instead,
    * providing fast performance, a robust cache implementation and stable chunk fallback
    */
   @Deprecated

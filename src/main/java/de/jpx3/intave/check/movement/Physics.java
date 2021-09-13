@@ -363,7 +363,7 @@ public final class Physics extends Check {
           colliderName = "world border";
         } else {
           String prefix = (currentlyInOverride ? "emulated" : "") + " " + (altered ? "altered" : "") + " ";
-          Material type = VolatileBlockAccess.safeTypeAccess(user,block.getLocation());//currentlyInOverride ? BukkitBlockAccess.cacheAppliedTypeAccess(user, block.getLocation()) : BlockTypeAccess.typeAccess(block, player);
+          Material type = VolatileBlockAccess.typeAccess(user,block.getLocation());
           String typeName = shortenTypeName(type);
           colliderName = prefix + typeName + " block";
         }

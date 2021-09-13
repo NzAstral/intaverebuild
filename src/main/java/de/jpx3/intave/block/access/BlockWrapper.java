@@ -61,7 +61,7 @@ public final class BlockWrapper {
 
     @Override
     public Material getType() {
-      return VolatileBlockAccess.safeTypeAccess(user, location);
+      return VolatileBlockAccess.typeAccess(user, location);
     }
   }
 
@@ -83,7 +83,7 @@ public final class BlockWrapper {
 
     @Override
     public @NotNull Material getType() {
-      return VolatileBlockAccess.safeTypeAccess(user, location);
+      return VolatileBlockAccess.typeAccess(user, location);
     }
 
 
@@ -124,7 +124,7 @@ public final class BlockWrapper {
       if (MinecraftVersions.VER1_14_0.atOrAbove()) {
         return 0;
       }
-      return (byte) VolatileBlockAccess.safeVariantAccess(
+      return (byte) VolatileBlockAccess.variantAccess(
         user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()
       );
     }

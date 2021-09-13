@@ -30,14 +30,14 @@ final class DoorBlockPatch extends BoundingBoxPatch {
     User user = UserRepository.userOf(player);
     boolean isUpper = (upperData & 8) != 0;
     if (isUpper) {
-      lowerData = VolatileBlockAccess.safeVariantAccess(user, world, posX, posY - 1, posZ);
+      lowerData = VolatileBlockAccess.variantAccess(user, world, posX, posY - 1, posZ);
     } else {
       lowerData = upperData;
       if (topAcquire.get()) {
         upperData = 0;
       } else {
         topAcquire.set(true);
-        upperData = VolatileBlockAccess.safeVariantAccess(user, world, posX, posY + 1, posZ);
+        upperData = VolatileBlockAccess.variantAccess(user, world, posX, posY + 1, posZ);
         topAcquire.set(false);
       }
     }

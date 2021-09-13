@@ -38,18 +38,18 @@ public final class VolatileBlockAccess implements BukkitEventSubscriber {
     return fallbackBlock(blockAccess);
   }
 
-  public static Material safeTypeAccess(User user, Location location) {
-    return safeTypeAccess(user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+  public static Material typeAccess(User user, Location location) {
+    return typeAccess(user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
   }
 
-  public static Material safeTypeAccess(User user, World blockAccess, int blockX, int blockY, int blockZ) {
+  public static Material typeAccess(User user, World blockAccess, int blockX, int blockY, int blockZ) {
     if (isInLoadedChunk(blockAccess, blockX, blockZ) || Bukkit.isPrimaryThread()) {
       return user.blockShapeAccess().resolveType(blockX >> 4, blockZ >> 4, blockX, blockY, blockZ);
     }
     return Material.AIR;
   }
 
-  public static Material safeTypeAccess(User user, World blockAccess, double x, double y, double z) {
+  public static Material typeAccess(User user, World blockAccess, double x, double y, double z) {
     int blockX = floor(x);
     int blockY = floor(y);
     int blockZ = floor(z);
@@ -59,14 +59,14 @@ public final class VolatileBlockAccess implements BukkitEventSubscriber {
     return Material.AIR;
   }
 
-  public static int safeVariantAccess(User user, World blockAccess, int blockX, int blockY, int blockZ) {
+  public static int variantAccess(User user, World blockAccess, int blockX, int blockY, int blockZ) {
     if (isInLoadedChunk(blockAccess, blockX, blockZ) || Bukkit.isPrimaryThread()) {
       return user.blockShapeAccess().resolveVariant(blockX >> 4, blockZ >> 4, blockX, blockY, blockZ);
     }
     return 0;
   }
 
-  public static int safeVariantAccess(User user, World blockAccess, double x, double y, double z) {
+  public static int variantAccess(User user, World blockAccess, double x, double y, double z) {
     int blockX = floor(x);
     int blockY = floor(y);
     int blockZ = floor(z);

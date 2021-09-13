@@ -63,7 +63,7 @@ public final class MovementHelper {
   @Deprecated
   @IdoNotBelongHere
   public static float currentSlipperiness(User user, Location location) {
-    Material type = VolatileBlockAccess.safeTypeAccess(user, location);
+    Material type = VolatileBlockAccess.typeAccess(user, location);
     return BlockProperties.ofType(type).slipperiness() * 0.91f;
   }
 
@@ -95,7 +95,7 @@ public final class MovementHelper {
     for (int x = minX; x <= maxX; ++x) {
       for (int y = minY; y <= maxY; ++y) {
         for (int z = minZ; z <= maxZ; ++z) {
-          Material material = VolatileBlockAccess.safeTypeAccess(user, world, x, y, z);
+          Material material = VolatileBlockAccess.typeAccess(user, world, x, y, z);
           if (MaterialMagic.isLiquid(material)) {
             return true;
           }
@@ -117,7 +117,7 @@ public final class MovementHelper {
     for (int x = minX; x <= maxX; ++x) {
       for (int y = minY; y <= maxY; ++y) {
         for (int z = minZ; z <= maxZ; ++z) {
-          Material material = VolatileBlockAccess.safeTypeAccess(user, world, x, y, z);
+          Material material = VolatileBlockAccess.typeAccess(user, world, x, y, z);
           if (!MaterialMagic.isLiquid(material)) {
             return false;
           }
@@ -139,7 +139,7 @@ public final class MovementHelper {
     for (int x = minX; x < maxX; ++x) {
       for (int y = minY; y < maxY; ++y) {
         for (int z = minZ; z < maxZ; ++z) {
-          if (MaterialMagic.isLava(VolatileBlockAccess.safeTypeAccess(user, world, x, y, z))) {
+          if (MaterialMagic.isLava(VolatileBlockAccess.typeAccess(user, world, x, y, z))) {
             return true;
           }
         }
@@ -159,7 +159,7 @@ public final class MovementHelper {
       WrappedMathHelper.floor(positionY),
       WrappedMathHelper.floor(positionZ)
     );
-    Material type = VolatileBlockAccess.safeTypeAccess(
+    Material type = VolatileBlockAccess.typeAccess(
       user, player.getWorld(),
       WrappedMathHelper.floor(positionX),
       WrappedMathHelper.floor(positionY),
@@ -190,7 +190,7 @@ public final class MovementHelper {
         return false;
       }
       Directional downBlockDirectional = (Directional) downBlockData;
-      return VolatileBlockAccess.safeTypeAccess(user, downLocation) == Material.LADDER && directional.getFacing() == downBlockDirectional.getFacing();
+      return VolatileBlockAccess.typeAccess(user, downLocation) == Material.LADDER && directional.getFacing() == downBlockDirectional.getFacing();
     }
     return false;
   }

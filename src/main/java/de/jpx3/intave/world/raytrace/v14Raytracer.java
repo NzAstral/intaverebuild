@@ -158,7 +158,7 @@ public final class v14Raytracer implements Raytracer {
   private VoxelShape voxelShapeAt(User user, BlockPosition position) {
     // resolve native boxes
     List<AxisAlignedBB> boxes = translateBoxes(user.blockShapeAccess().resolveShape(
-      position.getX() >> 4, position.getZ() >> 4, position.getX(), position.getY(), position.getZ()
+      position.getX(), position.getY(), position.getZ()
     ).boundingBoxes());
     return voxelShapeOf(boxes);
   }

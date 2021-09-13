@@ -66,7 +66,7 @@ public final class v12FluidResolver extends FluidEngine {
       for (int y = minY; y < maxY; ++y) {
         for (int z = minZ; z < maxZ; ++z) {
           Block block = VolatileBlockAccess.unsafe__BlockAccess(world, x, y, z);
-          Material clientSideBlock = VolatileBlockAccess.safeTypeAccess(user, world, x, y, z);
+          Material clientSideBlock = VolatileBlockAccess.typeAccess(user, world, x, y, z);
           boolean waterServerSide = MaterialMagic.isWater(BlockTypeAccess.typeAccess(block, player));
           boolean waterClientSide = MaterialMagic.isWater(clientSideBlock);
           if (waterServerSide) {

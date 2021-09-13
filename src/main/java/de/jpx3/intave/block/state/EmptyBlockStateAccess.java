@@ -12,7 +12,7 @@ import java.util.Map;
 
 public final class EmptyBlockStateAccess implements BlockStateAccess {
   @Override
-  public @NotNull BlockShape resolveShape(int chunkX, int chunkZ, int posX, int posY, int posZ) {
+  public @NotNull BlockShape resolveShape(int posX, int posY, int posZ) {
     return BlockShapes.empty();
   }
 

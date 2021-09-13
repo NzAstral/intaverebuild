@@ -83,7 +83,7 @@ public final class AirClickLimitHeuristic extends MetaCheckPart<Heuristics, AirC
 
     if (blockPosition != null) {
       if (blockPlaceDirection != 255) {
-        Material clickedType = VolatileBlockAccess.safeTypeAccess(user, blockPosition.toLocation(player.getWorld()));
+        Material clickedType = VolatileBlockAccess.typeAccess(user, blockPosition.toLocation(player.getWorld()));
         boolean clickable = BlockInteractionAccess.isClickable(clickedType);
 
         if (clickable) {

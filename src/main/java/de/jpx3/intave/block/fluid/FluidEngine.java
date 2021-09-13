@@ -4,15 +4,17 @@ import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.shade.NativeVector;
-import de.jpx3.intave.shade.WrappedMathHelper;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Material;
 import org.bukkit.World;
 
+import static de.jpx3.intave.shade.WrappedMathHelper.ceil;
+import static de.jpx3.intave.shade.WrappedMathHelper.floor;
+
 public abstract class FluidEngine {
   public final WrappedFluid fluidAt(User user, double x, double y, double z) {
-    return fluidAt(user, WrappedMathHelper.floor(x), WrappedMathHelper.floor(y), WrappedMathHelper.floor(z));
+    return fluidAt(user, floor(x), floor(y), floor(z));
   }
 
   protected abstract WrappedFluid fluidAt(User user, int x, int y, int z);
@@ -23,12 +25,12 @@ public abstract class FluidEngine {
     World world = user.player().getWorld();
     MovementMetadata movementData = user.meta().movement();
     BoundingBox wrappedBoundingBox = boundingBox.shrink(0.001D);
-    int minX = WrappedMathHelper.floor(wrappedBoundingBox.minX);
-    int minY = WrappedMathHelper.floor(wrappedBoundingBox.minY);
-    int minZ = WrappedMathHelper.floor(wrappedBoundingBox.minZ);
-    int maxX = WrappedMathHelper.ceil(wrappedBoundingBox.maxX);
-    int maxY = WrappedMathHelper.ceil(wrappedBoundingBox.maxY);
-    int maxZ = WrappedMathHelper.ceil(wrappedBoundingBox.maxZ);
+    int minX = floor(wrappedBoundingBox.minX);
+    int minY = floor(wrappedBoundingBox.minY);
+    int minZ = floor(wrappedBoundingBox.minZ);
+    int maxX = ceil(wrappedBoundingBox.maxX);
+    int maxY = ceil(wrappedBoundingBox.maxY);
+    int maxZ = ceil(wrappedBoundingBox.maxZ);
     boolean inWater = false;
     int countedWaterCollisions = 0;
     NativeVector waterFlowTotal = NativeVector.ZERO;
@@ -37,7 +39,7 @@ public abstract class FluidEngine {
     for (int x = minX; x < maxX; ++x) {
       for (int y = minY; y < maxY; ++y) {
         for (int z = minZ; z < maxZ; ++z) {
-          Material blockClientSide = VolatileBlockAccess.safeTypeAccess(user, world, x, y, z);
+          Material blockClientSide = VolatileBlockAccess.typeAccess(user, world, x, y, z);
           WrappedFluid wrappedFluid = fluidAt(user, x, y, z);
           if (wrappedFluid.isIn(FluidTag.WATER)) {
             double d1 = (float) y + wrappedFluid.height();

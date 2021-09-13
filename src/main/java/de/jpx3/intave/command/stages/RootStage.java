@@ -31,6 +31,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.text.CharacterIterator;
+import java.text.DecimalFormat;
 import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -71,20 +72,28 @@ public final class RootStage extends CommandStage {
         }
         boolean suspicious = timing.averageCallDurationInMillis() > 0.5d;
         boolean dumping = timing.averageCallDurationInMillis() > 1.5d;
-        String message = String.format(
-          "%s: %s::%sms (%s&f ms/c)",
+        String message;
+        ChatColor outputColor = suspicious ? (dumping ? ChatColor.RED : ChatColor.YELLOW) : ChatColor.GREEN;
+        message = String.format(
+          "%s: %s::%s%s (%s&f %s/c)",
           timing.coloredName(),
           timing.recordedCalls(),
-          formatDouble(timing.totalDurationMillis(), 4),
-          (suspicious ? (dumping ? ChatColor.RED : ChatColor.YELLOW) : ChatColor.GREEN) + "" +
-            formatDouble(timing.averageCallDurationInMillis(), 8)
+          formatDouble(timing.totalDurationMillis() / 1000d, 2),
+          "s",
+          outputColor + "" + largeNumberFormat((long) timing.averageCallDurationInNanos()),
+          "ns"
         );
-        if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
+        if (!fullSpecifier.isEmpty() && !fullSpecifier.equals("ns") && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
           message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
         }
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
       });
     }
+  }
+
+  public static String largeNumberFormat(double value) {
+    DecimalFormat df = new DecimalFormat("###,###,###");
+    return df.format(value);
   }
 
   @SubCommand(
@@ -214,8 +223,8 @@ public final class RootStage extends CommandStage {
 
     player.sendMessage(successfulBias + "/"+biasPredCalls+" pred biased, "+successfulLK+"/"+biasLKCalls+" lk biased with " + iterativeCall + " iterative");
     player.sendMessage(formatDouble(percentage, 2) + "% movements bias simulated");
-    double estimatedTimeIfAllBiasCallsWereIterative = biasTotalCalls * Timings.CHECK_PHYSICS_PROC_ITR.getAverageCallDurationInNanos();
-    double savedTime = (estimatedTimeIfAllBiasCallsWereIterative - (Timings.CHECK_PHYSICS_PROC_PRED_BIA.getTotalDurationNanos() + Timings.CHECK_PHYSICS_PROC_LK_BIA.getTotalDurationNanos()) ) / 1000000d;
+    double estimatedTimeIfAllBiasCallsWereIterative = biasTotalCalls * Timings.CHECK_PHYSICS_PROC_ITR.averageCallDurationInNanos();
+    double savedTime = (estimatedTimeIfAllBiasCallsWereIterative - (Timings.CHECK_PHYSICS_PROC_PRED_BIA.totalDurationNanos() + Timings.CHECK_PHYSICS_PROC_LK_BIA.totalDurationNanos()) ) / 1000000d;
 
     player.sendMessage("Saved " + (savedTime > 0 ? ChatColor.GREEN : ChatColor.RED) + formatDouble(savedTime, 2) + ChatColor.WHITE + "ms");
   }

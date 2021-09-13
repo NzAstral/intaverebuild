@@ -27,7 +27,7 @@ public interface BlockStateLookup {
    * @param posZ the blocks z coordinate
    * @return the blocks bounding boxes
    */
-  @NotNull BlockShape resolveShape(int chunkX, int chunkZ, int posX, int posY, int posZ);
+  @NotNull BlockShape resolveShape(int posX, int posY, int posZ);
 
   /**
    * Resolve-if-not-cached and retrieve the type of the specified block.
