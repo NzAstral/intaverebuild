@@ -26,6 +26,7 @@ import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ViolationMetadata;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -68,7 +69,7 @@ public final class MovementEmulator {
 
     violationLevelData.isInActiveTeleportBundle = true;
     if (IntaveControl.DEBUG_EMULATION) {
-      player.sendMessage("[E+] " + motion + " (" + ticks + " ticks)");
+      player.sendMessage(ChatColor.DARK_PURPLE + "[E+] " + motion + " (" + ticks + " ticks)");
     }
 
     proceedEmulationTick(player, motion, ticks, ticks, cancellable);
@@ -116,16 +117,21 @@ public final class MovementEmulator {
       double motionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
       Vector pushVector = resolvePushVector(player, motionX, motionY, motionZ);
 
+      if (pushVector.length() < 0.005) {
+        violationLevelData.isInActiveTeleportBundle = false;
+        return;
+      }
+
       Location location = movementData.verifiedLocation().clone().add(pushVector);
       teleport(player, location);
 
       if (IntaveControl.DEBUG_EMULATION) {
-        player.sendMessage("[E/] Push out of blocks emulation (? remaining) with " + MathHelper.formatMotion(pushVector));
+        player.sendMessage(ChatColor.DARK_PURPLE + "[E/] Push out of blocks emulation (? remaining) with " + MathHelper.formatMotion(pushVector));
       }
       Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 1);
     } else {
       if (IntaveControl.DEBUG_EMULATION) {
-        player.sendMessage("[E-] Player does no longer intersect with their bounding-box");
+        player.sendMessage(ChatColor.DARK_PURPLE + "[E-] Player is no longer inside blocks");
       }
       violationLevelData.isInActiveTeleportBundle = false;
     }
@@ -203,15 +209,27 @@ public final class MovementEmulator {
       }
 
       if (IntaveControl.DEBUG_EMULATION) {
-        player.sendMessage("[E-] (" + ticks + " ticks remaining)");
+        player.sendMessage(ChatColor.DARK_PURPLE + "[E-] (" + ticks + " ticks remaining)");
       }
     } else {
       // teleport
       //player.teleport(futurePosition);
-      teleport(player, futurePosition);
+
+      boundingBox = BoundingBox.fromPosition(user, futurePosition);
+      boolean boundingBoxIntersection = Collision.present(user.player(), boundingBox);
+      if (boundingBoxIntersection) {
+        double motionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+        double motionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
+        double motionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+        Vector pushVector = resolvePushVector(player, motionX, motionY, motionZ);
+        Location location = futurePosition.add(pushVector);
+        teleport(player, location);
+      } else {
+        teleport(player, futurePosition);
+      }
 
       if (IntaveControl.DEBUG_EMULATION) {
-        String s = "[E/] " + MathHelper.formatMotion(motion) + " at " + MathHelper.formatPosition(futurePosition) + " (" + ticks + " ticks remaining)";
+        String s = ChatColor.DARK_PURPLE + "[E/] " + MathHelper.formatMotion(motion) + (boundingBoxIntersection ? " (block-push)" : "") + " at " + MathHelper.formatPosition(futurePosition) + " (" + ticks + " ticks remaining)";
         player.sendMessage(s);
       }
       //   s += " @" + movementData.entityBoundingBox();

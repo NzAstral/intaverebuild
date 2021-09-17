@@ -18,7 +18,6 @@ import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.tracker.entity.EntityCollisionDisabler;
 import de.jpx3.intave.module.tracker.entity.LazyEntityCollisionService;
 import de.jpx3.intave.player.ItemProperties;
-import de.jpx3.intave.player.dmc.DamageController;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserLifetimeService;
 import de.jpx3.intave.user.UserRepository;
@@ -34,10 +33,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -46,7 +42,6 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
 import static de.jpx3.intave.entity.datawatcher.DataWatcherAccess.WATCHER_BLOCKING_ID;
-import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier.BLOCKING;
 
 @Deprecated
 public final class EventService implements BukkitEventSubscriber {
@@ -72,7 +67,6 @@ public final class EventService implements BukkitEventSubscriber {
     if (DISABLE_ENTITY_COLLISIONS) {
       new EntityCollisionDisabler(plugin);
     }
-
     plugin.eventLinker().registerEventsIn(this);
   }
 
@@ -144,23 +138,6 @@ public final class EventService implements BukkitEventSubscriber {
         DataWatcherAccess.setDataWatcherFlag(player, WATCHER_BLOCKING_ID, false);
 //        player.sendMessage(ReflectiveDataWatcherAccess.getDataWatcherFlag(player, WATCHER_BLOCKING_ID) + "");
       });
-    }
-  }
-
-  @BukkitEventSubscription
-  public void on(EntityDamageByEntityEvent event) {
-    if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-      return;
-    }
-    Entity attacked = event.getEntity();
-    if (!(attacked instanceof Player)) {
-      return;
-    }
-    Player attackedPlayer = (Player) attacked;
-    User user = UserRepository.userOf(attackedPlayer);
-    double blockingDamageAbsorption = event.getDamage(BLOCKING);
-    if (blockingDamageAbsorption < 0 && !user.meta().inventory().handActive()) {
-      DamageController.withNewDamageApplier(event, BLOCKING, current -> -0d);
     }
   }
 

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_12;
 
-final class BlockBedPhysic implements BlockPhysic {
+final class BedPhysics implements BlockPhysic {
   private List<Material> materials;
 
   @Override

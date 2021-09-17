@@ -71,7 +71,7 @@ public class DefaultSimulator extends Simulator {
           user, user.player().getWorld(),
           movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ
         );
-        int blockData = VolatileBlockAccess.variantAccess(
+        int blockData = VolatileBlockAccess.variantIndexAccess(
           user, user.player().getWorld(),
           movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ
         );

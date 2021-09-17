@@ -12,11 +12,11 @@ import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.annotate.DispatchTarget;
 import de.jpx3.intave.block.access.BlockInteractionAccess;
-import de.jpx3.intave.block.access.BlockTypeAccess;
 import de.jpx3.intave.block.access.BlockVariantAccess;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.block.state.BlockStateAccess;
+import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
 import de.jpx3.intave.check.MetaCheck;
 import de.jpx3.intave.check.world.interaction.Interaction;
@@ -452,6 +452,10 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       boolean instantBreak = blockDamage >= 1.0f || user.meta().abilities().inGameMode(AbilityTracker.GameMode.CREATIVE);
       if (instantBreak) {
         vl = 0;
+      }
+      if (lookingAtBlock) {
+        double multiplier = trustFactorSetting("k-multiplier", player) / 100d;
+        vl *= multiplier;
       }
       message = "performed invalid break";// +" -" + append;
       details = typeName + " block, " + append;

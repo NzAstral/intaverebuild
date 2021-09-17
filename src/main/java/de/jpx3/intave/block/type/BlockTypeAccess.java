@@ -1,8 +1,10 @@
-package de.jpx3.intave.block.access;
+package de.jpx3.intave.block.type;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.annotate.Relocate;
+import de.jpx3.intave.block.access.BlockAccess;
+import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Material;

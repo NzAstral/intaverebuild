@@ -126,7 +126,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
     }
 
     // make player trustfactor dependent
-    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player);
+    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player) + (int) MathHelper.minmax(0, LatencyStudy.cachedAverage(), 20);
 
     List<Attack> remainingAttacks = attackRaytraceMeta.pendingAttacks;
     for (Attack remainingAttack : remainingAttacks) {
@@ -230,7 +230,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
 
   private boolean invalidReachStanding(User user, WrappedEntity entity) {
     Player player = user.player();
-    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player);
+    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player) + (int) MathHelper.minmax(0, LatencyStudy.cachedAverage(), 20);
     long pendingFeedbackPackets = entity.pendingFeedbackPackets();
     boolean entityHasNotTimedOut = pendingFeedbackPackets < maximumPendingFeedbackPackets;
     if (!entityHasNotTimedOut && entity.clientSynchronized) {
@@ -247,7 +247,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
     double blockReachDistance = Raytracing.reachDistance(player);
     float rotationYaw = movementData.rotationYaw % 360;
 
-    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player);
+    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player) + (int) MathHelper.minmax(0, LatencyStudy.cachedAverage(), 20);
     long pendingFeedbackPackets = entity.pendingFeedbackPackets();
     boolean entityHasNotTimedOut = pendingFeedbackPackets < maximumPendingFeedbackPackets;
 
@@ -461,7 +461,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
     double lastPositionY = movementData.lastPositionY;
     double lastPositionZ = movementData.lastPositionZ;
     double blockReachDistance = Raytracing.reachDistance(meta);
-    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player);
+    int maximumPendingFeedbackPackets = trustFactorSetting("pending-allowance", player) + (int) MathHelper.minmax(0, LatencyStudy.cachedAverage(), 20);
     double minReach = 10;
     WrappedEntity clonedEntity = entity.temporaryCopy();
     boolean livingEntity = entity.typeData.isLivingEntity();

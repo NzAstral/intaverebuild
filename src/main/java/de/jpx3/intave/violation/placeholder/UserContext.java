@@ -25,11 +25,8 @@ public final class UserContext implements PlaceholderContext {
     TrustFactor trustFactor = user.trustFactor();
     builder.put("trust", trustFactor.baseName());
     builder.put("trust-color", trustFactor.coloredBaseName());
-
     builder.put("latency", String.valueOf(user.latency()));
     builder.put("jitter", String.valueOf(user.latencyJitter()));
-//    builder.put("player", player.getName());
-//    builder.put("uuid", player.getUniqueId().toString());
     builder.put("version", user.meta().protocol().versionString());
     builder.put("world", player.getWorld().getName());
 

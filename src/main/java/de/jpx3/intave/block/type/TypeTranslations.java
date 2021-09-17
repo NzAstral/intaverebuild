@@ -1,4 +1,4 @@
-package de.jpx3.intave.block.access;
+package de.jpx3.intave.block.type;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.google.common.collect.ImmutableList;

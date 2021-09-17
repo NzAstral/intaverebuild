@@ -628,7 +628,7 @@ public final class MovementDispatcher extends Module {
         This fix is an attempt to decrease this bugs effectiveness, neither perfect nor sustainable, but at least working to a certain degree
        */
       int pendingVelocityPackets = movementData.pendingVelocityPackets.get();
-      if(pendingVelocityPackets > 1) {
+      if(pendingVelocityPackets > 1 && user.meta().attack().wasRecentlyAttackedByEntity()) {
         if (pendingVelocityPackets < 6) {
           velocity.setX(velocity.getX() / pendingVelocityPackets);
           velocity.setY(Math.min(0, velocity.getY()));

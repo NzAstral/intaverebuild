@@ -1,4 +1,4 @@
-package de.jpx3.intave.block.access;
+package de.jpx3.intave.block.type;
 
 import de.jpx3.intave.resource.CompilerStreamFunctionProvider;
 

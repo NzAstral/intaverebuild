@@ -124,7 +124,7 @@ public final class BlockWrapper {
       if (MinecraftVersions.VER1_14_0.atOrAbove()) {
         return 0;
       }
-      return (byte) VolatileBlockAccess.variantAccess(
+      return (byte) VolatileBlockAccess.variantIndexAccess(
         user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()
       );
     }

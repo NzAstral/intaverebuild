@@ -9,7 +9,7 @@ import org.bukkit.util.Vector;
 import java.util.Collections;
 import java.util.List;
 
-final class BlockSlimePhysic implements BlockPhysic {
+final class SlimePhysics implements BlockPhysic {
   private List<Material> material;
 
   @Override

@@ -1,9 +1,7 @@
 package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
-import de.jpx3.intave.block.access.BlockTypeAccess;
 import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,26 +12,24 @@ import java.util.List;
 
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_15;
 
-final class BlockWebPhysic implements BlockPhysic {
+final class SoulSandPhysics implements BlockPhysic {
   private List<Material> material;
 
   @Override
   public void setup(MinecraftVersion serverVersion) {
-    material = Collections.singletonList(BlockTypeAccess.WEB);
+    material = Collections.singletonList(Material.SOUL_SAND);
   }
 
   @Override
   public Vector entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
-    ProtocolMetadata clientData = user.meta().protocol();
-    MovementMetadata movementData = user.meta().movement();
-    movementData.inWeb = true;
-    movementData.artificialFallDistance = 0;
-    if (clientData.protocolVersion() >= VER_1_15) {
-      return new Vector(motionX * 0.25, motionY * 0.05f, motionZ * 0.25);
-    }
-    return null;
+    boolean useBlockCollision = useBlockCollision(user);
+    return useBlockCollision ? new Vector(motionX * 0.4, motionY, motionZ * 0.4) : null;
   }
 
+  private boolean useBlockCollision(User user) {
+    ProtocolMetadata clientData = user.meta().protocol();
+    return clientData.protocolVersion() < VER_1_15;
+  }
 
   @Override
   public List<Material> materials() {

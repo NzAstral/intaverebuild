@@ -16,6 +16,8 @@ import de.jpx3.intave.block.physics.BlockPhysics;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.block.shape.ShapeResolver;
 import de.jpx3.intave.block.shape.pipe.patch.BoundingBoxPatcher;
+import de.jpx3.intave.block.type.BlockTypeAccess;
+import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.check.CheckService;
 import de.jpx3.intave.clazz.locate.Locator;
 import de.jpx3.intave.cleanup.GarbageCollector;
@@ -200,7 +202,7 @@ public final class IntavePlugin extends JavaPlugin {
 
       // causes interceptor output
       for (int i = 0; i < 1; i++) {
-        URL url = new URL("https://intave.de/api/versions.json");
+        URL url = new URL("https://service.intave.de/versions");
         url.getDefaultPort();
       }
 
