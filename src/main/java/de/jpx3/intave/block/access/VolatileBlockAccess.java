@@ -71,6 +71,10 @@ public final class VolatileBlockAccess implements BukkitEventSubscriber {
     return BlockVariantRegister.variantOf(type, variantIndex);
   }
 
+  public static int variantIndexAccess(User user, Location location) {
+    return variantIndexAccess(user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+  }
+
   public static int variantIndexAccess(User user, World blockAccess, int blockX, int blockY, int blockZ) {
     if (isInLoadedChunk(blockAccess, blockX, blockZ) || Bukkit.isPrimaryThread()) {
       return user.blockShapeAccess().resolveVariantIndex(blockX >> 4, blockZ >> 4, blockX, blockY, blockZ);

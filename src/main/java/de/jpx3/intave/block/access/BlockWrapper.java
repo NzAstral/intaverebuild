@@ -88,6 +88,10 @@ public final class BlockWrapper {
       return VolatileBlockAccess.typeAccess(user, location);
     }
 
+    @Override
+    public byte getData() {
+      return (byte) VolatileBlockAccess.variantIndexAccess(user, location);
+    }
 
     @Override
     public @NotNull Location getLocation() {
@@ -119,16 +123,6 @@ public final class BlockWrapper {
     @Override
     public byte getLightFromBlocks() {
       return 0;
-    }
-
-    @Override
-    public byte getData() {
-      if (MinecraftVersions.VER1_14_0.atOrAbove()) {
-        return 0;
-      }
-      return (byte) VolatileBlockAccess.variantIndexAccess(
-        user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()
-      );
     }
 
     @PatchyAutoTranslation
