@@ -9,7 +9,6 @@ import java.util.function.IntPredicate;
 /**
  * Represents the client's MathHelper.
  */
-@Deprecated
 public final class WrappedMathHelper {
   /**
    * Though it looks like an array, this is really more like a mapping.  Key (index of this array) is the upper 5 bits
