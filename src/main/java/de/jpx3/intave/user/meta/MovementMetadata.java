@@ -12,7 +12,6 @@ import de.jpx3.intave.annotate.Relocate;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.block.fluid.Fluid;
-import de.jpx3.intave.block.fluid.FluidTag;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.check.movement.physics.*;
@@ -39,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.comphenix.protocol.wrappers.WrappedAttributeModifier.Operation.ADD_PERCENTAGE;
+import static de.jpx3.intave.block.fluid.FluidTag.WATER;
 import static de.jpx3.intave.check.movement.physics.MovementHelper.resolveFriction;
 import static de.jpx3.intave.reflect.access.ReflectiveHandleAccess.handleOf;
 import static de.jpx3.intave.shade.ClientMathHelper.*;
@@ -325,11 +325,11 @@ public final class MovementMetadata {
 
   public void updateEyesInWater() {
     double yPos = positionY + eyeHeight() - (double) 0.11111f;
-    this.eyesInWater = interactingFluid != null && interactingFluid.isIn(FluidTag.WATER);
+    this.eyesInWater = interactingFluid != null && interactingFluid.isOf(WATER);
     this.interactingFluid = null;
 
     Fluid fluid = Fluids.fluidAt(user, positionX, yPos, positionZ);
-    if (fluid.isIn(FluidTag.WATER)) {
+    if (fluid.isOf(WATER)) {
       double d1 = (float) floor(yPos) + 1.0f;
       if (d1 > yPos) {
         this.interactingFluid = fluid;

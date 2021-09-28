@@ -1,11 +1,11 @@
 package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
+import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Vector;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,9 +21,9 @@ final class SoulSandPhysics implements BlockPhysic {
   }
 
   @Override
-  public Vector entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
     boolean useBlockCollision = useBlockCollision(user);
-    return useBlockCollision ? new Vector(motionX * 0.4, motionY, motionZ * 0.4) : null;
+    return useBlockCollision ? new Motion(motionX * 0.4, motionY, motionZ * 0.4) : null;
   }
 
   private boolean useBlockCollision(User user) {

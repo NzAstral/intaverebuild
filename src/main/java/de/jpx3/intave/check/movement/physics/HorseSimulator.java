@@ -1,15 +1,15 @@
 package de.jpx3.intave.check.movement.physics;
 
-import de.jpx3.intave.player.collider.complex.ComplexColliderSimulationResult;
 import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 
-public final class HorseSimulator extends DefaultSimulator {
+final class HorseSimulator extends BaseSimulator {
   private final static double MAXIMUM_HORSE_MOVEMENT_SPEED = 0.22499999403953552D;//0.3374999970197678;
 
   @Override
-  public ComplexColliderSimulationResult performSimulation(
+  @Deprecated
+  public Simulation performSimulation(
     User user, Motion motion,
     float forward, float strafe,
     boolean attackReduce, boolean sprinting, boolean jumped, boolean handActive

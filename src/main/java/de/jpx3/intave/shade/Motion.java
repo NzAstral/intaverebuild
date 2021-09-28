@@ -27,6 +27,18 @@ public final class Motion {
     this.motionZ = z;
   }
 
+  public double motionX() {
+    return motionX;
+  }
+
+  public double motionY() {
+    return motionY;
+  }
+
+  public double motionZ() {
+    return motionZ;
+  }
+
   public Motion copy() {
     return copyFrom(this);
   }

@@ -1,7 +1,6 @@
 package de.jpx3.intave.check.movement.physics;
 
 import de.jpx3.intave.check.movement.Physics;
-import de.jpx3.intave.player.collider.complex.ComplexColliderSimulationResult;
 import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 
@@ -12,7 +11,20 @@ public abstract class Simulator {
     this.physics = physics;
   }
 
-  public abstract ComplexColliderSimulationResult performSimulation(
+  public Simulation performSimulation(
+    User user, Motion motion,
+    MovementConfiguration configuration
+  ) {
+    return performSimulation(
+      user, motion, configuration.forward(), configuration.strafe(),
+      configuration.isReducing(), configuration.isSprinting(),
+      configuration.isJumping(), configuration.isHandActive()
+    );
+  }
+
+  @Deprecated
+  // use the method above please
+  protected abstract Simulation performSimulation(
     User user, Motion motion,
     float keyForward, float keyStrafe,
     boolean attackReduce, boolean sprinting, boolean jumped, boolean handActive

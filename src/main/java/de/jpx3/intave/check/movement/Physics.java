@@ -64,10 +64,10 @@ public final class Physics extends Check {
     super("Physics", "physics");
     this.plugin = plugin;
     this.decrementer = new CheckViolationLevelDecrementer(this, VL_DECREMENT_PER_VALID_MOVE * 20);
-    this.simulationProcessor = new PredictionSimulationProcessor();
-    this.simulationEvaluator = new SimulationEvaluator();
     this.highToleranceMode = configuration().settings().boolBy("high-tolerance", false);
     this.resetItemUsage = configuration().settings().boolBy("reset-item-usage", true);
+    this.simulationProcessor = new PredictionSimulationProcessor(resetItemUsage);
+    this.simulationEvaluator = new SimulationEvaluator();
     setDefaultMitigationStrategy(MitigationStrategy.CAREFUL);
     this.fallDamageApplier = new FallDamageApplier();
     linkCheckToPoseSimulators();
@@ -84,30 +84,29 @@ public final class Physics extends Check {
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     ProtocolMetadata clientData = meta.protocol();
-
     Simulator simulator = selectSimulator(user);
     movementData.setSimulator(simulator);
     movementData.stepHeight = simulator.stepHeight();
-
     if (clientData.waterUpdate() && movementData.sneaking && movementData.inWater) {
       handleSneakInWater(user);
     }
-
     updateAquatics(user);
     simulateMotionClamp(user);
-
     Timings.CHECK_PHYSICS_PROC_TOT.start();
     predictFlyingPacketBeforeVelocity(user);
-    ComplexColliderSimulationResult predictedMovement = simulationProcessor.simulate(user, movementData.simulator());
-    movementData.onGround = predictedMovement.onGround();
-    movementData.collidedHorizontally = predictedMovement.collidedHorizontally();
-    movementData.collidedVertically = predictedMovement.collidedVertically();
-    movementData.physicsResetMotionX = predictedMovement.resetMotionX();
-    movementData.physicsResetMotionZ = predictedMovement.resetMotionZ();
-    movementData.step = predictedMovement.step();
+    // simulation
+    Simulation simulation = simulationProcessor.simulate(user, movementData.simulator());
+    ComplexColliderSimulationResult collider = simulation.collider();
+    movementData.onGround = collider.onGround();
+    movementData.collidedHorizontally = collider.collidedHorizontally();
+    movementData.collidedVertically = collider.collidedVertically();
+    movementData.physicsResetMotionX = collider.resetMotionX();
+    movementData.physicsResetMotionZ = collider.resetMotionZ();
+    movementData.step = collider.step();
     Timings.CHECK_PHYSICS_PROC_TOT.stop();
     Timings.CHECK_PHYSICS_EVAL.start();
-    evaluateBestSimulation(user, predictedMovement);
+    // evaluation
+    evaluateBestSimulation(user, simulation);
     Timings.CHECK_PHYSICS_EVAL.stop();
     movementData.lastKeyStrafe = movementData.keyStrafe;
     movementData.lastKeyForward = movementData.keyForward;
@@ -254,7 +253,7 @@ public final class Physics extends Check {
    * This method is too big, please refactor
    */
   @SplitMeUp
-  private void evaluateBestSimulation(User user, ComplexColliderSimulationResult expectedMovement) {
+  private void evaluateBestSimulation(User user, Simulation simulation) {
     Player player = user.player();
     MetadataBundle meta = user.meta();
     boolean spectator = player.getGameMode() == GameMode.SPECTATOR;
@@ -263,6 +262,8 @@ public final class Physics extends Check {
     ViolationMetadata violationLevelData = meta.violationLevel();
     AbilityMetadata abilityData = meta.abilities();
     BlockStateAccess blockStateAccess = user.blockShapeAccess();
+
+    ComplexColliderSimulationResult expectedMovement = simulation.collider();
     Motion context = expectedMovement.motion();
 
     int keyForward = movementData.keyForward;
@@ -334,8 +335,8 @@ public final class Physics extends Check {
     }
     if (distance > 1e-3) {
       movementData.suspiciousMovement = true;
-      ComplexColliderSimulationResult simulation = simulationProcessor.simulateWithoutKeyPress(user, selectSimulator(user));
-      Motion setbackMotion = simulation.motion();
+      Simulation otherSimulation = simulationProcessor.simulateWithoutKeyPress(user, selectSimulator(user));
+      Motion setbackMotion = otherSimulation.motion();
       predictedX = setbackMotion.motionX;
       predictedY = setbackMotion.motionY;
       predictedZ = setbackMotion.motionZ;

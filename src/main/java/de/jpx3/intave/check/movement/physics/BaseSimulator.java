@@ -32,9 +32,9 @@ import java.util.Collection;
 
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_14;
 
-public class DefaultSimulator extends Simulator {
+class BaseSimulator extends Simulator {
   @Override
-  public ComplexColliderSimulationResult performSimulation(
+  public Simulation performSimulation(
     User user, Motion motion,
     float forward, float strafe,
     boolean attackReduce, boolean sprinting,
@@ -54,6 +54,8 @@ public class DefaultSimulator extends Simulator {
     boolean elytraFlying = pose == Pose.FALL_FLYING;
     boolean swimming = pose == Pose.SWIMMING;
     boolean waterUpdate = clientData.waterUpdate();
+    forward = ((int) forward) * 0.98f;
+    strafe = ((int) strafe) * 0.98f;
     if (pose == Pose.CROUCHING || !clientData.beeUpdate() && movementData.sneaking) {
       strafe = (float) ((double) strafe * 0.3);
       forward = (float) ((double) forward * 0.3);
@@ -126,13 +128,12 @@ public class DefaultSimulator extends Simulator {
       movementData.physicsMotionY = 0;
       movementData.physicsMotionZ = 0;
     }
-
     ComplexColliderSimulationResult collisionResult = Collider.simulateComplexCollision(
       user, motion, movementData.inWeb,
       positionX, positionY, positionZ
     );
     notePossibleFlyingPacket(user, collisionResult);
-    return collisionResult;
+    return Simulation.of(user, /*temporary*/MovementConfiguration.select((int)forward,(int) strafe, attackReduce, sprinting, jumped, handActive), collisionResult);
   }
 
   private void performSimulationInWaterOfState(
@@ -290,14 +291,14 @@ public class DefaultSimulator extends Simulator {
   }
 
   void applyCollidedMotionsToContext(
-    Player player, Motion context,
+    Player player, Motion motion,
     double positionX, double positionY, double positionZ,
     double motionX, double motionY, double motionZ
   ) {
     SimpleColliderSimulationResult colliderResult = Collider.simulateSimpleCollision(player, positionX, positionY, positionZ, motionX, motionY, motionZ);
-    context.motionX = colliderResult.motionX();
-    context.motionY = colliderResult.motionY();
-    context.motionZ = colliderResult.motionZ();
+    motion.motionX = colliderResult.motionX();
+    motion.motionY = colliderResult.motionY();
+    motion.motionZ = colliderResult.motionZ();
   }
 
   @IdoNotBelongHere
@@ -438,14 +439,15 @@ public class DefaultSimulator extends Simulator {
 
     // onLanded
     if (movementData.collidedVertically) {
-      Vector collisionVector = BlockPhysics.blockLanded(
+      Motion collisionVector = BlockPhysics.blockLanded(
         user, block,
         motion.motionX, movementData.physicsMotionY, motion.motionZ
       );
       if (collisionVector != null) {
-        motion.motionX = collisionVector.getX();
-        motion.motionY = collisionVector.getY();
-        motion.motionZ = collisionVector.getZ();
+        motion.resetTo(collisionVector);
+//        motion.motionX = collisionVector.getX();
+//        motion.motionY = collisionVector.getY();
+//        motion.motionZ = collisionVector.getZ();
       } else {
         motion.motionY = 0.0;
       }
@@ -453,14 +455,15 @@ public class DefaultSimulator extends Simulator {
 
     // EntityCollidedWithBlock
     if (movementData.onGround && !movementData.sneaking) {
-      Vector collisionVector = BlockPhysics.entityCollision(
+      Motion collisionVector = BlockPhysics.entityCollision(
         user, block,
         motion.motionX, motion.motionY, motion.motionZ
       );
       if (collisionVector != null) {
-        motion.motionX = collisionVector.getX();
-        motion.motionY = collisionVector.getY();
-        motion.motionZ = collisionVector.getZ();
+        motion.resetTo(collisionVector);
+//        motion.motionX = collisionVector.getX();
+//        motion.motionY = collisionVector.getY();
+//        motion.motionZ = collisionVector.getZ();
       }
     }
 
@@ -481,16 +484,17 @@ public class DefaultSimulator extends Simulator {
         for (int z = blockPositionStartZ; z <= blockPositionEndZ; z++) {
           Location location = new Location(world, x, y, z);
           Material material = VolatileBlockAccess.typeAccess(user, world, x, y, z);
-          Vector collisionVector = BlockPhysics.entityCollision(
+          Motion collisionMotion = BlockPhysics.entityCollision(
             user, material,
             location,
             blockCollisionFrom,
             motion.motionX, motion.motionY, motion.motionZ
           );
-          if (collisionVector != null) {
-            motion.motionX = collisionVector.getX();
-            motion.motionY = collisionVector.getY();
-            motion.motionZ = collisionVector.getZ();
+          if (collisionMotion != null) {
+            motion.resetTo(collisionMotion);
+//            motion.motionX = collisionMotion.motionX();
+//            motion.motionY = collisionMotion.motionY();
+//            motion.motionZ = collisionMotion.motionZ();
           }
         }
       }

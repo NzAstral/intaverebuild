@@ -1,6 +1,5 @@
 package de.jpx3.intave.check.movement.physics;
 
-import de.jpx3.intave.player.collider.complex.ComplexColliderSimulationResult;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserLocal;
 
@@ -9,7 +8,7 @@ public final class SimulationStack {
 
   private final static int DEFAULT_DISTANCE = Integer.MAX_VALUE;
 
-  private ComplexColliderSimulationResult collisionResult;
+  private Simulation collisionResult;
   private int forward, strafe;
   private boolean jumped;
   private boolean sprinted;
@@ -32,45 +31,35 @@ public final class SimulationStack {
   }
 
   public void tryAppendToState(
-    ComplexColliderSimulationResult collisionResult,
+    Simulation simulation,
     double newDistance,
-    int forward,
-    int strafe,
-    boolean attackReduce,
-    boolean sprinted,
-    boolean jumped,
-    boolean handActive
+    MovementConfiguration movementConfiguration
   ) {
     if (newDistance < this.smallestDistance) {
-      appendToState(collisionResult, newDistance, forward, strafe, attackReduce, sprinted, jumped, handActive);
+      appendToState(simulation, newDistance, movementConfiguration);
     }
   }
 
   private void appendToState(
-    ComplexColliderSimulationResult collisionResult,
+    Simulation collisionResult,
     double newDistance,
-    int forward,
-    int strafe,
-    boolean attackReduce,
-    boolean sprinted,
-    boolean jumped,
-    boolean handActive
+    MovementConfiguration movementConfiguration
   ) {
     this.collisionResult = collisionResult;
     this.smallestDistance = newDistance;
-    this.forward = forward;
-    this.strafe = strafe;
-    this.reduced = attackReduce;
-    this.sprinted = sprinted;
-    this.jumped = jumped;
-    this.handActive = handActive;
+    this.forward = movementConfiguration.forward();
+    this.strafe = movementConfiguration.strafe();
+    this.reduced = movementConfiguration.isReducing();
+    this.sprinted = movementConfiguration.isSprinting();
+    this.jumped = movementConfiguration.isJumping();
+    this.handActive = movementConfiguration.isHandActive();
   }
 
   public boolean noMatch() {
     return collisionResult == null || this.smallestDistance == DEFAULT_DISTANCE;
   }
 
-  public ComplexColliderSimulationResult bestSimulation() {
+  public Simulation bestSimulation() {
     return collisionResult;
   }
 

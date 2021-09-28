@@ -2,7 +2,6 @@ package de.jpx3.intave.check.movement.physics;
 
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.fluid.Fluid;
-import de.jpx3.intave.block.fluid.FluidTag;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.math.SinusCache;
@@ -18,12 +17,13 @@ import org.bukkit.Material;
 
 import javax.annotation.Nullable;
 
+import static de.jpx3.intave.block.fluid.FluidTag.WATER;
 import static de.jpx3.intave.shade.ClientMathHelper.ceil;
 import static de.jpx3.intave.shade.ClientMathHelper.floor;
 
-public final class BoatSimulator extends DefaultSimulator {
+public final class BoatSimulator extends BaseSimulator {
   @Override
-  public ComplexColliderSimulationResult performSimulation(
+  public Simulation performSimulation(
     User user,
     Motion motion,
     float keyForward, float keyStrafe,
@@ -38,10 +38,10 @@ public final class BoatSimulator extends DefaultSimulator {
     updateMotion(user, motion);
     controlBoat(user, motion);
 
-    return Collider.simulateComplexCollision(
-      user, motion, movement.inWeb,
-      movement.verifiedPositionX, movement.verifiedPositionY, movement.verifiedPositionZ
+    ComplexColliderSimulationResult collision = Collider.simulateComplexCollision(
+      user, motion, movement.inWeb, movement.verifiedPositionX, movement.verifiedPositionY, movement.verifiedPositionZ
     );
+    return Simulation.of(user, /*temporary*/MovementConfiguration.select((int)keyForward,(int) keyStrafe, attackReduce, sprinting, jumped, handActive), collision);
   }
 
   private Status getBoatStatus(User user) {
@@ -78,7 +78,7 @@ public final class BoatSimulator extends DefaultSimulator {
       for (int y = minY; y < maxY; ++y) {
         for (int z = minZ; z < maxZ; ++z) {
           Fluid fluid = Fluids.fluidAt(user, x, y, z);
-          if (fluid.isIn(FluidTag.WATER)) {
+          if (fluid.isOf(WATER)) {
             float f = y + fluid.height();
             movement.waterLevel = Math.max(f, movement.waterLevel);
             flag |= boundingBox.minY < f;
@@ -105,7 +105,7 @@ public final class BoatSimulator extends DefaultSimulator {
       for (int y = minY; y < maxY; ++y) {
         for (int z = minZ; z < maxZ; ++z) {
           Fluid fluid = Fluids.fluidAt(user, x, y, z);
-          if (fluid.isIn(FluidTag.WATER) && d0 < (double) ((float) y + fluid.height())) {
+          if (fluid.isOf(WATER) && d0 < (double) ((float) y + fluid.height())) {
             if (!fluid.source()) {
               return Status.UNDER_FLOWING_WATER;
             }

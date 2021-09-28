@@ -7,16 +7,26 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserLocal;
 
 public final class Simulation {
-  private final static UserLocal<Simulation> simulationUserLocal = UserLocal.withInitial(Simulation::new);
+  private final static Simulation INVALID_SIMULATION = new Simulation(MovementConfiguration.empty(), ComplexColliderSimulationResult.invalid());
 
+  private final static UserLocal<Simulation> simulationUserLocal = UserLocal.withInitial(Simulation::new);
+  private MovementConfiguration configuration;
   private ComplexColliderSimulationResult colliderResult;
   private String details = "";
 
   private Simulation() {
-
   }
 
-  public void flush(ComplexColliderSimulationResult colliderResult) {
+  private Simulation(
+    MovementConfiguration configuration,
+    ComplexColliderSimulationResult colliderResult
+  ) {
+    this.configuration = configuration;
+    this.colliderResult = colliderResult;
+  }
+
+  public void flush(MovementConfiguration configuration, ComplexColliderSimulationResult colliderResult) {
+    this.configuration = configuration;
     this.colliderResult = colliderResult;
     this.details = "";
   }
@@ -41,9 +51,21 @@ public final class Simulation {
     return colliderResult;
   }
 
-  public static Simulation construct(User user, ComplexColliderSimulationResult colliderResult) {
+  public MovementConfiguration configuration() {
+    return configuration;
+  }
+
+  public Simulation reusableCopy() {
+    return new Simulation(configuration, colliderResult);
+  }
+
+  public static Simulation of(User user, MovementConfiguration configuration, ComplexColliderSimulationResult colliderResult) {
     Simulation simulation = simulationUserLocal.get(user);
-    simulation.flush(colliderResult);
+    simulation.flush(configuration, colliderResult);
     return simulation;
+  }
+
+  public static Simulation invalid() {
+    return INVALID_SIMULATION;
   }
 }

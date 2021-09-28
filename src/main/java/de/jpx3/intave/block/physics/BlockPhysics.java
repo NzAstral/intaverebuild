@@ -2,10 +2,10 @@ package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.annotate.Nullable;
+import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +41,7 @@ public final class BlockPhysics {
   }
 
   @Nullable
-  public static Vector entityCollision(
+  public static Motion entityCollision(
     User user,
     Material material,
     Location location, Location from,
@@ -52,7 +52,7 @@ public final class BlockPhysics {
   }
 
   @Nullable
-  public static Vector entityCollision(
+  public static Motion entityCollision(
     User user,
     Material material,
     double motionX, double motionY, double motionZ
@@ -62,7 +62,7 @@ public final class BlockPhysics {
   }
 
   @Nullable
-  public static Vector blockLanded(
+  public static Motion blockLanded(
     User user,
     Material material,
     double motionX, double motionY, double motionZ

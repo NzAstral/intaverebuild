@@ -2,12 +2,12 @@ package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.adapter.MinecraftVersions;
+import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import org.bukkit.Material;
-import org.bukkit.util.Vector;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +29,7 @@ final class BedPhysics implements BlockPhysic {
   }
 
   @Override
-  public Vector landed(User user, double motionX, double motionY, double motionZ) {
+  public Motion landed(User user, double motionX, double motionY, double motionZ) {
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     ProtocolMetadata protocolMetadata = meta.protocol();
@@ -39,7 +39,7 @@ final class BedPhysics implements BlockPhysic {
     if (motionY < 0.0) {
       motionY = -motionY * 0.66f;
     }
-    return movementData.sneaking ? null : new Vector(motionX, motionY, motionZ);
+    return movementData.sneaking ? null : new Motion(motionX, motionY, motionZ);
   }
 
   private List<Material> resolveBedMaterials() {

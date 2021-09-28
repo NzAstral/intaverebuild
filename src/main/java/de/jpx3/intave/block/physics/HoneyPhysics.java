@@ -2,11 +2,11 @@ package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.google.common.collect.ImmutableList;
+import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Vector;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ final class HoneyPhysics implements BlockPhysic {
   }
 
   @Override
-  public Vector entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
     if (doBlockPhysics(user, location, motionY)) {
       return updateMovement(user, motionX, motionY, motionZ);
     }
@@ -42,14 +42,14 @@ final class HoneyPhysics implements BlockPhysic {
     }
   }
 
-  private Vector updateMovement(User user, double motionX, double motionY, double motionZ) {
+  private Motion updateMovement(User user, double motionX, double motionY, double motionZ) {
     MovementMetadata movementData = user.meta().movement();
     movementData.artificialFallDistance = 0.0F;
     if (motionY< -0.13D) {
       double d0 = -0.05D / motionY;
-      return new Vector(motionX * d0, -0.05D, motionZ * d0);
+      return new Motion(motionX * d0, -0.05D, motionZ * d0);
     } else {
-      return new Vector(motionX, -0.05D, motionZ);
+      return new Motion(motionX, -0.05D, motionZ);
     }
   }
 

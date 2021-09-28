@@ -6,12 +6,12 @@ import de.jpx3.intave.block.fluid.Fluid;
 import de.jpx3.intave.block.fluid.FluidTag;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.shade.BoundingBox;
+import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +31,12 @@ final class FluidPhysics implements BlockPhysic {
   }
 
   @Override
-  public Vector entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityCollidedWithBlock(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
     ProtocolMetadata clientData = user.meta().protocol();
     if (clientData.waterUpdate()) {
       MovementMetadata movementData = user.meta().movement();
       Fluid fluid = Fluids.fluidAt(user, location);
-      if (fluid.isIn(FluidTag.LAVA)) {
+      if (fluid.isOf(FluidTag.LAVA)) {
         float f = (float) location.getY() + fluid.height();
         BoundingBox boundingBox = movementData.boundingBox();
         if (boundingBox.minY < (double) f || (double) f > boundingBox.maxY) {

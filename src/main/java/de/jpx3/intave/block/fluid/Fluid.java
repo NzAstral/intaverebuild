@@ -19,7 +19,7 @@ public final class Fluid {
     return fluidTag;
   }
 
-  public boolean isIn(FluidTag fluidTag) {
+  public boolean isOf(FluidTag fluidTag) {
     return !empty && this.fluidTag == fluidTag;
   }
 

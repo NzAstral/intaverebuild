@@ -12,9 +12,9 @@ import org.bukkit.util.Vector;
 import static de.jpx3.intave.shade.ClientMathHelper.cos;
 import static de.jpx3.intave.shade.ClientMathHelper.sin;
 
-public final class ElytraSimulator extends DefaultSimulator {
+final class ElytraSimulator extends BaseSimulator {
   @Override
-  public ComplexColliderSimulationResult performSimulation(
+  public Simulation performSimulation(
     User user, Motion motion,
     float forward, float strafe,
     boolean attackReduce, boolean sprinting,
@@ -66,7 +66,7 @@ public final class ElytraSimulator extends DefaultSimulator {
       positionX, positionY, positionZ
     );
     notePossibleFlyingPacket(user, collisionResult);
-    return collisionResult;
+    return Simulation.of(user, /*temporary*/MovementConfiguration.select((int)forward,(int) strafe, attackReduce, sprinting, jumped, handActive), collisionResult);
   }
 
   private void tryRelinkFlyingPosition(User user, Motion context) {

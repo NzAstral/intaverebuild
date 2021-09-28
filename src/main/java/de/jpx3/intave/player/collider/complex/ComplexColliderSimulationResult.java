@@ -8,20 +8,20 @@ public final class ComplexColliderSimulationResult {
     new Motion(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE), false, false, false, false, false, false
   );
 
-  private final Motion context;
+  private final Motion motion;
   private final boolean onGround, collidedHorizontally, collidedVertically;
   private final boolean resetMotionX, resetMotionZ;
   private final boolean step;
 
   public ComplexColliderSimulationResult(
-    Motion context, boolean onGround,
+    Motion motion, boolean onGround,
     boolean collidedHorizontally, boolean collidedVertically,
     boolean resetMotionX, boolean resetMotionZ, boolean step
   ) {
-    if (context == null) {
+    if (motion == null) {
       throw new IllegalArgumentException("Context cannot be null");
     }
-    this.context = context;
+    this.motion = motion;
     this.onGround = onGround;
     this.collidedHorizontally = collidedHorizontally;
     this.collidedVertically = collidedVertically;
@@ -31,11 +31,11 @@ public final class ComplexColliderSimulationResult {
   }
 
   public double accuracy(Motion motionVector) {
-    return MathHelper.distanceOf(context, motionVector);
+    return MathHelper.distanceOf(motion, motionVector);
   }
 
   public Motion motion() {
-    return context;
+    return motion;
   }
 
   public boolean onGround() {

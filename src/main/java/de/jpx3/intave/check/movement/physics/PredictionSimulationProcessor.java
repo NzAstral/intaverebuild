@@ -1,14 +1,11 @@
 package de.jpx3.intave.check.movement.physics;
 
 import de.jpx3.intave.annotate.Relocate;
-import de.jpx3.intave.annotate.refactoring.IdoNotBelongHere;
 import de.jpx3.intave.diagnostic.IterativeStudy;
 import de.jpx3.intave.diagnostic.KeyPressStudy;
 import de.jpx3.intave.diagnostic.timings.Timings;
 import de.jpx3.intave.math.Hypot;
-import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.dispatch.AttackDispatcher;
-import de.jpx3.intave.player.collider.complex.ComplexColliderSimulationResult;
 import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.InventoryMetadata;
@@ -18,18 +15,29 @@ import de.jpx3.intave.user.meta.ProtocolMetadata;
 
 @Relocate
 public final class PredictionSimulationProcessor implements SimulationProcessor {
+
+  /*
+  * this class is rather messy
+  * please refactor
+  * */
+  private final boolean itemUsageReset;
+
+  public PredictionSimulationProcessor(boolean itemUsageReset) {
+    this.itemUsageReset = itemUsageReset;
+  }
+
   @Override
-  public ComplexColliderSimulationResult simulate(User user, Simulator simulator) {
+  public Simulation simulate(User user, Simulator simulator) {
     boolean keyDependent = simulator.affectedByMovementKeys();
     return keyDependent ? performKeySimulation(user, simulator) : simulateWithoutKeyPress(user, simulator);
   }
 
-  private ComplexColliderSimulationResult performKeySimulation(User user, Simulator simulator) {
+  private Simulation performKeySimulation(User user, Simulator simulator) {
     MovementMetadata movementData = user.meta().movement();
     return movementData.externalKeyApply ? performKeySimulationFromInput(user, simulator) : performKeyComparisonSimulation(user, simulator);
   }
 
-  private ComplexColliderSimulationResult performKeySimulationFromInput(User user, Simulator simulator) {
+  private Simulation performKeySimulationFromInput(User user, Simulator simulator) {
     MovementMetadata movementData = user.meta().movement();
     int clientInputKey = movementData.clientForwardKey;
     int clientStrafeKey = movementData.clientStrafeKey;
@@ -44,9 +52,9 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
   private final static double REQUIRED_ACCURACY_FOR_QUICK_PROC_EXIT = 0.002;
   private final static double REQUIRED_ACCURACY_FOR_FLYING_PROC_EXIT = 0.02;
 
-  private ComplexColliderSimulationResult performKeyComparisonSimulation(User user, Simulator simulator) {
+  private Simulation performKeyComparisonSimulation(User user, Simulator simulator) {
     MovementMetadata movementData = user.meta().movement();
-    ComplexColliderSimulationResult simulation;
+    Simulation simulation;
     double simulationAccuracy;
     boolean biasedSimulationFailed;
 
@@ -69,29 +77,29 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
     //
     // perform iterative simulation procedure
     //
-    boolean iterativeAllowed = !user.meta().inventory().inventoryOpen();
+    boolean iterativeAllowed = /* misplaced - please solve this otherwise */ !user.meta().inventory().inventoryOpen();
     if (biasedSimulationFailed && iterativeAllowed) {
-      SimulationStack iterative = simulateMovementIterative(user, simulator);
-      simulation = iterative.bestSimulation();
-      applyIterativeSimulationTo(user, iterative);
+      SimulationStack simulationStack = simulateMovementIterative(user, simulator);
+      simulation = simulationStack.bestSimulation();
+      enterIterativeSimulationStack(user, simulationStack);
     }
     KeyPressStudy.enterKeyPress(movementData.keyForward, movementData.keyStrafe);
     return simulation;
   }
 
-  @IdoNotBelongHere
-  private void applyIterativeSimulationTo(User user, SimulationStack iterativeResult) {
+  private void enterIterativeSimulationStack(User user, SimulationStack iterativeResult) {
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     InventoryMetadata inventoryData = meta.inventory();
     if (movementData.pastPlayerAttackPhysics == 0 && movementData.sprinting && !iterativeResult.reduced()) {
       movementData.ignoredAttackReduce = true;
     }
+    /* misplaced - please solve this otherwise */
     boolean movementSuggestsHandIsActive = iterativeResult.handActive();
     boolean packetsSuggestsHandIsActive = inventoryData.handActive();
     if (packetsSuggestsHandIsActive && !movementSuggestsHandIsActive) {
       boolean releaseHandConditions = Hypot.fast(movementData.motionX(), movementData.motionZ()) > 0.3 || movementData.lastTeleport >= 2;
-      if (releaseHandConditions) {
+      if (releaseHandConditions && itemUsageReset) {
         user.meta().inventory().releaseItemNextTick();
       }
     }
@@ -101,23 +109,26 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
   }
 
   @Override
-  public ComplexColliderSimulationResult simulateWithKeyPress(
+  public Simulation simulateWithKeyPress(
     User user, Simulator simulator, int forward, int strafe, boolean jumped
   ) {
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     Motion motion = movementData.motionProcessorContext.copy();
     motion.resetTo(movementData);
+    MovementConfiguration configuration = MovementConfiguration.select(
+      forward, strafe,
+      false, movementData.sprintingAllowed(),
+      jumped, meta.inventory().handActive()
+    );
     return simulator.performSimulation(
-      user, motion,
-      forward, strafe, false, movementData.sprintingAllowed(), jumped,
-      meta.inventory().handActive()
+      user, motion, configuration
     );
   }
 
   private final static double REQUIRED_PREDICTION_ACCURACY_FOR_PRED_BIAS_PROCEED = 0.1;
 
-  private ComplexColliderSimulationResult simulateMovementKeyPredictionBiased(User user, Simulator simulator) {
+  private Simulation simulateMovementKeyPredictionBiased(User user, Simulator simulator) {
     Timings.CHECK_PHYSICS_PROC_BIA.start();
     Timings.CHECK_PHYSICS_PROC_PRED_BIA.start();
     MovementMetadata movementData = user.meta().movement();
@@ -150,34 +161,45 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
       motionVector.resetTo(movementData);
       Timings.CHECK_PHYSICS_PROC_BIA.stop();
       Timings.CHECK_PHYSICS_PROC_PRED_BIA.stop();
-      return ComplexColliderSimulationResult.invalid();
+      return Simulation.invalid();
     }
-
+    MovementConfiguration configuration = MovementConfiguration.empty();
+    // keys
     int directionPrediction = directionFrom(differenceX, differenceZ, yaw);
-    int keyForward = forwardKeyFrom(directionPrediction);
-    int keyStrafe = strafeKeyFrom(directionPrediction);
-    boolean handActive = inventoryData.handActive();
-    boolean attackReduce = !AttackDispatcher.REDUCING_DISABLED && movementData.sprintingAllowed() && movementData.pastPlayerAttackPhysics == 0;
-    if (sprinting && keyForward != 1) {
-      keyForward = 0;
-      keyStrafe = 0;
+    configuration = configuration.withKeyPress(forwardKeyFrom(directionPrediction), strafeKeyFrom(directionPrediction));
+    // jump
+    if (jumped) {
+      configuration = configuration.withJump();
     }
+    // active hand
+    if (inventoryData.handActive()) {
+      configuration = configuration.withActiveHand();
+    }
+    // reducing
+    if (!AttackDispatcher.REDUCING_DISABLED && movementData.sprintingAllowed() && movementData.pastPlayerAttackPhysics == 0) {
+      configuration = configuration.withReducing();
+    }
+    // block omisprint
+    if (sprinting && configuration.forward() != 1) {
+      configuration = configuration.withoutKeypress();
+    } else if (sprinting) {
+      configuration = configuration.withSprinting();
+    }
+    // block inventory move
     if (inventoryOpen) {
-      keyForward = 0;
-      keyStrafe = 0;
+      configuration = configuration.withoutSprinting();
+      configuration = configuration.withoutKeypress();
     }
-    float moveForward = keyForward * 0.98f;
-    float moveStrafe = keyStrafe * 0.98f;
     movementData.physicsJumped = jumped;
     motionVector.resetTo(movementData);
-    movementData.keyForward = keyForward;
-    movementData.keyStrafe = keyStrafe;
+    movementData.keyForward = configuration.forward();
+    movementData.keyStrafe = configuration.strafe();
     movementData.refreshFriction(sprinting);
-    ComplexColliderSimulationResult simulationResult =
-      simulator.performSimulation(user, motionVector, moveForward, moveStrafe, attackReduce, sprinting, jumped, handActive);
+    Simulation simulation = simulator.performSimulation(user, motionVector, configuration);
+//    user.player().sendMessage(configuration + " -> " + simulation.accuracy(movementData.motion()));
     Timings.CHECK_PHYSICS_PROC_PRED_BIA.stop();
     Timings.CHECK_PHYSICS_PROC_BIA.stop();
-    return simulationResult;
+    return simulation;
   }
 
   private int directionFrom(double differenceX, double differenceZ, float yaw) {
@@ -221,7 +243,7 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
     return direction == -1 ? 0 : strafeKeys[direction];
   }
 
-  private ComplexColliderSimulationResult simulateMovementLastKeyBiased(User user, Simulator simulator) {
+  private Simulation simulateMovementLastKeyBiased(User user, Simulator simulator) {
     Timings.CHECK_PHYSICS_PROC_BIA.start();
     Timings.CHECK_PHYSICS_PROC_LK_BIA.start();
     MovementMetadata movementData = user.meta().movement();
@@ -236,37 +258,48 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
     if (!inventoryOpen && keyForward == movementData.keyForward && keyStrafe == movementData.keyStrafe) {
       Timings.CHECK_PHYSICS_PROC_LK_BIA.stop();
       Timings.CHECK_PHYSICS_PROC_BIA.stop();
-      return ComplexColliderSimulationResult.invalid();
+      return Simulation.invalid();
     }
-
-    boolean jumped = false;
+    MovementConfiguration configuration = MovementConfiguration.empty();
+    // keys
+    configuration = configuration.withKeyPress(keyForward, keyStrafe);
+    // reducing
+    if (!AttackDispatcher.REDUCING_DISABLED && movementData.sprintingAllowed() && user.meta().movement().pastPlayerAttackPhysics == 0) {
+      configuration = configuration.withReducing();
+    }
+    boolean sprinting = movementData.sprintingAllowed();
+    // jump
     if (movementData.lastOnGround && !movementData.denyJump()) {
       double motionY = movementData.motionY();
-      jumped = Math.abs(motionY - 0.2) < 1e-5 || motionY == movementData.jumpMotion();
+      if (Math.abs(motionY - 0.2) < 1e-5 || motionY == movementData.jumpMotion()) {
+        configuration = configuration.withJump();
+      }
     }
     if (movementData.inWater && !movementData.denyJump()) {
-      jumped = movementData.motionY() > 0.0;
+      if (movementData.motionY() > 0.0) {
+        configuration = configuration.withJump();
+      }
     }
-
-    boolean handActive = inventoryData.handActive();
-    boolean attackReduce = !AttackDispatcher.REDUCING_DISABLED && movementData.sprintingAllowed() && user.meta().movement().pastPlayerAttackPhysics == 0;
-    boolean sprinting = movementData.sprintingAllowed();
+    // hand active
+    if (inventoryData.handActive()) {
+      configuration = configuration.withActiveHand();
+    }
+    // block invalid sprint
     if (sprinting && keyForward != 1) {
-      keyForward = 0;
-      keyStrafe = 0;
+      configuration = configuration.withoutKeypress();
+    } else if (sprinting) {
+      configuration = configuration.withSprinting();
     }
+    // block inventory move
     if (inventoryData.inventoryOpen()) {
-      keyForward = 0;
-      keyStrafe = 0;
+      configuration = configuration.withoutKeypress();
     }
-    float moveForward = keyForward * 0.98f;
-    float moveStrafe = keyStrafe * 0.98f;
-    movementData.physicsJumped = jumped;
+    movementData.physicsJumped = configuration.isJumping();
     motion.resetTo(movementData);
-    movementData.keyForward = keyForward;
-    movementData.keyStrafe = keyStrafe;
+    movementData.keyForward = configuration.forward();
+    movementData.keyStrafe = configuration.strafe();
     movementData.refreshFriction(sprinting);
-    ComplexColliderSimulationResult simulationResult = simulator.performSimulation(user, motion, moveForward, moveStrafe, attackReduce, sprinting, jumped, handActive);
+    Simulation simulationResult = simulator.performSimulation(user, motion, configuration);
     Timings.CHECK_PHYSICS_PROC_LK_BIA.stop();
     Timings.CHECK_PHYSICS_PROC_BIA.stop();
     return simulationResult;
@@ -336,17 +369,16 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
                 continue;
               }
               iterativeRuns++;
-              double distance = simulateIterativeState(
-                simulator,
-                user,
-                movementData,
-                inventoryData,
+              MovementConfiguration movementConfiguration = MovementConfiguration.select(
+                keyForward, keyStrafe, attackReduce, sprinting, jumped, useItemState
+              );
+              Simulation simulation = simulateAndAppend(
+                user, simulator,
                 simulationStack,
-                keyForward, keyStrafe,
-                attackReduce, sprinting,
-                jumped, useItemState,
+                movementConfiguration,
                 false
               );
+              double distance = simulation.accuracy(movementData.motion());
               if (distance < nearestKeyDistance) {
                 nearestKeyDistance = distance;
                 nearestForwardKey = keyForward;
@@ -361,18 +393,10 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
       }
     }
     if (simulationStack.noMatch()) {
-      simulateIterativeState(
-        simulator,
-        user,
-        movementData,
-        inventoryData,
+      simulateAndAppend(
+        user, simulator,
         simulationStack,
-        0,
-        0,
-        false,
-        false,
-        false,
-        false,
+        MovementConfiguration.empty(),
         true
       );
     }
@@ -384,61 +408,25 @@ public final class PredictionSimulationProcessor implements SimulationProcessor 
     return simulationStack;
   }
 
-  private static String shortenBoolean(boolean bool) {
-    return bool ? "1" : "0";
-  }
-
-  private static String resolveKeysFromInput(int forward, int strafe) {
-    String key = "";
-    if (forward == 1) {
-      key += "W";
-    } else if (forward == -1) {
-      key += "S";
-    }
-    if (strafe == 1) {
-      key += "A";
-    } else if (strafe == -1) {
-      key += "D";
-    }
-    return key;
-  }
-
-  private double compareReceivedMotionWithMotion(User user, Motion context) {
-    MovementMetadata movementData = user.meta().movement();
-    return MathHelper.distanceOf(
-      context.motionX, context.motionY, context.motionZ,
-      movementData.motionX(), movementData.motionY(), movementData.motionZ()
-    );
-  }
-
-  private double simulateIterativeState(
-    Simulator simulator,
+  private Simulation simulateAndAppend(
     User user,
-    MovementMetadata movementData,
-    InventoryMetadata inventoryData,
+    Simulator simulator,
     SimulationStack result,
-    int keyForward,
-    int keyStrafe,
-    boolean attackReduce,
-    boolean jumped,
-    boolean sprinting,
-    boolean handActive,
+    MovementConfiguration movementConfiguration,
     boolean forceApply
   ) {
-    Motion motionVector = movementData.motionProcessorContext;
-    float moveForward = keyForward * 0.98f;
-    float moveStrafe = keyStrafe * 0.98f;
-    motionVector.resetTo(movementData);
-    ComplexColliderSimulationResult collisionResult = simulator.performSimulation(
-      user, motionVector, moveForward, moveStrafe,
-      attackReduce, sprinting, jumped, handActive
+    MovementMetadata movementData = user.meta().movement();
+    InventoryMetadata inventoryData = user.meta().inventory();
+    Motion motion = movementData.motionProcessorContext;
+    motion.resetTo(movementData);
+    Simulation simulation = simulator.performSimulation(
+      user, motion, movementConfiguration
     );
-    Motion predictedMotion = collisionResult.motion();
-    double distance = compareReceivedMotionWithMotion(user, predictedMotion);
-    if (forceApply || inventoryData.handActive() == handActive || distance < 0.001) {
-      result.tryAppendToState(collisionResult, distance, keyForward, keyStrafe, attackReduce, sprinting, jumped, handActive);
+    double distance = simulation.accuracy(movementData.motion());
+    if (forceApply || inventoryData.handActive() == movementConfiguration.isHandActive() || distance < 0.001) {
+      simulation = simulation.reusableCopy();
+      result.tryAppendToState(simulation, distance, movementConfiguration);
     }
-    return distance;
+    return simulation;
   }
-
 }

@@ -2,10 +2,10 @@ package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.annotate.Nullable;
+import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Vector;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface BlockPhysic {
 
   // Called from #doBlockCollisions
   @Nullable
-  default Vector entityCollidedWithBlock(
+  default Motion entityCollidedWithBlock(
     User user,
     Location location, Location from,
     double motionX, double motionY, double motionZ
@@ -23,12 +23,12 @@ public interface BlockPhysic {
   }
 
   @Nullable
-  default Vector entityCollidedWithBlock(User user, double motionX, double motionY, double motionZ) {
+  default Motion entityCollidedWithBlock(User user, double motionX, double motionY, double motionZ) {
     return null;
   }
 
   @Nullable
-  default Vector landed(User user, double motionX, double motionY, double motionZ) {
+  default Motion landed(User user, double motionX, double motionY, double motionZ) {
     return null;
   }
 
