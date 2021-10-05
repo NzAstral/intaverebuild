@@ -28,8 +28,9 @@ public abstract class Movement extends HeadRotationMovement {
   public Location location;
   public Location prevLocation;
   public boolean onGround = false;
+  public boolean lastOnGround = false;
   public boolean collidedHorizontally;
-  public int lastOnGround = 0;
+  public int airTicks = 0;
   public boolean sprinting = false, sneaking = false;
   public double velocityX = 0.0, velocityY = 0.0, velocityZ = 0.0;
   public boolean velocityChanged = false;
@@ -60,9 +61,9 @@ public abstract class Movement extends HeadRotationMovement {
     }
 
     if (this.onGround) {
-      this.lastOnGround = 0;
+      this.airTicks = 0;
     } else {
-      this.lastOnGround++;
+      this.airTicks++;
     }
     move(parentLocation);
     double startMotionX = this.motionX;
@@ -72,14 +73,18 @@ public abstract class Movement extends HeadRotationMovement {
       motionX, motionY, motionZ
     );
     if (doBlockCollisions()) {
-//      this.motionX = result.motionX();
+      boolean collideHorizontally = collideHorizontally();
+      if (collideHorizontally) {
+        this.motionX = result.motionX();
+        this.motionZ = result.motionZ();
+      }
       this.motionY = result.motionY();
-//      this.motionZ = result.motionZ();
       if (this.velocityChanged) {
         this.velocityChanged = false;
       }
       this.collidedHorizontally = result.motionX() != motionX || result.motionZ() != motionZ;
     }
+    this.lastOnGround = this.onGround;
     this.onGround = result.onGround();
 
     // Renew location
@@ -99,7 +104,11 @@ public abstract class Movement extends HeadRotationMovement {
     updateHeadRotation(this.motionX, this.motionZ, distanceMoved(), parentLocation.getYaw());
     this.location.setYaw(this.rotationYaw);
     this.location.setPitch(this.rotationPitch);
+
+    endTick();
   }
+
+  public void endTick() {}
 
   private SimpleColliderSimulationResult collide(BoundingBox boundingBox, double motionX, double motionY, double motionZ) {
     List<BoundingBox> collisionBoxes = resolveCollisions(location.getWorld(), boundingBox.expand(motionX, motionY, motionZ));
@@ -211,5 +220,9 @@ public abstract class Movement extends HeadRotationMovement {
 
   public boolean moveOnTopOfPlayer() {
     return System.currentTimeMillis() - this.moveOnTopOfPlayerTime < 7000;
+  }
+
+  public boolean collideHorizontally() {
+    return false;
   }
 }

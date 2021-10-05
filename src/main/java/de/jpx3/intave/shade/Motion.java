@@ -51,6 +51,13 @@ public final class Motion {
     return Hypot.fast(motionX - other.motionX, motionZ - other.motionZ);
   }
 
+  public Motion add(double x, double y, double z) {
+    motionX += x;
+    motionY += y;
+    motionZ += z;
+    return this;
+  }
+
   public void resetTo(Motion motion) {
     reset(motion.motionX, motion.motionY, motion.motionZ);
   }

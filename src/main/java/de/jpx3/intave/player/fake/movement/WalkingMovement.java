@@ -47,7 +47,7 @@ public final class WalkingMovement extends Movement {
     double startMotionZ = this.motionZ;
     this.motionX = (expectedLocation.getX() - this.location.getX()) * MOVE_MULTIPLIER;
     this.motionZ = (expectedLocation.getZ() - this.location.getZ()) * MOVE_MULTIPLIER;
-    if (lastOnGround == 1) {
+    if (airTicks == 1) {
       this.motionX *= 0.6;
       this.motionZ *= 0.6;
     }

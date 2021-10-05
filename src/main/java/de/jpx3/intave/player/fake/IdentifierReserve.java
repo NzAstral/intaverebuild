@@ -23,7 +23,8 @@ public final class IdentifierReserve {
 
   static {
     try {
-      Field entityCountField = Lookup.serverClass("Entity").getDeclaredField("entityCount");
+      String fieldName = MinecraftVersions.VER1_17_0.atOrAbove() ? "b" : "entityCount";
+      Field entityCountField = Lookup.serverClass("Entity").getDeclaredField(fieldName);
       ENTITY_COUNT_FIELD = ensureAccessibility(entityCountField);
     } catch (NoSuchFieldException e) {
       throw new IntaveInternalException(e);
