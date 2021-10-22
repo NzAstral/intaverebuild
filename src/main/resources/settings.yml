@@ -39,7 +39,7 @@ check:
     disable-reducing: false
 
     confidence-thresholds:
-      "!!":B
+      "!!":
         25:
           - "intave internals sendnotify &c{player}&7/{trust-color}&7 has been removed for attacking suspiciously (!!) (heuristics)"
           - "intave internals collectivekick {player} &cYou have been kicked, as an account with your ip address was removed from the game"
