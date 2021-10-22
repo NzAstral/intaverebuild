@@ -102,7 +102,7 @@ public final class SimulationEvaluator {
     }
 
     boolean criticalWeb = receivedMotionY > -0.01
-      && movementData.inWeb
+      && movementData.pastInWeb < 10
       && !movementData.inWater
       && !movementData.inLava()
       && movementData.positionY % 1 > 0.1

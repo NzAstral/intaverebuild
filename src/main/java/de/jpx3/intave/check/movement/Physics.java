@@ -1,6 +1,5 @@
 package de.jpx3.intave.check.movement;
 
-import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.check.MitigationStrategy;
@@ -377,7 +376,7 @@ public final class Physics extends Check {
           colliderName = "world border";
         } else {
           String prefix = (currentlyInOverride ? "emulated" : "") + " " + (altered ? "altered" : "") + " ";
-          Material type = VolatileBlockAccess.typeAccess(user,block.getLocation());
+          Material type = VolatileBlockAccess.typeAccess(user, block.getLocation());
           String typeName = shortenTypeName(type);
           colliderName = prefix + typeName + " block";
         }
@@ -392,42 +391,6 @@ public final class Physics extends Check {
         Modules.violationProcessor().processViolation(violation);
         Vector emulationMotion = new Vector(predictedX, predictedY, predictedZ);
         Modules.mitigate().movement().emulationSetBack(player, emulationMotion, 2, true);
-      } else {
-        // Phase Check
-        if (!movementData.currentlyInBlock) {
-          movementData.currentlyInBlock = true;
-          movementData.phaseIntersectingBoundingBoxes = ImmutableList.copyOf(intersectionBoundingBoxesCurrent);
-        }
-        // Prevents players from walking in other blocks
-        boolean startBoundingBoxInList = false;
-        for (BoundingBox intersectingBoundingBox : movementData.phaseIntersectingBoundingBoxes) {
-          boolean containsAny = containsBoundingBoxAny(intersectionBoundingBoxesCurrent, intersectingBoundingBox);
-          if (containsAny) {
-            startBoundingBoxInList = true;
-            break;
-          }
-        }
-        if (!startBoundingBoxInList) {
-          movementData.invalidMovement = true;
-          if (!IntaveControl.IGNORE_CACHE_REFRESH_ON_SIMULATION_FAULT) {
-            blockStateAccess.invalidateAll();
-          }
-          BoundingBox boundingBox = intersectionBoundingBoxesCurrent.get(0);
-          double blockPositionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
-          double blockPositionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
-          double blockPositionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
-          Block block = VolatileBlockAccess.blockAccess(player.getWorld(), blockPositionX, blockPositionY, blockPositionZ);
-
-          String message = "moved into " + shortenTypeName(BlockTypeAccess.typeAccess(block, player)) + " block whilst moving in another block";
-          boolean multipleBoxes = intersectionBoundingBoxesCurrent.size() > 1;
-          String details = (multipleBoxes ? intersectionBoundingBoxesCurrent.size() : "one") + " box" + (multipleBoxes ? "es" : "");
-          Violation violation = Violation.builderFor(Physics.class)
-            .forPlayer(player).withMessage(message).withDetails(details).withVL(0)
-            .build();
-          Modules.violationProcessor().processViolation(violation);
-          BoundingBox startPhaseBoundingBox = BoundingBox.fromPosition(user, movementData.verifiedLocation());
-          Modules.mitigate().movement().emulationPushOutOfBlock(player, startPhaseBoundingBox, predictedX, predictedY, predictedZ);
-        }
       }
     }
 
