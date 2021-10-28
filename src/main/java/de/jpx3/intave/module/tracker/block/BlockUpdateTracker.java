@@ -132,10 +132,15 @@ public final class BlockUpdateTracker extends Module {
 
     World world = player.getWorld();
     FeedbackCallback<Object> process = (player1, target) -> {
-      BlockStateAccess blockStateAccess = UserRepository.userOf(player1).blockStates();
+      User user = UserRepository.userOf(player1);
+      BlockStateAccess blockStateAccess = user.blockStates();
+      Location verifiedLocation = user.meta().movement().verifiedLocation();
       for (int i = 0; i < blockPositions.size(); i++) {
         BlockPosition blockPosition = blockPositions.get(i);
         WrappedBlockData blockData = blockDataList.get(i);
+        if (distance(verifiedLocation, blockPosition) < 2) {
+          user.meta().movement().pastNearbyCollisionInaccuracy = 0;
+        }
         Material material = blockData.getType();
         int variant = BlockVariantAccess.variantAccess(blockData);
         blockStateAccess.override(world, blockPosition.getX(), blockPosition.getY(), blockPosition.getZ(), material, variant);

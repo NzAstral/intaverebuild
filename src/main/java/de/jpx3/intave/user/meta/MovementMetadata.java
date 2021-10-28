@@ -100,6 +100,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean canResetMotion;
   private double jumpMotion;
   private int pastClientFlyingPacket, pastFlyingPacketAccurate;
+  public int pastNearbyCollisionInaccuracy;
   private float aiMoveSpeed, jumpMovementFactor;
   public float frictionMultiplier;
   public float genericMovementSpeedAttribute;
@@ -652,6 +653,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   public void increaseFlyingPacket() {
     pastFlyingPacketAccurate++;
     pastClientFlyingPacket++;
+    pastNearbyCollisionInaccuracy++;
   }
 
   private Material blockOnPosition() {

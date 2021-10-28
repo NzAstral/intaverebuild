@@ -37,8 +37,14 @@ public final class SimulationEvaluator {
     boolean accountedSkippedMovement = movementData.recentlyEncounteredFlyingPacket(2);
     double legitimateDeviation = accountedSkippedMovement ? 0.01 : 0.00001;
 
+    if (accountedSkippedMovement && movementData.pastNearbyCollisionInaccuracy == 0) {
+      if (Math.abs(movementData.motionX()) < 0.05 && Math.abs(movementData.motionZ()) < 0.05 && movementData.motionY() < 0 && movementData.motionY() > -0.4) {
+        legitimateDeviation = 0.15;
+      }
+    }
+
     if (pose.height(user) < 1 && receivedMotionY <= 0 && accountedSkippedMovement) {
-      legitimateDeviation = 0.1;
+      legitimateDeviation = Math.max(legitimateDeviation, 0.1);
     }
 
     // MotionY calculations with sin/cos (FastMath affected)
@@ -249,6 +255,9 @@ public final class SimulationEvaluator {
         legitimateDeviation = lessThanExpected ? 0.115 : 0.005;
       } else {
         legitimateDeviation = 0.05;
+      }
+      if (movementData.pastNearbyCollisionInaccuracy == 0) {
+        legitimateDeviation = Math.max(legitimateDeviation, 0.05);
       }
     }
 

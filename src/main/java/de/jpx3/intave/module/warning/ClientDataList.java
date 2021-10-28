@@ -8,6 +8,7 @@ import de.jpx3.intave.resource.CachedResource;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -37,13 +38,17 @@ public final class ClientDataList {
   }
 
   private static List<ClientData> parseClientData(String rawJson) {
-    List<ClientData> content = new ArrayList<>();
-    JsonReader jsonReader = new JsonReader(new StringReader(rawJson));
-    jsonReader.setLenient(true);
-    JsonArray jsonArray = new JsonParser().parse(jsonReader).getAsJsonArray();
-    for (JsonElement jsonElement : jsonArray) {
-      content.add(ClientData.parseFrom(jsonElement));
+    try {
+      List<ClientData> content = new ArrayList<>();
+      JsonReader jsonReader = new JsonReader(new StringReader(rawJson));
+      jsonReader.setLenient(true);
+      JsonArray jsonArray = new JsonParser().parse(jsonReader).getAsJsonArray();
+      for (JsonElement jsonElement : jsonArray) {
+        content.add(ClientData.parseFrom(jsonElement));
+      }
+      return content;
+    } catch (Exception exception) {
+      return Collections.emptyList();
     }
-    return content;
   }
 }

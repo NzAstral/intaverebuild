@@ -1,5 +1,6 @@
 package de.jpx3.intave.module.violation;
 
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.access.check.event.IntaveCommandExecutionEvent;
 import de.jpx3.intave.access.check.event.IntaveViolationEvent;
 import de.jpx3.intave.access.player.trust.TrustFactor;
@@ -9,6 +10,7 @@ import de.jpx3.intave.check.CheckStatistics;
 import de.jpx3.intave.connect.proxy.protocol.packets.IntavePacketOutKicked;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.MathHelper;
+import de.jpx3.intave.metric.ServerHealth;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.violation.placeholder.TextContext;
@@ -173,6 +175,9 @@ public final class ViolationProcessor extends Module {
       LOGGER_MESSAGE_LAYOUT, player.getName(), trustFactor,
       message, details, vlAdded, vlAfterViolation, checkName
     );
+    if (IntaveControl.GOMME_MODE) {
+      consoleMessage += " | TPS: "+ ServerHealth.stringFormattedTick() +" Ping: "+user.latency()+"ms";
+    }
     plugin.logger().violation(consoleMessage);
   }
 

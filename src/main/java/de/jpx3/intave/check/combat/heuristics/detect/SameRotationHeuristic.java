@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.jpx3.intave.check.combat.heuristics.Anomaly.AnomalyOption.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
 public final class SameRotationHeuristic extends MetaCheckPart<Heuristics, SameRotationHeuristic.SameRotationHeuristicMeta> {
@@ -201,13 +202,13 @@ public final class SameRotationHeuristic extends MetaCheckPart<Heuristics, SameR
   private int options() {
     int options;
     if (IntaveControl.GOMME_MODE) {
-      options = Anomaly.AnomalyOption.DELAY_32s;
+      options = DELAY_32s;
     } else if (isPartner()) {
-      options = Anomaly.AnomalyOption.DELAY_64s;
+      options = DELAY_64s;
     } else {
-      options = Anomaly.AnomalyOption.DELAY_128s;
+      options = DELAY_128s;
     }
-
+    options |= LIMIT_4;
     return options;
   }
 

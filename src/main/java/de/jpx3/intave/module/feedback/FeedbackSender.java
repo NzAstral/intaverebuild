@@ -190,7 +190,7 @@ public final class FeedbackSender extends Module {
     return feedbackEntry;
   }
 
-  private synchronized short findAvailableTransactionIdFor(Player player) {
+  private /* synchronized (is already always sync) */ short findAvailableTransactionIdFor(Player player) {
     User user = UserRepository.userOf(player);
     ConnectionMetadata synchronizeData = user.meta().connection();
     Map<Short, FeedbackRequest<?>> transactionFeedBackMap = synchronizeData.transactionShortKeyMap();
