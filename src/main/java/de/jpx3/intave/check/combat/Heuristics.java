@@ -99,6 +99,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     appendCheckPart(new DoubleEntityActionHeuristic(this));
     appendCheckPart(new SprintOnAttackHeuristic(this));
     appendCheckPart(new JumpVelocityHeuristic(this));
+    appendCheckPart(new CivbreakHeuristic(this));
 //    appendCheckPart(new TestHeuristic(this));
   }
 
