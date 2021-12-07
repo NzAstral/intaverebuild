@@ -12,11 +12,11 @@ import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.annotate.DispatchTarget;
 import de.jpx3.intave.block.access.BlockInteractionAccess;
-import de.jpx3.intave.block.access.BlockVariantAccess;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.block.state.BlockStateAccess;
 import de.jpx3.intave.block.type.BlockTypeAccess;
+import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
 import de.jpx3.intave.check.MetaCheck;
 import de.jpx3.intave.check.world.interaction.Interaction;
@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.*;
+import static de.jpx3.intave.check.world.interaction.InteractionEmulator.EmulationResult.FAILED;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
 public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.InteractionMeta> {
@@ -323,7 +324,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     if (!raytraceFailed) {
       decrementer.decrement(user, 0.25);
       InteractionEmulator.EmulationResult emulationResult = interactionEmulator.emulate(interaction);
-      boolean emulationFailed = emulationResult == InteractionEmulator.EmulationResult.FAILED;
+      boolean emulationFailed = emulationResult == FAILED;
       flag = emulationFailed;
       flagEnforce = emulationFailed;
     } else {
