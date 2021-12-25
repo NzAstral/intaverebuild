@@ -76,7 +76,8 @@ public final class IntaveAccessService {
 
       @Override
       @Native
-      public void subscribeINX(BiConsumer<Object, Object> biConsumer) {}
+      public void subscribeINX(BiConsumer<Object, Object> biConsumer) {
+      }
 
       @Override
       public PlayerAccess player(Player player) {

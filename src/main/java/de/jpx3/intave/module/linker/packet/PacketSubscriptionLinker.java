@@ -273,7 +273,7 @@ public final class PacketSubscriptionLinker extends Module {
     }
   }
 
-  public static <T> T[] clone(T[] array) {
+  private static <T> T[] clone(T[] array) {
     return array == null ? null : array.clone();
   }
 

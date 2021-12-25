@@ -28,6 +28,10 @@ public class NativeVector {
     this.zCoord = z;
   }
 
+  public Position toPosition() {
+    return new Position(xCoord, yCoord, zCoord);
+  }
+
   public Vector convertToBukkitVec() {
     return new Vector(xCoord, yCoord, zCoord);
   }

@@ -6,10 +6,7 @@ import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.shade.BlockPosition;
 import de.jpx3.intave.shade.Position;
 import de.jpx3.intave.user.User;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 
 @Relocate
@@ -38,6 +35,14 @@ public final class VolatileBlockAccess {
 
   private static Block fallbackBlock(World world) {
     Location spawnLocation = world.getSpawnLocation();
+    if (!world.isChunkLoaded(spawnLocation.getBlockX(), spawnLocation.getBlockZ())) {
+      Chunk[] loadedChunks = world.getLoadedChunks();
+      if (loadedChunks.length > 0) {
+        Chunk anyChunk = loadedChunks[0];
+        return world.getBlockAt(anyChunk.getX() << 4, -1, anyChunk.getZ() << 4);
+      }
+      // well.. xd
+    }
     return world.getBlockAt(spawnLocation.getBlockX(), -1, spawnLocation.getBlockZ());
   }
 
@@ -45,8 +50,8 @@ public final class VolatileBlockAccess {
     return typeAccess(user, location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
   }
 
-  public static Material typeAccess(User user, Position position) {
-    return typeAccess(user, user.player().getWorld(), position.blockX(), position.blockY(), position.blockZ());
+  public static Material typeAccess(User user, World world, Position position) {
+    return typeAccess(user, world, position.blockX(), position.blockY(), position.blockZ());
   }
 
   public static Material typeAccess(User user, int blockX, int blockY, int blockZ) {

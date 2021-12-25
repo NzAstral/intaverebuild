@@ -14,6 +14,7 @@ import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.tracker.entity.EntityShade;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.*;
+import de.jpx3.intave.world.raytrace.Raytrace;
 import de.jpx3.intave.world.raytrace.Raytracing;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -154,14 +155,14 @@ public final class AttackRequiredHeuristic extends MetaCheckPart<Heuristics, Att
     boolean alternativePositionY = clientData.protocolVersion() == VER_1_8;
     boolean hasAlwaysMouseDelayFix = clientData.protocolVersion() >= 314;
     // mouse delay fix
-    Raytracing.EntityInteractionRaytrace distanceOfResult = Raytracing.blockConstraintEntityRaytrace(
+    Raytrace distanceOfResult = Raytracing.blockConstraintEntityRaytrace(
       player,
       entity, alternativePositionY,
       movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ,
       rotationYaw, movementData.rotationPitch,
       expandHitbox
     );
-    if (distanceOfResult.reach > blockReachDistance) {
+    if (distanceOfResult.reach() > blockReachDistance) {
       return false;
     }
     if (!hasAlwaysMouseDelayFix) {
@@ -174,7 +175,7 @@ public final class AttackRequiredHeuristic extends MetaCheckPart<Heuristics, Att
         expandHitbox
       );
     }
-    return distanceOfResult.reach <= blockReachDistance;
+    return distanceOfResult.reach() <= blockReachDistance;
   }
 
   private float reachDistance(boolean creative) {

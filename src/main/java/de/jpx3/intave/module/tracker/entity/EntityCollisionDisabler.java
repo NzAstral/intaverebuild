@@ -30,11 +30,14 @@ public final class EntityCollisionDisabler extends Module {
     }
     PacketContainer packet = event.getPacket();
     if (INDIRECT_SCOREBOARD_ACCESS) {
-      Optional<InternalStructure> optionalStructure = packet.getOptionalStructures().read(0);
-      if (optionalStructure.isPresent()) {
-        InternalStructure structure = optionalStructure.get();
-        StructureModifier<String> strings = structure.getStrings();
-        applyNoCollisionRule(strings);
+      //noinspection OptionalAssignedToNull
+      if (packet.getSpecificModifier(Optional.class).read(0) != null) {
+        Optional<InternalStructure> optionalStructure = packet.getOptionalStructures().read(0);
+        if (optionalStructure.isPresent()) {
+          InternalStructure structure = optionalStructure.get();
+          StructureModifier<String> strings = structure.getStrings();
+          applyNoCollisionRule(strings);
+        }
       }
     } else {
       applyNoCollisionRule(packet.getStrings());

@@ -11,6 +11,7 @@ import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.tracker.entity.EntityShade;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.*;
+import de.jpx3.intave.world.raytrace.Raytrace;
 import de.jpx3.intave.world.raytrace.Raytracing;
 import org.bukkit.entity.Player;
 
@@ -84,7 +85,7 @@ public final class RotationModuloResetHeuristic extends MetaCheckPart<Heuristics
     MovementMetadata movementData = meta.movement();
     ProtocolMetadata clientData = meta.protocol();
     boolean alternativePositionY = clientData.protocolVersion() == ProtocolMetadata.VER_1_8;
-    Raytracing.EntityInteractionRaytrace rayTraceResult = Raytracing.blockIgnoringEntityRaytrace(
+    Raytrace raytraceTraceResult = Raytracing.blockIgnoringEntityRaytrace(
       user.player(),
       attackData.lastAttackedEntity(),
       alternativePositionY,
@@ -95,7 +96,7 @@ public final class RotationModuloResetHeuristic extends MetaCheckPart<Heuristics
       movementData.rotationPitch,
       0.1f
     );
-    return rayTraceResult.reach != 10;
+    return raytraceTraceResult.reach() != 10;
   }
 
   public static final class RotationModuloResetHeuristicMeta extends CheckCustomMetadata {

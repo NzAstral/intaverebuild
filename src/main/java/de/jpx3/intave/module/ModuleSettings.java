@@ -53,15 +53,15 @@ public final class ModuleSettings {
     }
 
     public Builder requireProtocolLib() {
-      return requires(Requirements.protocolLib());
+      return withRequirement(Requirements.protocolLib());
     }
 
-    public Builder requires(Requirement requirement) {
+    public Builder withRequirement(Requirement requirement) {
       this.requirement = requirement;
       return this;
     }
 
-    public Builder andMustFulfill(Requirement requirement) {
+    public Builder andRequire(Requirement requirement) {
       if (this.requirement == null) {
         this.requirement = Requirements.none();
       }
@@ -69,7 +69,7 @@ public final class ModuleSettings {
       return this;
     }
 
-    public Builder orCanFulfill(Requirement requirement) {
+    public Builder orRequire(Requirement requirement) {
       if (this.requirement == null) {
         throw new IllegalStateException("Can not have or operation on empty requirement");
       }

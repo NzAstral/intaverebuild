@@ -4,7 +4,6 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.reflect.StructureModifier;
 import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.adapter.MinecraftVersions;
-import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.entity.size.HitboxSize;
 import de.jpx3.intave.entity.type.EntityTypeData;
 import de.jpx3.intave.math.Hypot;
@@ -24,8 +23,8 @@ public class EntityShade {
   this type of entity ensures that the synchrosized packets are handled correctly.
   */
   private static EntityShade DESTROYED_ENTITY;
-  private final static boolean NEW_POSITION_PROCESSING_1_9 = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0);
-  private final static boolean NEW_POSITION_PROCESSING_1_14 = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_14_0);
+  private final static boolean NEW_POSITION_PROCESSING_1_9 = MinecraftVersions.VER1_9_0.atOrAbove();
+  private final static boolean NEW_POSITION_PROCESSING_1_14 = MinecraftVersions.VER1_14_0.atOrAbove();
   public EntityTypeData typeData;
 
   private final int entityId;

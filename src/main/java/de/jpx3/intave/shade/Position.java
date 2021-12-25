@@ -1,6 +1,8 @@
 package de.jpx3.intave.shade;
 
-public final class Position {
+import java.io.Serializable;
+
+public final class Position implements Serializable {
   public double xCoordinate, yCoordinate, zCoordinate;
 
   public Position() {
@@ -39,6 +41,12 @@ public final class Position {
   private int floor(double num) {
     int floor = (int)num;
     return (double)floor == num ? floor : floor - (int)(Double.doubleToRawLongBits(num) >>> 63);
+  }
+  public double distanceTo(Position position) {
+    double d0 = position.xCoordinate - this.xCoordinate;
+    double d1 = position.yCoordinate - this.yCoordinate;
+    double d2 = position.zCoordinate - this.zCoordinate;
+    return (float) Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
   }
 
   public Position with(Motion motion) {

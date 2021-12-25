@@ -18,12 +18,12 @@ public final class ModuleLoader {
   public void setup() {
     // linker
     prepareModule("de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriptionLinker", ModuleSettings.builder().doNotLinkSubscriptions().bootAt(BootSegment.STAGE_3).build());
-    prepareModule("de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker", ModuleSettings.builder().doNotLinkSubscriptions().requireProtocolLib().requires(Requirements.intaveEnabled()).bootAt(BootSegment.STAGE_6).build());
+    prepareModule("de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker", ModuleSettings.builder().doNotLinkSubscriptions().requireProtocolLib().andRequire(Requirements.intaveEnabled()).bootAt(BootSegment.STAGE_6).build());
 
     ModuleSettings defaultBoot = ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_7).build();
     ModuleSettings lateBoot = ModuleSettings.builder().requireProtocolLib().bootAt(BootSegment.STAGE_10).build();
 
-    // feedbacks
+    // feedback
     prepareModule("de.jpx3.intave.module.feedback.FeedbackSender", defaultBoot);
     prepareModule("de.jpx3.intave.module.feedback.FeedbackReceiver", defaultBoot);
 
@@ -60,7 +60,7 @@ public final class ModuleLoader {
   }
 
   private void prepareModule(String moduleClass) {
-    pendingModuleClasses.put(moduleClass, ModuleSettings.def());
+    prepareModule(moduleClass, ModuleSettings.def());
   }
 
   private void prepareModule(String moduleClass, ModuleSettings settings) {
@@ -73,13 +73,16 @@ public final class ModuleLoader {
       .peek(this::initiate).collect(Collectors.toList());
   }
 
-  private boolean readyToLoad(BootSegment segment, ModuleSettings moduleSettings) {
-    return segment.equals(moduleSettings.bootSegment()) && moduleSettings.requirementsFulfilled();
+  private Collection<String> classPick(
+    Predicate<ModuleSettings> predicate
+  ) {
+    return pendingModuleClasses.entrySet().stream()
+      .filter(entry -> predicate.test(entry.getValue()))
+      .map(Map.Entry::getKey).collect(Collectors.toList());
   }
 
-  private void initiate(Module module) {
-    module.setPlugin(IntavePlugin.singletonInstance());
-    module.setModuleSettings(pendingModuleClasses.remove(module.getClass().getName()));
+  private boolean readyToLoad(BootSegment segment, ModuleSettings moduleSettings) {
+    return segment.equals(moduleSettings.bootSegment()) && moduleSettings.requirementsFulfilled();
   }
 
   @SuppressWarnings("unchecked")
@@ -98,11 +101,8 @@ public final class ModuleLoader {
     }
   }
 
-  private Collection<String> classPick(
-    Predicate<ModuleSettings> predicate
-  ) {
-    return pendingModuleClasses.entrySet().stream()
-      .filter(entry -> predicate.test(entry.getValue()))
-      .map(Map.Entry::getKey).collect(Collectors.toList());
+  private void initiate(Module module) {
+    module.setPlugin(IntavePlugin.singletonInstance());
+    module.setModuleSettings(pendingModuleClasses.remove(module.getClass().getName()));
   }
 }

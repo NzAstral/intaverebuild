@@ -155,9 +155,9 @@ public final class v8Raytracer implements Raytracer {
   @PatchyTranslateParameters
   private IBlockData typeOf(Player player, WorldServer world, BlockPosition blockPosition) {
     BlockStateAccess blockStateAccess = UserRepository.userOf(player).blockStates();
-    BlockState shape = blockStateAccess.overrideOf(blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
-    if (shape != null) {
-      return Block.getById(shape.type().getId()).fromLegacyData(shape.variantIndex());
+    BlockState state = blockStateAccess.overrideOf(blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
+    if (state != null) {
+      return Block.getById(state.type().getId()).fromLegacyData(state.variantIndex());
     } else {
       return world.getType(blockPosition);
     }

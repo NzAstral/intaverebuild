@@ -57,6 +57,8 @@ public final class Modules {
     return find(FeedbackReceiver.class);
   }
 
+  // categories
+
   private final static LinkerCategory LINKER_CATEGORY = new LinkerCategory();
   private final static DispatchCategory DISPATCH_CATEGORY = new DispatchCategory();
   private final static TrackerCategory TRACKER_CATEGORY = new TrackerCategory();

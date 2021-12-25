@@ -25,6 +25,8 @@ import de.jpx3.intave.user.meta.AttackMetadata;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
+import de.jpx3.intave.world.raytrace.EntityRaytraceBlockConstraint;
+import de.jpx3.intave.world.raytrace.Raytrace;
 import de.jpx3.intave.world.raytrace.Raytracing;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -219,27 +221,27 @@ public final class RotationSnapHeuristic extends MetaCheckPart<Heuristics, Rotat
 
         if (lastEntityPosition != null && tick != null) {
           BoundingBox lastBoundingBox = EntityShade.entityBoundingBoxFrom(lastEntityPosition, entityShade);
-          Raytracing.EntityInteractionRaytrace last = Raytracing.entityRaytrace(
+          Raytrace last = Raytracing.entityRaytrace(
             player,
             lastBoundingBox,
             0,
             tick.posX, tick.posY, tick.posZ,
             tick.yaw, tick.pitch,
             0.1f,
-            Raytracing.EntityRaytraceBlockConstraint.IGNORE_BLOCKS
+            EntityRaytraceBlockConstraint.IGNORE_BLOCKS
           );
 
-          Raytracing.EntityInteractionRaytrace now = Raytracing.entityRaytrace(
+          Raytrace raytrace = Raytracing.entityRaytrace(
             player,
             entityShade.entityBoundingBox(),
             0,
             movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ,
             movementData.lastRotationYaw, movementData.lastRotationPitch,
             0.1f,
-            Raytracing.EntityRaytraceBlockConstraint.IGNORE_BLOCKS
+            EntityRaytraceBlockConstraint.IGNORE_BLOCKS
           );
 
-          changedLookToEntity = (last.reach != 10) != (now.reach != 10);
+          changedLookToEntity = (last.reach() != 10) != (raytrace.reach() != 10);
           if (changedLookToEntity) {
             description += " lookEn";
           }

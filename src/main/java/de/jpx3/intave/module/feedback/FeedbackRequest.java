@@ -10,8 +10,8 @@ public final class FeedbackRequest<T> {
   private final long time;
   private final long num;
 
-  FeedbackRequest(FeedbackCallback<T> Callback, FeedbackTracker tracker, T obj, short key, long num) {
-    this.callback = Callback;
+  FeedbackRequest(FeedbackCallback<T> callback, FeedbackTracker tracker, T obj, short key, long num) {
+    this.callback = callback;
     this.tracker = tracker;
     this.obj = obj;
     this.key = key;

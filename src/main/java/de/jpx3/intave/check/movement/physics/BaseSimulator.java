@@ -85,7 +85,7 @@ class BaseSimulator extends Simulator {
       if (clientData.waterUpdate() && inWater) {
         Position lastPosition = environment.lastPosition();
         // Geht nicht anders
-        Material material = VolatileBlockAccess.typeAccess(user, lastPosition);
+        Material material = VolatileBlockAccess.typeAccess(user, user.player().getWorld(), lastPosition);
         int blockData = VolatileBlockAccess.variantIndexAccess(user, lastPosition);
         float heightPercentage = LegacyWaterflow.resolveLiquidHeightPercentage(blockData);
         if (environment.onGround()) {

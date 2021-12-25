@@ -53,7 +53,9 @@ public final class MovementEmulator extends Module {
     this.teleportMethodContainer = new InternalTeleportApplier();
   }
 
-  private final static Set<TeleportCause> BANNED_TELEPORT_CAUSES = new HashSet<>(Arrays.asList(NETHER_PORTAL /* Intave */, UNKNOWN /* Vanilla "AntiCheat" */));
+  private final static Set<TeleportCause> BANNED_TELEPORT_CAUSES = new HashSet<>(
+    Arrays.asList(NETHER_PORTAL /* Intave */, UNKNOWN /* Vanilla "AntiCheat" */)
+  );
 
   @BukkitEventSubscription
   public void uponTeleport(PlayerTeleportEvent teleport) {
@@ -102,72 +104,72 @@ public final class MovementEmulator extends Module {
     proceedEmulationTick(player, motion, ticks, ticks, cancellable);
   }
 
-  public void emulationPushOutOfBlock(
-    Player player, BoundingBox boundingBox,
-    double motionX, double motionY, double motionZ
-  ) {
-    User user = UserRepository.userOf(player);
-    ViolationMetadata violationLevelData = user.meta().violationLevel();
+//  public void emulationPushOutOfBlock(
+//    Player player, BoundingBox boundingBox,
+//    double motionX, double motionY, double motionZ
+//  ) {
+//    User user = UserRepository.userOf(player);
+//    ViolationMetadata violationLevelData = user.meta().violationLevel();
+//
+//    if (violationLevelData.isInActiveTeleportBundle) {
+//      return;
+//    }
+//
+//    violationLevelData.isInActiveTeleportBundle = true;
+//    MovementMetadata movementData = user.meta().movement();
+//    movementData.physicsMotionX = motionX;
+//    movementData.physicsMotionY = motionY;
+//    movementData.physicsMotionZ = motionZ;
+//    movementData.setBoundingBox(boundingBox);
+//    proceedPushOutOfBlockEmulationTick(player);
+//  }
 
-    if (violationLevelData.isInActiveTeleportBundle) {
-      return;
-    }
-
-    violationLevelData.isInActiveTeleportBundle = true;
-    MovementMetadata movementData = user.meta().movement();
-    movementData.physicsMotionX = motionX;
-    movementData.physicsMotionY = motionY;
-    movementData.physicsMotionZ = motionZ;
-    movementData.setBoundingBox(boundingBox);
-    proceedPushOutOfBlockEmulationTick(player);
-  }
-
-  private void proceedPushOutOfBlockEmulationTick(Player player) {
-    if (!Bukkit.isPrimaryThread()) {
-      Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 0);
-      return;
-    }
-
-    User user = UserRepository.userOf(player);
-    if (!user.hasPlayer()) {
-      return;
-    }
-
-    MetadataBundle meta = user.meta();
-    MovementMetadata movementData = meta.movement();
-    ViolationMetadata violationLevelData = meta.violationLevel();
-    BoundingBox boundingBox = movementData.boundingBox();
-
-    if (!violationLevelData.isInActiveTeleportBundle) {
-      return;
-    }
-
-    boolean boundingBoxIntersection = Collision.present(user.player(), boundingBox);
-    if (boundingBoxIntersection) {
-      double motionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
-      double motionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
-      double motionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
-      Vector pushVector = resolvePushVector(player, motionX, motionY, motionZ);
-
-      if (pushVector.length() < 0.005) {
-        violationLevelData.isInActiveTeleportBundle = false;
-        return;
-      }
-
-      Location location = movementData.verifiedLocation().clone().add(pushVector);
-      teleport(player, location);
-
-      if (IntaveControl.DEBUG_EMULATION) {
-        player.sendMessage(ChatColor.DARK_PURPLE + "[E/] Push out of blocks emulation (? remaining) with " + MathHelper.formatMotion(pushVector));
-      }
-      Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 1);
-    } else {
-      if (IntaveControl.DEBUG_EMULATION) {
-        player.sendMessage(ChatColor.DARK_PURPLE + "[E-] Player is no longer inside blocks");
-      }
-      violationLevelData.isInActiveTeleportBundle = false;
-    }
-  }
+//  private void proceedPushOutOfBlockEmulationTick(Player player) {
+//    if (!Bukkit.isPrimaryThread()) {
+//      Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 0);
+//      return;
+//    }
+//
+//    User user = UserRepository.userOf(player);
+//    if (!user.hasPlayer()) {
+//      return;
+//    }
+//
+//    MetadataBundle meta = user.meta();
+//    MovementMetadata movementData = meta.movement();
+//    ViolationMetadata violationLevelData = meta.violationLevel();
+//    BoundingBox boundingBox = movementData.boundingBox();
+//
+//    if (!violationLevelData.isInActiveTeleportBundle) {
+//      return;
+//    }
+//
+//    boolean boundingBoxIntersection = Collision.present(user.player(), boundingBox);
+//    if (boundingBoxIntersection) {
+//      double positionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+//      double positionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
+//      double positionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+//      Vector pushVector = resolvePushVector(player, positionX, positionY, positionZ);
+//
+//      if (pushVector.length() < 0.005) {
+//        violationLevelData.isInActiveTeleportBundle = false;
+//        return;
+//      }
+//
+//      Location location = movementData.verifiedLocation().clone().add(pushVector);
+//      teleport(player, location);
+//
+//      if (IntaveControl.DEBUG_EMULATION) {
+//        player.sendMessage(ChatColor.DARK_PURPLE + "[E/] Push out of blocks emulation (? remaining) with " + MathHelper.formatMotion(pushVector));
+//      }
+//      Synchronizer.synchronizeDelayed(() -> proceedPushOutOfBlockEmulationTick(player), 1);
+//    } else {
+//      if (IntaveControl.DEBUG_EMULATION) {
+//        player.sendMessage(ChatColor.DARK_PURPLE + "[E-] Player is no longer inside blocks");
+//      }
+//      violationLevelData.isInActiveTeleportBundle = false;
+//    }
+//  }
 
   private void proceedEmulationTick(
     Player player,
@@ -224,7 +226,7 @@ public final class MovementEmulator extends Module {
       // fixes stuck in block below, please remove and fix me differently
       futurePosition.subtract(0, 0.02, 0);
       boundingBox = BoundingBox.fromPosition(user, futurePosition);
-      futurePosition.add(0, Collision.nonePresent(player, boundingBox) ? 0.03 : 0.02, 0);
+      futurePosition.add(0, Collision.nonePresent(player, boundingBox) ? 0.03 : 0.0201, 0);
       boundingBox = BoundingBox.fromPosition(user, futurePosition);
 
       teleport(player, futurePosition);
@@ -254,10 +256,10 @@ public final class MovementEmulator extends Module {
       boundingBox = BoundingBox.fromPosition(user, futurePosition);
       boolean boundingBoxIntersection = Collision.present(user.player(), boundingBox);
       if (boundingBoxIntersection) {
-        double motionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
-        double motionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
-        double motionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
-        Vector pushVector = resolvePushVector(player, motionX, motionY, motionZ);
+        double positionX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+        double positionY = (boundingBox.minY + boundingBox.maxY) / 2.0;
+        double positionZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+        Vector pushVector = resolvePushVector(player, positionX, positionY, positionZ);
         Location location = futurePosition.add(pushVector);
         teleport(player, location);
       } else {

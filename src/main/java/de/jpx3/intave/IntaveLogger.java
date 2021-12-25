@@ -118,8 +118,8 @@ public final class IntaveLogger extends PluginLogger {
   }
 
   public void commandExecution(String command) {
-    printLine("[Intave] Issued server command /" + ChatColor.stripColor(command));
     command = ChatColor.stripColor(command);
+    printLine("[Intave] Issued server command /" + command);
     logToFile("(EXE) " + command);
   }
 

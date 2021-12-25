@@ -60,7 +60,7 @@ Raytracing {
    * Calculates the reach with and without mouse delay fix and returns the smallest calculated reach
    * @return
    */
-  public static EntityInteractionRaytrace doubleMDFBlockConstraintEntityRaytrace(
+  public static Raytrace doubleMDFBlockConstraintEntityRaytrace(
     Player player, EntityShade entity, boolean alternativePositionY,
     double lastPositionX, double lastPositionY, double lastPositionZ,
     float lastRotationYaw,
@@ -70,14 +70,14 @@ Raytracing {
 //    float rotationYaw = movementData.rotationYaw % 360;
 
     // mouse delay fix
-    Raytracing.EntityInteractionRaytrace distanceOfResult = blockConstraintEntityRaytrace(
+    Raytrace distanceOfResult = blockConstraintEntityRaytrace(
       player,
       entity, alternativePositionY,
       lastPositionX, lastPositionY, lastPositionZ,
       rotationYaw, rotationPitch,
       expandHitbox
     );
-    if (withoutMouseDelayFix && distanceOfResult.reach > blockReachDistance && rotationYaw != lastRotationYaw) {
+    if (withoutMouseDelayFix && distanceOfResult.reach() > blockReachDistance && rotationYaw != lastRotationYaw) {
       // normal
       distanceOfResult = blockConstraintEntityRaytrace(
         player,
@@ -94,7 +94,7 @@ Raytracing {
   /**
    * @param expandBoundingBox should be "0.1f" for a default hitbox
    */
-  public static EntityInteractionRaytrace blockConstraintEntityRaytrace(
+  public static Raytrace blockConstraintEntityRaytrace(
     Player player, EntityShade entity,
     boolean useAlternativePositionY,
     double prevPosX, double prevPosY, double prevPosZ,
@@ -115,7 +115,7 @@ Raytracing {
   /**
    * @param expandBoundingBox should be "0.1f" for a default hitbox
    */
-  public static EntityInteractionRaytrace blockIgnoringEntityRaytrace(
+  public static Raytrace blockIgnoringEntityRaytrace(
     Player player, EntityShade entity,
     boolean useAlternativePositionY,
     double prevPosX, double prevPosY, double prevPosZ,
@@ -140,7 +140,7 @@ Raytracing {
    * @return distance the distance between the entity and the eyes of the player 0 means the player is inside of the
    * entity -1 means the player hit outside of the hitbox of the entity greater than 0 means the reach of the player
    */
-  public static EntityInteractionRaytrace entityRaytrace(
+  public static Raytrace entityRaytrace(
     Player player,
     BoundingBox entityBoundingBox,
     double alternativeYDifference,
@@ -194,7 +194,7 @@ Raytracing {
     }
 
     Timings.SERVICE_RAYTRACER_ENTITY.stop();
-    return new EntityInteractionRaytrace(lastHitVec, lastReach);
+    return Raytrace.ofNative(eyeVector, lastHitVec, lastReach);
   }
 
   private static NativeVector wrappedVectorForRotation(float pitch, float prevYaw, boolean fastMath) {
@@ -203,15 +203,6 @@ Raytracing {
     float var5 = -SinusCache.cos(-pitch * 0.017453292f, fastMath);
     float var6 = SinusCache.sin(-pitch * 0.017453292f, fastMath);
     return new NativeVector(var4 * var5, var6, var3 * var5);
-  }
-
-  public static class EntityInteractionRaytrace {
-    public final NativeVector hitVec;
-    public final double reach;
-    public EntityInteractionRaytrace(NativeVector hitVec, double distance) {
-      this.hitVec = hitVec;
-      this.reach = distance;
-    }
   }
 
   private static NativeVector positionEyes(Player player, double prevPosX, double prevPosY, double prevPosZ) {
@@ -286,8 +277,4 @@ Raytracing {
     return (gameMode == GameMode.CREATIVE) ? 5.0 : 4.5;
   }
 
-  public enum EntityRaytraceBlockConstraint {
-    IGNORE_BLOCKS,
-    ACCEPT_BLOCKS,
-  }
 }

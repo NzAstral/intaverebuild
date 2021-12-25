@@ -3,7 +3,7 @@ package de.jpx3.intave.module.violation.placeholder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 public final class Placeholders {
@@ -16,7 +16,7 @@ public final class Placeholders {
 
   public static String replacePlaceholders(
     String initialString,
-    List<PlaceholderContext> context
+    Collection<? extends PlaceholderContext> context
   ) {
     return replacePlaceholders(initialString, context.toArray(new PlaceholderContext[0]));
   }
@@ -58,11 +58,6 @@ public final class Placeholders {
       globalContext.putAll(context.replacements());
     }
     Map<String, String> immutableContextMap = ImmutableMap.copyOf(globalContext);
-    return new PlaceholderContext() {
-      @Override
-      public Map<String, String> replacements() {
-        return immutableContextMap;
-      }
-    };
+    return () -> immutableContextMap;
   }
 }
