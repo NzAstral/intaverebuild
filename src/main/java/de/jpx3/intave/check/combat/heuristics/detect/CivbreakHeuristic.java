@@ -40,7 +40,7 @@ public final class CivbreakHeuristic extends MetaCheckPart<Heuristics, CivbreakH
     
     // Note: isMining should set to false on every PlayerDigType except START_DESTROY_BLOCK
   
-    player.sendMessage("" + playerDigType);
+//    player.sendMessage("" + playerDigType);
     
     if (playerDigType == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK) {
       meta.isMining = true;
@@ -48,7 +48,7 @@ public final class CivbreakHeuristic extends MetaCheckPart<Heuristics, CivbreakH
     if (playerDigType == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK) {
       if(user.meta().protocol().protocolVersion() < ProtocolMetadata.VER_1_14) {
         if (!meta.isMining) {
-          player.sendMessage("cancel");
+//          player.sendMessage("cancel");
           event.setCancelled(true);
         }
       } else {
