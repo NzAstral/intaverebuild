@@ -151,18 +151,18 @@ class BaseSimulator extends Simulator {
     float yawSine, float yawCosine
   ) {
     Player player = user.player();
-    float f2 = 0.02F;
-    float f3 = Enchantments.resolveDepthStriderModifier(player);
-    if (f3 > 3.0F) {
-      f3 = 3.0F;
+    float friction = 0.02F;
+    float depthStrider = Enchantments.resolveDepthStriderModifier(player);
+    if (depthStrider > 3.0F) {
+      depthStrider = 3.0F;
     }
     if (!environment.lastOnGround()) {
-      f3 *= 0.5F;
+      depthStrider *= 0.5F;
     }
-    if (f3 > 0.0F) {
-      f2 += (environment.aiMoveSpeed(sprinting) - f2) * f3 / 3.0F;
+    if (depthStrider > 0.0F) {
+      friction += (environment.aiMoveSpeed(sprinting) - friction) * depthStrider / 3.0F;
     }
-    performRelativeMoveSimulationOfState(context, f2, yawSine, yawCosine, moveForward, moveStrafe);
+    performRelativeMoveSimulationOfState(context, friction, yawSine, yawCosine, moveForward, moveStrafe);
   }
 
   private void performLavaSimulationOfState(
@@ -201,7 +201,7 @@ class BaseSimulator extends Simulator {
     float moveForward, float moveStrafe
   ) {
     float f = moveStrafe * moveStrafe + moveForward * moveForward;
-    if (f >= 1.0E-4F) {
+    if (f >= 0.0001f) {
       f = (float) Math.sqrt(f);
       f = friction / Math.max(1.0f, f);
       moveStrafe *= f;

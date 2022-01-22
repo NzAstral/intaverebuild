@@ -255,10 +255,10 @@ public final class MovementMetadata implements SimulationEnvironment {
       sprintResetNextTick = false;
     }
     if (hasMovement) {
-      StructureModifier<Double> modifier = packet.getDoubles();
-      positionX = modifier.read(0);
-      positionY = modifier.read(1);
-      positionZ = modifier.read(2);
+      StructureModifier<Double> position = packet.getDoubles();
+      positionX = position.read(0);
+      positionY = position.read(1);
+      positionZ = position.read(2);
       blockOnPosition = VolatileBlockAccess.typeAccess(user, player.getWorld(), positionX, positionY - frictionPosSubtraction, positionZ);
       motionX = positionX - verifiedPositionX;
       motionY = positionY - verifiedPositionY;
@@ -278,12 +278,13 @@ public final class MovementMetadata implements SimulationEnvironment {
     lastRotationYaw = rotationYaw;
     lastRotationPitch = rotationPitch;
     if (hasRotation) {
-      StructureModifier<Float> modifier = packet.getFloat();
-      rotationYaw = modifier.read(0);
-      rotationPitch = modifier.read(1);
+      StructureModifier<Float> rotation = packet.getFloat();
+      rotationYaw = rotation.read(0);
+      rotationPitch = rotation.read(1);
       lookVector = vectorForRotation(rotationYaw, rotationPitch);
-      yawSine = sin(rotationYaw * (float) Math.PI / 180.0F);
-      yawCosine = cos(rotationYaw * (float) Math.PI / 180.0F);
+      float rotationYawInRadians = rotationYaw * (float) Math.PI / 180.0F;
+      yawSine = sin(rotationYawInRadians);
+      yawCosine = cos(rotationYawInRadians);
     }
     recheckWebStateFromLastTick();
     updateEntityMovement();
