@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static de.jpx3.intave.math.MathHelper.minmax;
 import static de.jpx3.intave.shade.Direction.Axis.*;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.NETHER_PORTAL;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.UNKNOWN;
@@ -479,6 +480,10 @@ public final class MovementEmulator extends Module {
     BoundingBox entityBoundingBox,
     double motionX, double motionY, double motionZ
   ) {
+    motionX = minmax(-4, motionX, 4);
+    motionY = minmax(-4, motionY, 4);
+    motionZ = minmax(-4, motionZ, 4);
+
     BlockShape collisionBox = Collision.collisionShape(player, entityBoundingBox.expand(motionX, motionY, motionZ));
 
     // motion y

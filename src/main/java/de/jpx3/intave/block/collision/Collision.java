@@ -30,6 +30,9 @@ import static de.jpx3.intave.shade.ClientMathHelper.floor;
 @Relocate
 @DoNotFlowObfuscate
 public final class Collision {
+  // usually we collide with 8 blocks, so a limit of 256 comes with a very big margin
+  private static final int COLLISION_LIMIT = 256;
+
   public static BlockShape collisionShape(Player player, BoundingBox playerBoundingBox) {
     int minX = floor(playerBoundingBox.minX);
     int maxX = floor(playerBoundingBox.maxX);
@@ -50,9 +53,14 @@ public final class Collision {
     } else if (!outsideBorderLast && !outsideBorderCurrent) {
       movementData.outsideBorder = true;
     }
+    int blocksRemaining = COLLISION_LIMIT;
+    exit:
     for (int x = minX; x <= maxX; ++x) {
       for (int z = minZ; z <= maxZ; ++z) {
         for (int y = ystart; y <= maxY; ++y) {
+          if (blocksRemaining-- <= 0) {
+            break exit;
+          }
           BlockShape resolve = stateAccess.shapeAt(x, y, z);
           Material material = stateAccess.typeAt(x, y, z);
           if (CollisionModifiers.isModified(material)) {
@@ -102,9 +110,14 @@ public final class Collision {
     } else if (!outsideBorderLast && !outsideBorderCurrent) {
       movementData.outsideBorder = true;
     }
+    int blockRemaining = COLLISION_LIMIT;
+    exit:
     for (int x = minX; x <= maxX; ++x) {
       for (int z = minZ; z <= maxZ; ++z) {
         for (int y = ystart; y <= maxY; ++y) {
+          if (blockRemaining-- <= 0) {
+            break exit;
+          }
           BlockShape shape = blockStates.shapeAt(x, y, z);
           Material material = blockStates.typeAt(x, y, z);
           if (CollisionModifiers.isModified(material)) {
@@ -133,9 +146,14 @@ public final class Collision {
     int minZ = floor(playerBox.minZ);
     int maxZ = floor(playerBox.maxZ);
     int ystart = Math.max(minY - 1, WorldHeight.LOWER_WORLD_LIMIT);
+    int blockRemaining = COLLISION_LIMIT;
+    exit:
     for (int x = minX; x <= maxX; ++x) {
       for (int z = minZ; z <= maxZ; ++z) {
         for (int y = ystart; y <= maxY; ++y) {
+          if (blockRemaining-- <= 0) {
+            break exit;
+          }
           Block block = VolatileBlockAccess.blockAccess(world, x, y, z);
           Material type = BlockTypeAccess.typeAccess(block, player);
           int variant = BlockVariantAccess.variantAccess(block);
@@ -177,6 +195,8 @@ public final class Collision {
     }
     BlockStateAccess stateAccess = user.blockStates();
     World world = player.getWorld();
+    int blockRemaining = COLLISION_LIMIT;
+    exit:
     // this looks 1000x slower than it actually is
     for (int chunkx = minX >> 4; chunkx <= maxX - 1 >> 4; ++chunkx) {
       int chunkXPos = chunkx << 4;
@@ -190,6 +210,9 @@ public final class Collision {
           for (int x = xstart; x < xend; ++x) {
             for (int z = zstart; z < zend; ++z) {
               for (int y = ystart; y < maxY; ++y) {
+                if (blockRemaining-- <= 0) {
+                  break exit;
+                }
                 List<BoundingBox> resolve = stateAccess.shapeAt(x, y, z).boundingBoxes();
                 Material material = stateAccess.typeAt(x, y, z);
                 if (CollisionModifiers.isModified(material)) {
