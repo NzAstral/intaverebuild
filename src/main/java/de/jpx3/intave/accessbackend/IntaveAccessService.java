@@ -11,6 +11,7 @@ import de.jpx3.intave.access.check.CheckAccess;
 import de.jpx3.intave.access.check.UnknownCheckException;
 import de.jpx3.intave.access.player.PlayerAccess;
 import de.jpx3.intave.access.player.UnknownPlayerException;
+import de.jpx3.intave.access.player.storage.StorageGateway;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.access.player.trust.TrustFactorResolver;
 import de.jpx3.intave.access.server.ServerAccess;
@@ -20,6 +21,7 @@ import de.jpx3.intave.accessbackend.server.ServerAccessor;
 import de.jpx3.intave.annotate.HighOrderService;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.check.combat.heuristics.detect.LabyModsHeuristic;
+import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.entity.Player;
 
@@ -73,6 +75,11 @@ public final class IntaveAccessService {
       @Override
       public void unsubscribeOutputStream(PrintStream stream) {
         IntaveLogger.logger().removeOutputStream(stream);
+      }
+
+      @Override
+      public void setStorageGateway(StorageGateway gateway) {
+        Modules.storage().setStorageGateway(gateway);
       }
 
       @Override

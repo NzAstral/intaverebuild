@@ -23,6 +23,7 @@ import de.jpx3.intave.trustfactor.TrustFactorConfiguration;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.permission.PermissionCache;
+import de.jpx3.intave.user.storage.Storage;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -145,6 +146,10 @@ public interface User {
    * This usually happens automatically after an outbound packet has been ignored.
    */
   void receiveNextOutboundPacketAgain();
+
+  Storage mainStorage();
+
+  Storage storageOf(Class<? extends Storage> storageClass);
 
   @Deprecated
   boolean hasShadow();

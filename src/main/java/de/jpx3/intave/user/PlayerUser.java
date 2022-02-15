@@ -36,6 +36,9 @@ import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.user.permission.BukkitPermissionCheck;
 import de.jpx3.intave.user.permission.ExpiringPermissionCache;
 import de.jpx3.intave.user.permission.PermissionCache;
+import de.jpx3.intave.user.storage.PlayerStorage;
+import de.jpx3.intave.user.storage.Storage;
+import de.jpx3.intave.user.storage.Storages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -77,6 +80,7 @@ final class PlayerUser implements User {
   private final UserContext playerPlaceholderContext = new UserContext(this);
   private final PlayerContext playerContext;
   private TrustFactor trustFactor = TrustFactor.DARK_RED;
+  private final PlayerStorage storage;
 
   PlayerUser(Player player) {
     this.player = new WeakReference<>(player);
@@ -89,6 +93,7 @@ final class PlayerUser implements User {
     this.simpleColliderProcessor = Collider.suitableSimpleColliderProcessorFor(this);
     Synchronizer.synchronize(this::setDefaultMessagingChannel);
     this.playerContext = PlayerContext.of(player);
+    this.storage = Storages.emptyPlayerStorageFor(player.getUniqueId());
     this.poseSizes = Pose.poseSizesByVersion(metadata.protocol().protocolVersion());
     this.metadata.setup();
   }
@@ -214,6 +219,16 @@ final class PlayerUser implements User {
   @Override
   public void receiveNextOutboundPacketAgain() {
     this.ignoreNextOutboundPacket = false;
+  }
+
+  @Override
+  public Storage mainStorage() {
+    return storage;
+  }
+
+  @Override
+  public Storage storageOf(Class<? extends Storage> storageClass) {
+    return storage.storageOf(storageClass);
   }
 
   @Override

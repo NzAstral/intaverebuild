@@ -773,9 +773,9 @@ public final class IntavePlugin extends JavaPlugin {
   @Native
   public void performShutdown() {
     logger.info("Stopping Intave");
-    BackgroundExecutor.stopBlocking();
     Bukkit.getScheduler().cancelTasks(this);
     ShutdownTasks.runAll();
+    BackgroundExecutor.stopBlocking();
     deleteIntegrityCache();
     logger.info("Intave offline");
     logger.shutdown();

@@ -10,6 +10,7 @@ import de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker;
 import de.jpx3.intave.module.mitigate.CombatMitigator;
 import de.jpx3.intave.module.mitigate.MovementEmulator;
 import de.jpx3.intave.module.mitigate.ReconDelayLimiter;
+import de.jpx3.intave.module.player.StorageLoader;
 import de.jpx3.intave.module.violation.ViolationProcessor;
 
 public final class Modules {
@@ -43,6 +44,9 @@ public final class Modules {
 
   // quick accessors
 
+  public static StorageLoader storage() {
+    return find(StorageLoader.class);
+  }
   public static ViolationProcessor violationProcessor() {
     return find(ViolationProcessor.class);
   }

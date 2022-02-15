@@ -29,6 +29,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 
+import static org.bukkit.event.EventPriority.MONITOR;
+
 @SplitMeUp
 public final class MiscBukkitEvents extends Module {
   @BukkitEventSubscription
@@ -78,7 +80,7 @@ public final class MiscBukkitEvents extends Module {
     GarbageCollector.clearIf(o -> o instanceof Location && ((Location) o).getWorld().equals(world));
   }
 
-  @BukkitEventSubscription
+  @BukkitEventSubscription(priority = MONITOR)
   @IdoNotBelongHere
   public void on(PlayerQuitEvent quit) {
     Player player = quit.getPlayer();

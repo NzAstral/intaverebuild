@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.access.UnsupportedFallbackOperationException;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.check.MetaCheck;
@@ -148,7 +149,9 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   private void evaluateAll() {
     for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-      evaluate(onlinePlayer, false);
+      try {
+        evaluate(onlinePlayer, false);
+      } catch (UnsupportedFallbackOperationException ignored) {}
     }
   }
 

@@ -87,7 +87,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   private Material blockOnPosition = Material.AIR;
 
   // Timestamps
-  public long lastSneakingTimestamps, lastJump;
+  public long lastSneakingTimestamps, lastJump, lastMovement;
 
   private volatile BoundingBox boundingBox = BoundingBox.fromBounds(0, 0, 0, 0, 0, 0);
   private boolean boundingBoxSetup = false;

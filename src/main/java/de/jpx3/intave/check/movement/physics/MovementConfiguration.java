@@ -96,6 +96,20 @@ public final class MovementConfiguration {
     return keyLookup(index & (int) (Math.pow(BOOLEANS, 2) - 1));
   }
 
+  public static MovementConfiguration keyLookup(int key) {
+    MovementConfiguration config = UNIVERSE[key];
+    if (config == null) {
+      throw new IllegalStateException("Unable to lookup " + key);
+    }
+    return config;
+  }
+
+  private final static MovementConfiguration EMPTY_CONFIGURATION;
+
+  public static MovementConfiguration empty() {
+    return EMPTY_CONFIGURATION;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -109,14 +123,6 @@ public final class MovementConfiguration {
     return index;
   }
 
-  public static MovementConfiguration keyLookup(int key) {
-    MovementConfiguration config = UNIVERSE[key];
-    if (config == null) {
-      throw new IllegalStateException("Unable to lookup " + key);
-    }
-    return config;
-  }
-
   @Override
   public String toString() {
     return "MovementConfiguration{" +
@@ -128,10 +134,6 @@ public final class MovementConfiguration {
       ", jumped=" + jumped +
       ", handActive=" + handActive +
       '}';
-  }
-
-  public static MovementConfiguration empty() {
-    return select(0, 0, false, false, false, false);
   }
 
   public static MovementConfiguration select(
@@ -162,5 +164,6 @@ public final class MovementConfiguration {
         }
       }
     }
+    EMPTY_CONFIGURATION = select(0, 0, false, false, false, false);
   }
 }

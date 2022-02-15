@@ -6,6 +6,7 @@ import de.jpx3.intave.access.check.CheckAccess;
 import de.jpx3.intave.access.check.UnknownCheckException;
 import de.jpx3.intave.access.player.PlayerAccess;
 import de.jpx3.intave.access.player.UnknownPlayerException;
+import de.jpx3.intave.access.player.storage.StorageGateway;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.access.player.trust.TrustFactorResolver;
 import de.jpx3.intave.access.server.ServerAccess;
@@ -49,6 +50,8 @@ public interface IntaveAccess {
    * @param stream the stream to unsubscribe
    */
   void unsubscribeOutputStream(PrintStream stream);
+
+  void setStorageGateway(StorageGateway gateway);
 
   /**
    * Retrieves player-specific access control in {@link PlayerAccess}.

@@ -7,19 +7,27 @@ import de.jpx3.intave.command.CommandStage;
 import de.jpx3.intave.command.Forward;
 import de.jpx3.intave.command.Optional;
 import de.jpx3.intave.command.SubCommand;
+import de.jpx3.intave.module.Modules;
+import de.jpx3.intave.player.id.ProfileLookup;
 import de.jpx3.intave.security.LicenseAccess;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
+import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.user.permission.BukkitPermissionCheck;
+import de.jpx3.intave.user.storage.ViolationStorage;
+import de.jpx3.intave.user.storage.ViolationStorage.ViolationEvent;
 import de.jpx3.intave.version.DurationTranslator;
 import de.jpx3.intave.version.IntaveVersion;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -111,6 +119,51 @@ public final class BaseStage extends CommandStage {
     } else {
       player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving notifications");
     }
+  }
+
+  @SubCommand(
+    selectors = {"history", "info", "logs"},
+    usage = "<name>",
+    permission = "intave.command.history"
+  )
+  public void historyCommand(CommandSender sender, String playerName) {
+    Player player = Bukkit.getPlayer(playerName);
+    if (isOnline(player)) {
+      User targetUser = UserRepository.userOf(player);
+      UUID id = player.getUniqueId();
+      ViolationStorage violationStorage = (ViolationStorage) targetUser.storageOf(ViolationStorage.class);
+      outputHistory(sender, id, violationStorage);
+    } else {
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.YELLOW + "Loading history..");
+      ProfileLookup.lookupIdFromName(playerName, uuid -> {
+        if (uuid == null) {
+          sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Player \"" + playerName + "\" not found");
+        } else {
+          Modules.storage().nullableManualStorageRequest(uuid, playerStorage -> {
+            if (playerStorage == null) {
+              sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Player has never played before");
+            } else {
+              outputHistory(sender, uuid, playerStorage.storageOf(ViolationStorage.class));
+            }
+          });
+        }
+      });
+    }
+  }
+
+  private void outputHistory(CommandSender sender, UUID id, ViolationStorage violationStorage) {
+    List<ViolationEvent> violations = violationStorage.violations();
+    sender.sendMessage(String.format("%s History of %s%s", IntavePlugin.prefix(), ChatColor.RED, id));
+    // first naive approach
+    violations.stream()
+      .sorted(Comparator.comparing(ViolationEvent::timestamp).reversed())
+      .map(violation -> violation.checkName() + " " + violation.violationLevel() + " " + violation.timestamp())
+      .map(s -> IntavePlugin.defaultColor() + s)
+      .forEach(sender::sendMessage);
+  }
+
+  private boolean isOnline(OfflinePlayer player) {
+    return player != null && (player.isOnline() || Bukkit.getPlayer(player.getUniqueId()) != null);
   }
 
   @SubCommand(

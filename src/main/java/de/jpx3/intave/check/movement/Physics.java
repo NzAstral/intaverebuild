@@ -115,6 +115,7 @@ public final class Physics extends Check {
     // evaluation
     evaluateBestSimulation(user, simulation);
     Timings.CHECK_PHYSICS_EVAL.stop();
+    movementData.lastMovement = System.currentTimeMillis();
     movementData.lastKeyStrafe = movementData.keyStrafe;
     movementData.lastKeyForward = movementData.keyForward;
     movementData.pastRiptideSpin++;

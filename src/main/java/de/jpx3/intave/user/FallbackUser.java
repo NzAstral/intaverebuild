@@ -20,10 +20,14 @@ import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.permission.ExpiringPermissionCache;
 import de.jpx3.intave.user.permission.PermissionCache;
+import de.jpx3.intave.user.storage.PlayerStorage;
+import de.jpx3.intave.user.storage.Storage;
+import de.jpx3.intave.user.storage.Storages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -39,6 +43,8 @@ public final class FallbackUser implements User {
 
   private final UserContext userContext = new UserContext(this);
   private final PlayerContext playerContext = PlayerContext.empty();
+
+  private final PlayerStorage storage = Storages.emptyPlayerStorageFor(UUID.randomUUID());
 
   FallbackUser() {
     this.metadata = new MetadataBundle(null, this);
@@ -131,6 +137,16 @@ public final class FallbackUser implements User {
 
   @Override
   public void receiveNextOutboundPacketAgain() {
+  }
+
+  @Override
+  public Storage mainStorage() {
+    return storage;
+  }
+
+  @Override
+  public Storage storageOf(Class<? extends Storage> storageClass) {
+    return storage.storageOf(storageClass);
   }
 
   @Override

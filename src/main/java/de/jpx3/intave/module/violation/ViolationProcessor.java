@@ -22,6 +22,7 @@ import de.jpx3.intave.user.MessageChannelSubscriptions;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.ViolationMetadata;
+import de.jpx3.intave.user.storage.ViolationStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -60,6 +61,7 @@ public final class ViolationProcessor extends Module {
     processViolationOverflow(violationContext);
     processViolationStatistics(violationContext);
     processViolationVerbose(violationContext);
+    noteViolationToStorage(violationContext);
     processViolationLevelIncrease(violationContext);
     lookupThresholdCommands(violationContext);
     processThresholdsEvents(violationContext);
@@ -187,11 +189,22 @@ public final class ViolationProcessor extends Module {
     plugin.logger().violation(consoleMessage);
   }
 
+  private void noteViolationToStorage(ViolationContext violationContext) {
+    if (violationContext.completed()) {
+      return;
+    }
+    Violation violation = violationContext.violation();
+    Player player = violation.findPlayer().orElseThrow(IllegalStateException::new);
+    User user = UserRepository.userOf(player);
+    ViolationStorage violationStorage = (ViolationStorage) user.storageOf(ViolationStorage.class);
+    violationStorage.noteViolation(violationContext);
+  }
+
   private void processViolationLevelIncrease(ViolationContext violationContext) {
     if (violationContext.completed()) {
       return;
     }
-    // hehehe fix fix
+    // bad fix
     try {
       Violation violation = violationContext.violation();
       Player player = violation.findPlayer().orElseThrow(IllegalStateException::new);

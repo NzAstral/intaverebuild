@@ -5,11 +5,16 @@ import de.jpx3.intave.security.LicenseAccess;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
 public final class WebResource implements Resource {
   private final URL url;
+
+  public WebResource(String url) throws MalformedURLException {
+    this(new URL(url));
+  }
 
   public WebResource(URL url) {
     this.url = url;
@@ -38,8 +43,8 @@ public final class WebResource implements Resource {
       connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
       connection.addRequestProperty("Pragma", "no-cache");
       connection.addRequestProperty("Identifier", LicenseAccess.rawLicense());
-      connection.setConnectTimeout(3000);
-      connection.setReadTimeout(1000);
+      connection.setConnectTimeout(4000);
+      connection.setReadTimeout(2000);
       return connection.getInputStream();
     } catch (Exception exception) {
       return new ByteArrayInputStream(new byte[0]);

@@ -43,7 +43,7 @@ permissions:
   intave.command.verbose:
     default: op
 
-  intave.command.restart:
+  intave.command.history:
     default: op
 
   intave.command.proxy:

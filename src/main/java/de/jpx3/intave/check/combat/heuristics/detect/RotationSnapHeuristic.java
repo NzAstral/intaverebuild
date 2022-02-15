@@ -16,7 +16,6 @@ import de.jpx3.intave.check.combat.heuristics.Confidence;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
-import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.tracker.entity.EntityShade;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.shade.ClientMathHelper;
@@ -251,12 +250,13 @@ public final class RotationSnapHeuristic extends MetaCheckPart<Heuristics, Rotat
       double vl = calculateViolation(valueOfSnap, changedLookToEntity, user, liteFlag);
       liteFlag = false;
 
+      // this mitigation has become too obvious, and is required for detection
       //dmc23
       if (vl >= 40) {
-        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "23");
+//        user.applyAttackNerfer(AttackNerfStrategy.HT_MEDIUM, "23");
       }
       if (vl > 70) {
-        user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT, "23");
+//        user.applyAttackNerfer(AttackNerfStrategy.CANCEL_FIRST_HIT, "23");
       }
 
       handleConfidence(user, "102", (int) vl, description);
