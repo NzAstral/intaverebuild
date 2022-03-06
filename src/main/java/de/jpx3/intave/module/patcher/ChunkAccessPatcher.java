@@ -2,6 +2,7 @@ package de.jpx3.intave.module.patcher;
 
 import com.google.common.collect.Sets;
 import de.jpx3.intave.IntaveLogger;
+import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.klass.rewrite.PatchyLoadingInjector;
@@ -18,9 +19,9 @@ import java.util.Iterator;
 public final class ChunkAccessPatcher extends Module {
   private final static boolean ENABLED = !MinecraftVersions.VER1_14_0.atOrAbove();
 
-  static {
+  {
     if (ENABLED) {
-      ClassLoader classLoader = ChunkAccessPatcher.class.getClassLoader();
+      ClassLoader classLoader = IntavePlugin.class.getClassLoader();
       PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, "de.jpx3.intave.module.patcher.SynchronizedLongHashSet");
     }
   }
