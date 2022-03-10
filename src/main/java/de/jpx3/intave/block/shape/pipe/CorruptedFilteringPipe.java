@@ -32,7 +32,7 @@ public final class CorruptedFilteringPipe implements ShapeResolverPipeline {
   }
 
   public List<BoundingBox> resolveCorrupted(Material type, int data) {
-    if (type == Material.ENDER_PORTAL_FRAME) {
+    if (type == BlockTypeAccess.END_PORTAL_FRAME) {
       ApplyOnShapeBoundingBoxBuilder builder = ApplyOnShapeBoundingBoxBuilder.create();
       builder.shapeX16AndApply(0.0D, 0.0D, 0.0D, 16.0D, 13.0D, 16.0D);
       boolean hasEye = (data & 4) != 0;

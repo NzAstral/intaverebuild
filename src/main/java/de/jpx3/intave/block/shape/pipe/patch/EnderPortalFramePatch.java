@@ -46,6 +46,6 @@ public final class EnderPortalFramePatch extends BoundingBoxPatch {
 
   @Override
   public boolean appliesTo(Material material) {
-    return material == Material.ENDER_PORTAL_FRAME;
+    return material.name().endsWith("PORTAL_FRAME");
   }
 }

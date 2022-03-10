@@ -32,7 +32,7 @@ public final class BoundingBoxPatcher {
     try {
       add(patchClass.newInstance());
     } catch (Exception | Error exception) {
-      IntaveLogger.logger().info("Failed to load bounding box patch (class " + patchClass + ")");
+      IntaveLogger.logger().info("Failed to load bounding box patch (" + patchClass + ")");
       exception.printStackTrace();
     }
   }
