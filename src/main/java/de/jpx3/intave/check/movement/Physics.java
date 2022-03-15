@@ -354,9 +354,29 @@ public final class Physics extends Check {
         otherSimulation = simulationProcessor.simulateWithoutKeyPress(user, selectSimulator(user));
       }
       Motion setbackMotion = otherSimulation.motion();
-      predictedX = setbackMotion.motionX;
-      predictedY = setbackMotion.motionY;
-      predictedZ = setbackMotion.motionZ;
+      /*
+       * This will patch the hit-player-sneaking-on-a-block-edge bug (https://youtu.be/ONGnOwhQyac)
+       */
+      Vector lastVelocity = movementData.sneakPatchVelocity;
+      boolean motionXClamp = lastVelocity != null && (Math.abs(setbackMotion.motionX()) < 0.1 && Math.abs(movementData.motionX()) > 0.4 && Math.abs(lastVelocity.getX()) > 0.4);
+      boolean motionZClamp = lastVelocity != null && (Math.abs(setbackMotion.motionZ()) < 0.1 && Math.abs(movementData.motionZ()) > 0.4 && Math.abs(lastVelocity.getZ()) > 0.4);
+      if (
+        movementData.isSneaking() &&
+        !movementData.onGround() &&
+        lastVelocity != null &&
+        lastVelocity.getY() > 0 &&
+        Math.abs(setbackMotion.motionY - movementData.motionY()) < 0.01 &&
+        (motionXClamp || motionZClamp)
+      ) {
+        predictedX = motionXClamp ? MathHelper.minmax(-0.8, lastVelocity.getX(), 0.8) : setbackMotion.motionX;
+        predictedY = setbackMotion.motionY;
+        predictedZ = motionZClamp ? MathHelper.minmax(-0.8, lastVelocity.getZ(), 0.8) : setbackMotion.motionZ;
+        movementData.sneakPatchVelocity = null;
+      } else {
+        predictedX = setbackMotion.motionX;
+        predictedY = setbackMotion.motionY;
+        predictedZ = setbackMotion.motionZ;
+      }
     }
 
     if (flying || spectator) {

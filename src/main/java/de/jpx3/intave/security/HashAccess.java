@@ -5,6 +5,7 @@ import de.jpx3.intave.annotate.Native;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -21,6 +22,28 @@ public final class HashAccess {
         md.update(dataBytes, 0, nread);
       }
       fis.close();
+      byte[] mdbytes = md.digest();
+      for (byte mdbyte : mdbytes) {
+        jarChecksum.append(Integer.toString((mdbyte & 0xff) + 0x100, 16).substring(1));
+      }
+    } catch (NoSuchAlgorithmException | IOException exception) {
+      exception.printStackTrace();
+      jarChecksum.append("~invalid");
+    }
+    return jarChecksum.toString();
+  }
+
+  @Native
+  public static String readHash(InputStream inputStream) {
+    StringBuilder jarChecksum = new StringBuilder();
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");// MD5
+      byte[] dataBytes = new byte[1024];
+      int nread;
+      while ((nread = inputStream.read(dataBytes)) != -1) {
+        md.update(dataBytes, 0, nread);
+      }
+      inputStream.close();
       byte[] mdbytes = md.digest();
       for (byte mdbyte : mdbytes) {
         jarChecksum.append(Integer.toString((mdbyte & 0xff) + 0x100, 16).substring(1));

@@ -1,5 +1,6 @@
 package de.jpx3.intave.block.shape.pipe.patch;
 
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.BlockShapes;
@@ -11,6 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class BoundingBoxPatcher {
   private final static Map<Material, BoundingBoxPatch> patches = new HashMap<>();
@@ -25,6 +27,7 @@ public final class BoundingBoxPatcher {
     add(BambooBlockPatch.class);
     add(ThinBlockPatch.class);
     add(EnderPortalFramePatch.class);
+    add(CauldronBlockPatch.class);
 //    add(BlockDoorPatch.class);
   }
 
@@ -38,7 +41,11 @@ public final class BoundingBoxPatcher {
   }
 
   private static void add(BoundingBoxPatch patch) {
-    Arrays.stream(Material.values()).filter(patch::appliesTo).forEach(type -> patches.put(type, patch));
+    List<Material> materials = Arrays.stream(Material.values()).filter(patch::appliesTo).collect(Collectors.toList());
+    if (materials.isEmpty() && IntaveControl.DISABLE_LICENSE_CHECK) {
+      IntaveLogger.logger().info("[debug] no material matches patch " + patch.getClass().getName());
+    }
+    materials.forEach(type -> patches.put(type, patch));
   }
 
   @Deprecated

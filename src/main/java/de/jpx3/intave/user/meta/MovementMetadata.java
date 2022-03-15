@@ -93,6 +93,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   private boolean boundingBoxSetup = false;
 
   public Vector emulationVelocity;
+  public Vector sneakPatchVelocity;
   public Vector setbackOverrideVelocity = new Vector(0, 0, 0);
   public Vector lastVelocity = new Vector();
   @Nullable

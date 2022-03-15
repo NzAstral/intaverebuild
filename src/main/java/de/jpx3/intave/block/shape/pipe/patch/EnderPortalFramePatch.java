@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class EnderPortalFramePatch extends BoundingBoxPatch {
-  private final BoundingBox baseShape = BoundingBox.fromX16Bounds(0, 0, 0, 16, 13, 16);
-  private final BoundingBox eye8 = BoundingBox.fromX16Bounds(5, 13, 5, 11, 16, 11);
-  private final BoundingBox eye13 = BoundingBox.fromX16Bounds(4, 13, 4, 12, 16, 12);
+  private final BoundingBox baseShape = BoundingBox.originFromX16(0, 0, 0, 16, 13, 16);
+  private final BoundingBox eye8 = BoundingBox.originFromX16(5, 13, 5, 11, 16, 11);
+  private final BoundingBox eye13 = BoundingBox.originFromX16(4, 13, 4, 12, 16, 12);
 
   {
     baseShape.makeOriginBox();

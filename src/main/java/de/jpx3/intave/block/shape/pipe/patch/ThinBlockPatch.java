@@ -26,11 +26,11 @@ final class ThinBlockPatch extends BoundingBoxPatch {
   };
 
   private static final BoundingBox[] STATES_9 = new BoundingBox[] {
-    BoundingBox.fromX16Bounds(7, 0, 7, 9, 16, 9), // base
-    BoundingBox.fromX16Bounds(7, 0, 0, 9, 16, 9), // north
-    BoundingBox.fromX16Bounds(7, 0, 7, 16, 16, 9), // east
-    BoundingBox.fromX16Bounds(7, 0, 7, 9, 16, 16), // south
-    BoundingBox.fromX16Bounds(0, 0, 7, 9, 16, 9), // west
+    BoundingBox.originFromX16(7, 0, 7, 9, 16, 9), // base
+    BoundingBox.originFromX16(7, 0, 0, 9, 16, 9), // north
+    BoundingBox.originFromX16(7, 0, 7, 16, 16, 9), // east
+    BoundingBox.originFromX16(7, 0, 7, 9, 16, 16), // south
+    BoundingBox.originFromX16(0, 0, 7, 9, 16, 9), // west
   };
 
   public ThinBlockPatch() {

@@ -734,6 +734,9 @@ public final class MovementDispatcher extends Module {
 
       movementData.pendingVelocityPackets.incrementAndGet();
       movementData.emulationVelocity = velocity.clone();
+      if (movementData.sneaking) {
+        movementData.sneakPatchVelocity = velocity.clone();
+      }
       Modules.feedback().synchronize(player, velocity, this::receiveVelocity);
     }
   }

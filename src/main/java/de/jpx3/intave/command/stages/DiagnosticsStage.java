@@ -14,6 +14,7 @@ import de.jpx3.intave.diagnostic.timings.Timing;
 import de.jpx3.intave.diagnostic.timings.Timings;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.resource.ResourceRegistry;
+import de.jpx3.intave.security.HashAccess;
 import de.jpx3.intave.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -153,7 +154,7 @@ public final class DiagnosticsStage extends CommandStage {
   public void resourceStatus(CommandSender sender) {
     sender.sendMessage(IntavePlugin.prefix() + "Resources");
     ResourceRegistry.registeredResources().forEach((identifier, resource) ->
-      sender.sendMessage(IntavePlugin.prefix() + " " + identifier.substring(0, 2) + " of " + resource.lines().size())
+      sender.sendMessage(IntavePlugin.prefix() + " " + identifier.substring(0, 2) + " of " + HashAccess.readHash(resource.read()))
     );
   }
 

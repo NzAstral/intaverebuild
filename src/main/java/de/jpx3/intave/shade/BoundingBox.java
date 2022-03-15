@@ -493,7 +493,7 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     return new BoundingBox(d0, d1, d2, d3, d4, d5);
   }
 
-  public static BoundingBox fromX16Bounds(
+  public static BoundingBox originFromX16(
     double x1, double y1, double z1,
     double x2, double y2, double z2
   ) {
@@ -503,10 +503,12 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     double toX = Math.max(x1, x2);
     double toY = Math.max(y1, y2);
     double toZ = Math.max(z1, z2);
-    return new BoundingBox(
+    BoundingBox boundingBox = new BoundingBox(
       fromX / 16D, fromY / 16D, fromZ / 16D,
       toX / 16D, toY / 16D, toZ / 16D
     );
+    boundingBox.makeOriginBox();
+    return boundingBox;
   }
 
   public static BoundingBox fromPosition(User user, Location location) {

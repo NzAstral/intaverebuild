@@ -71,7 +71,7 @@ public final class ArrayBlockShape extends MemoryTraced implements BlockShape {
       List<BoundingBox> added = content.boundingBoxes();
       if (!added.isEmpty()) {
         if (boundingBoxes == null) {
-          boundingBoxes = new ArrayList<>();
+          boundingBoxes = new ArrayList<>(contents.length);
         }
         boundingBoxes.addAll(added);
       }
