@@ -4,6 +4,7 @@ import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ViaVersionAdapter;
 import de.jpx3.intave.annotate.Relocate;
+import de.jpx3.intave.annotate.refactoring.IdoNotBelongHere;
 import de.jpx3.intave.user.User;
 import org.bukkit.entity.Player;
 
@@ -51,6 +52,8 @@ public final class ProtocolMetadata {
     }
   }
 
+  @IdoNotBelongHere
+  @Deprecated
   private String versionAsString() {
     // ViaVersion's special cases
     if (protocolVersion == -1)

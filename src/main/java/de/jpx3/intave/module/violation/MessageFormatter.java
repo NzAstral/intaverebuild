@@ -56,7 +56,6 @@ public final class MessageFormatter {
   }
 
   private static String resolveLayout(String key) {
-    return IntavePlugin.singletonInstance().configurationService()
-      .configuration().getString("layout." + key);
+    return IntavePlugin.singletonInstance().settings().getString("layout." + key);
   }
 }

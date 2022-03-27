@@ -6,10 +6,12 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.mojang.authlib.GameProfile;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.block.type.BlockTypeAccess;
+import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
@@ -24,17 +26,22 @@ import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.PunishmentMetadata;
 import org.bukkit.World;
+import org.bukkit.block.Skull;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.UUID;
 
+import static de.jpx3.intave.module.linker.packet.PacketId.Client.HELD_ITEM_SLOT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
-import static de.jpx3.intave.module.linker.packet.PacketId.Server.OPEN_WINDOW;
-import static de.jpx3.intave.module.linker.packet.PacketId.Server.RESPAWN;
+import static de.jpx3.intave.module.linker.packet.PacketId.Server.*;
 
 public final class InventoryTracker extends Module {
   @BukkitEventSubscription
@@ -69,6 +76,102 @@ public final class InventoryTracker extends Module {
     InventoryMetadata inventoryData = user.meta().inventory();
     // https://i.imgur.com/O5UBqoJ.png
     if (inventoryData.pastSlotSwitch < 10) {
+      event.setCancelled(true);
+    }
+  }
+
+  @PacketSubscription(
+    packetsOut = {
+      WINDOW_ITEMS, SET_SLOT
+    }
+  )
+  public void checkOutgoingItems(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = UserRepository.userOf(player);
+    PacketContainer packet = event.getPacket();
+    ItemStack itemStack = packet.getItemModifier().readSafely(0);
+    if (itemStack != null) {
+      putOnWhitelist(user, itemStack);
+    }
+    ItemStack[] itemStacks = packet.getItemArrayModifier().readSafely(0);
+    if (itemStacks != null && itemStacks.length != 0) {
+      for (ItemStack stack : itemStacks) {
+        if (stack != null) {
+          putOnWhitelist(user, stack);
+        }
+      }
+    }
+    List<ItemStack> itemStackList = packet.getItemListModifier().readSafely(0);
+    if (itemStackList != null) {
+      for (ItemStack stack : itemStackList) {
+        if (stack != null) {
+          putOnWhitelist(user, stack);
+        }
+      }
+    }
+  }
+
+  private void putOnWhitelist(User user, ItemStack stack) {
+    InventoryMetadata inventory = user.meta().inventory();
+    UUID id = idFromSkull(stack);
+    if (id != null) {
+      inventory.registerIdRequest(id);
+    }
+  }
+
+  private Field profileField;
+  {
+    try {
+      profileField = Lookup.craftBukkitClass("block.CraftSkull").getDeclaredField("profile");
+      profileField.setAccessible(true);
+    } catch (NoSuchFieldException exception) {
+      exception.printStackTrace();
+    }
+  }
+
+  private UUID idFromSkull(ItemStack skull) {
+    if (skull instanceof Skull) {
+      SkullMeta itemMeta = (SkullMeta) skull.getItemMeta();
+      if (itemMeta != null) {
+        try {
+          GameProfile profile = (GameProfile) profileField.get(itemMeta);
+          return profile.getId();
+        } catch (Exception exception) {
+          exception.printStackTrace();
+        }
+      }
+    }
+    return null;
+  }
+
+  @PacketSubscription(
+    packetsIn = {
+      WINDOW_CLICK
+    }
+  )
+  public void windowClickCrashFix(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = UserRepository.userOf(player);
+    InventoryMetadata inventoryData = user.meta().inventory();
+    if (System.currentTimeMillis() - inventoryData.lastWCCReset > 10000) {
+      inventoryData.windowClickCounter = 0;
+      inventoryData.lastWCCReset = System.currentTimeMillis();
+    }
+
+    PacketContainer packet = event.getPacket();
+    ItemStack itemStack = packet.getItemModifier().readSafely(0);
+    System.out.println(itemStack);
+    UUID probableId = idFromSkull(itemStack);
+
+    if (probableId != null) {
+      System.out.println("Skull-Id: " + probableId);
+      if (!inventoryData.idWhitelisted(probableId)) {
+        user.synchronizedDisconnect("Forbidden skin request");
+      }
+    }
+
+    if (inventoryData.windowClickCounter++ > 500) {
+      user.synchronizedDisconnect("Too many inventory interactions");
       event.setCancelled(true);
     }
   }

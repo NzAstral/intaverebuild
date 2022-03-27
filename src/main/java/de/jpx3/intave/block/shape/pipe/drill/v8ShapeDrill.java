@@ -31,10 +31,10 @@ public final class v8ShapeDrill extends AbstractShapeDrill {
       blockData.getBlock().a(worldServer, blockposition, blockData, ALWAYS_COLLIDING_BOX, bbs, null);
       return translate(bbs);
     } catch (IllegalArgumentException exception) {
-      // ¯\_(ツ)_/¯
+      // we catch irregularities here elsewhere
       return BoundingBox
-        // anything but a box
-        .fromBounds(0,0,0,0.5,0.5,0.5)
+        // anything but a cubic or empty box
+        .originFromBounds(0.25,0.25,0.25,0.75,0.75,0.75)
         .contextualized(posX, posY, posZ);
     }
   }

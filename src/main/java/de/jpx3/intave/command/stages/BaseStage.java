@@ -39,8 +39,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.TimeUnit.*;
-
 public final class BaseStage extends CommandStage {
   private static BaseStage singletonInstance;
 
@@ -112,27 +110,66 @@ public final class BaseStage extends CommandStage {
   }
 
   @SubCommand(
-    selectors = "notify",
-    usage = "",
+    selectors = {"notify", "notifications"},
+    usage = "[<player...>]",
     description = "Toggle notifications",
     permission = "intave.command.notify"
   )
-  public void notifyCommand(User user) {
+  public void notifyCommand(User user, @Optional Player[] selectedPlayers) {
     Player player = user.player();
+    boolean receivesNotify = user.receives(MessageChannel.NOTIFY);
 
-    boolean receiveNotify = user.receives(MessageChannel.NOTIFY);
+    if (user.receives(MessageChannel.NOTIFY)) {
+      if (selectedPlayers != null && !user.hasChannelConstraint(MessageChannel.NOTIFY)) {
+        List<UUID> uniqueIds = Arrays.stream(selectedPlayers).map(Entity::getUniqueId).distinct().collect(Collectors.toList());
+        user.setChannelConstraint(MessageChannel.NOTIFY, player1 -> uniqueIds.contains(player1.getUniqueId()));
+        String names = ChatColor.RED + describePlayerList(Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> ChatColor.RED + s).collect(Collectors.toList()));
+        player.sendMessage(IntavePlugin.prefix() + "You have specified notifications to " + names);
+        return;
+      }
+    }
+
     user.toggleReceive(MessageChannel.NOTIFY);
+    user.removeChannelConstraint(MessageChannel.NOTIFY);
 
-    if (receiveNotify) {
+    if (receivesNotify) {
       player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.RED + "no longer " + IntavePlugin.defaultColor() + "receiving notifications");
     } else {
-      player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving notifications");
+      if (selectedPlayers == null) {
+        String target = ChatColor.RED + "everyone";
+        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving notifications for " + target);
+      } else {
+        List<UUID> uniqueIds = Arrays.stream(selectedPlayers).map(Entity::getUniqueId).distinct().collect(Collectors.toList());
+        user.setChannelConstraint(MessageChannel.NOTIFY, player1 -> uniqueIds.contains(player1.getUniqueId()));
+        String names = ChatColor.RED + describePlayerList(Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> ChatColor.RED + s).collect(Collectors.toList()));
+        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now" + IntavePlugin.defaultColor() + " receiving notifications for " + names);
+      }
     }
   }
 
+//  @SubCommand(
+//    selectors = "notify",
+//    usage = "",
+//    description = "Toggle notifications",
+//    permission = "intave.command.notify"
+//  )
+//  public void notifyCommand(User user) {
+//    Player player = user.player();
+//
+//    boolean receiveNotify = user.receives(MessageChannel.NOTIFY);
+//    user.toggleReceive(MessageChannel.NOTIFY);
+//
+//    if (receiveNotify) {
+//      player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.RED + "no longer " + IntavePlugin.defaultColor() + "receiving notifications");
+//    } else {
+//      player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving notifications");
+//    }
+//  }
+
   @SubCommand(
     selectors = {"history", "logs"},
-    usage = "<name>",
+    usage = "<player>",
+    description = "View a player's violation history",
     permission = "intave.command.history"
   )
   public void historyCommand(CommandSender sender, String playerName) {
@@ -235,39 +272,25 @@ public final class BaseStage extends CommandStage {
     return dateFormat.format(new Date(input));
   }
 
+  // converts milliseconds to a string like "a few days ago"
   private String durationToString(long duration) {
-    if (duration < MINUTES.toMillis(2)) {
-      return "just now";
-    } else if (duration < MINUTES.toMillis(10)) {
-      return "a few minutes ago";
-    } else if (duration < MINUTES.toMillis(20)) {
-      return "ten minutes ago";
-    } else if (duration < MINUTES.toMillis(30)) {
-      return "half an hour ago";
-    } else if (duration < HOURS.toMillis(1)) {
-      return "an hour ago";
-    } else if (duration < HOURS.toMillis(6)) {
-      return "a few hours ago";
-    } else if (duration < HOURS.toMillis(12)) {
-      return "hours ago";
-    } else if (duration < DAYS.toMillis(1)) {
-      return "yesterday";
-    } else if (duration < DAYS.toMillis(2)) {
-      return "two days ago";
-    } else if (duration < DAYS.toMillis(3)) {
-      return "three days ago";
-    } else if (duration < DAYS.toMillis(4)) {
-      return "four days ago";
-    } else if (duration < DAYS.toMillis(5)) {
-      return "almost a week ago";
-    } else if (duration < DAYS.toMillis(7)) {
-      return "a week ago";
-    } else if (duration < DAYS.toMillis(14)) {
-      return "two weeks ago";
-    } else if (duration < DAYS.toMillis(21)) {
-      return "weeks ago";
+    long seconds = duration / 1000;
+    long minutes = seconds / 60;
+    long hours = minutes / 60;
+    long days = hours / 24;
+    if (days > 0) {
+      return days + " days ago";
     }
-    return "long ago";
+    if (hours > 0) {
+      return hours + " hours ago";
+    }
+    if (minutes > 0) {
+      return minutes + " minutes ago";
+    }
+    if (seconds > 0) {
+      return seconds + " seconds ago";
+    }
+    return "a few seconds ago";
   }
 
   private ViolationEvents filterByCheck(String check, ViolationEvents allViolations) {
@@ -358,7 +381,7 @@ public final class BaseStage extends CommandStage {
       boolean outdated = versionInformation.outdated();
       version = IntavePlugin.version() + " (" + (outdated ? "outdated, " : "") + DurationTranslator.translateDuration(System.currentTimeMillis() - versionInformation.release()) + " old)";
     } else {
-      version = IntavePlugin.version() + " (unlisted)";
+      version = IntavePlugin.version() + " (unknown version)";
     }
 
     boolean enterprise = (ProtocolMetadata.VERSION_DETAILS & 0x200) != 0;

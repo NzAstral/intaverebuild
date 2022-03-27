@@ -69,7 +69,7 @@ public final class LegacyComplexColliderProcessor implements ComplexColliderProc
     BoundingBox startBoundingBox = movement.boundingBox();
     BoundingBox entityBoundingBox = movement.boundingBox();
     context.motionY = collisionShape.allowedOffset(Y_AXIS, entityBoundingBox, context.motionY);
-    entityBoundingBox = (entityBoundingBox.offset(0.0D, context.motionY, 0.0D));
+    entityBoundingBox = entityBoundingBox.offset(0.0D, context.motionY, 0.0D);
     boolean flag1 = movement.onGround || startMotionY != context.motionY && startMotionY < 0.0D;
     context.motionX = collisionShape.allowedOffset(X_AXIS, entityBoundingBox, context.motionX);
     entityBoundingBox = entityBoundingBox.offset(context.motionX, 0.0D, 0.0D);

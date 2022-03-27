@@ -64,7 +64,7 @@ import java.util.function.Consumer;
   }
 
   private void enterConfiguration() {
-    YamlConfiguration configuration = plugin.configurationService().configuration();
+    YamlConfiguration configuration = plugin.settings();
     String checkSectionPath = "check." + configurationKey();
     ConfigurationSection checkSection = configuration.getConfigurationSection(checkSectionPath);
     if (checkSection == null) {

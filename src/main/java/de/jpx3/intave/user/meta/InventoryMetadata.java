@@ -12,6 +12,10 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 @Relocate
 public final class InventoryMetadata {
   private final Player player;
@@ -25,11 +29,16 @@ public final class InventoryMetadata {
   public int pastItemUsageTransition;
   public int pastHotBarSlotChange;
   public int awaitingSlotSet = -1;
+
+  public long lastWCCReset;
+  public int windowClickCounter;
   public boolean forceInventoryOnClickOpen = true;
   public volatile int pastSlotSwitch = 100;
   public boolean blockNextArrow = false;
   public boolean releaseItemNextTick = false;
   public Material releaseItemType = Material.AIR;
+
+  private List<UUID> whitelistedItemIdRequests = new ArrayList<>();
 
   public InventoryMetadata(Player player) {
     this.player = player;
@@ -45,6 +54,16 @@ public final class InventoryMetadata {
 
   public boolean handActive() {
     return handActive;
+  }
+
+  public void registerIdRequest(UUID id) {
+    if (!whitelistedItemIdRequests.contains(id)) {
+      whitelistedItemIdRequests.add(id);
+    }
+  }
+
+  public boolean idWhitelisted(UUID id) {
+    return whitelistedItemIdRequests.contains(id);
   }
 
   @Nullable

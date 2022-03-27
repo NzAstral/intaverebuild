@@ -59,7 +59,7 @@ public final class SneakAnalyzer extends MetaCheckPart<PlacementAnalysis, SneakA
       if (placementSpeedHistory.size() >= CHECK_LENGTH) {
         double average = placementSpeedHistory.stream().mapToDouble(value -> value).average().orElse(500);
         boolean inOneLine = isOneLine(meta.placementHistory);
-        boolean noSneaking = System.currentTimeMillis() - movementData.lastSneakingTimestamps > 8000;
+        boolean noSneaking = System.currentTimeMillis() - movementData.lastSneakingTimestamps > 6000;
 
         double limit = 500;
 

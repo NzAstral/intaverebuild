@@ -297,6 +297,7 @@ public final class RotationSnapHeuristic extends MetaCheckPart<Heuristics, Rotat
     }
   }
 
+  // I can not test this
   @Native
   public boolean isPartner() {
     return (ProtocolMetadata.VERSION_DETAILS & 0x100) != 0;

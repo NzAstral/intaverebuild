@@ -30,7 +30,9 @@ import de.jpx3.intave.config.ConfigurationService;
 import de.jpx3.intave.connect.customclient.CustomClientSupportService;
 import de.jpx3.intave.connect.proxy.ProxyMessenger;
 import de.jpx3.intave.connect.shadow.LabymodShadowIntegration;
+import de.jpx3.intave.connect.sibyl.SibylBroadcast;
 import de.jpx3.intave.connect.sibyl.SibylIntegrationService;
+import de.jpx3.intave.diagnostic.natives.NativeCheck;
 import de.jpx3.intave.diagnostic.report.RuntimeDiagnostics;
 import de.jpx3.intave.entity.size.HitboxSizeAccess;
 import de.jpx3.intave.entity.type.EntityTypeDataAccessor;
@@ -51,6 +53,7 @@ import de.jpx3.intave.packet.reader.PacketReaders;
 import de.jpx3.intave.player.ItemProperties;
 import de.jpx3.intave.player.fake.event.FakePlayerEventService;
 import de.jpx3.intave.reflect.access.ReflectiveAccess;
+import de.jpx3.intave.resource.Resources;
 import de.jpx3.intave.resource.legacy.EncryptedLegacyResource;
 import de.jpx3.intave.security.*;
 import de.jpx3.intave.security.blacklist.BlackListService;
@@ -68,6 +71,7 @@ import de.jpx3.intave.world.permission.WorldPermission;
 import de.jpx3.intave.world.raytrace.Raytracing;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
@@ -182,6 +186,7 @@ public final class IntavePlugin extends JavaPlugin {
       ServerHealth.setup();
       Synchronizer.setup();
       ContextSecrets.setup();
+      SibylBroadcast.setup();
       ReflectiveAccess.setup();
       EntityTypeDataAccessor.setup();
       ChunkProviderServerAccess.setup();
@@ -439,7 +444,7 @@ public final class IntavePlugin extends JavaPlugin {
           }
         }
 
-        if (allowLeniency && !configurationService().loader().configurationCacheExists()) {
+        if (allowLeniency && !configurationService.loader().configurationCacheExists()) {
           logger().error("Unable to boot: Intave requires an internet connection for first-time startup");
           bootFailure("No internet connection");
           performShutdown();
@@ -583,6 +588,8 @@ public final class IntavePlugin extends JavaPlugin {
       logger.info(ChatColor.YELLOW + "This version will dump netty threads when a player times out");
     }
 
+    registerNativeCheck();
+
     Modules.linker().packetEvents().refreshLinkages();
     displayVersionInformation();
     logger.info("Intave booted successfully");
@@ -590,7 +597,16 @@ public final class IntavePlugin extends JavaPlugin {
     Synchronizer.synchronize(() -> {
       // stage 11
       Modules.proceedBoot(BootSegment.STAGE_11);
+
+
+      // perform a complete native self-check
+      BackgroundExecutor.execute(NativeCheck::run);
     });
+  }
+
+  private void registerNativeCheck() {
+    NativeCheck.registerNative(this::invalidateCaches);
+    NativeCheck.registerNative(() -> bootFailure(null));
   }
 
   public void createDataFolder() {
@@ -621,8 +637,9 @@ public final class IntavePlugin extends JavaPlugin {
     if (de.jpx3.classloader.ClassLoader.usesNativeAccess() && !de.jpx3.classloader.ClassLoader.loaded()) {
       try {
         de.jpx3.classloader.ClassLoader.setupEnvironment(Files.createTempDirectory("intave-debug").toFile());
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (IOException exception) {
+        logger.error("[Intave] Failed to create temporary directory for classloader");
+        exception.printStackTrace();
       }
     }
   }
@@ -753,6 +770,9 @@ public final class IntavePlugin extends JavaPlugin {
 
   @Native
   public void invalidateCaches() {
+    if (NativeCheck.checkActive()) {
+      return;
+    }
     if (configurationService != null) {
       configurationService.deleteCache();
     }
@@ -761,6 +781,9 @@ public final class IntavePlugin extends JavaPlugin {
 
   @Native
   public void bootFailure(String reason) {
+    if (NativeCheck.checkActive()) {
+      return;
+    }
     getCommand("intave").setExecutor((commandSender, command, s, strings) -> {
       commandSender.sendMessage(prefix() + ChatColor.RED + "Intave couldn't boot properly: " + reason);
       return false;
@@ -780,8 +803,15 @@ public final class IntavePlugin extends JavaPlugin {
     ShutdownTasks.runAll();
     BackgroundExecutor.stopBlocking();
     deleteIntegrityCache();
+    logger.info(randomExitMessage());
     logger.info("Intave offline");
     logger.shutdown();
+  }
+
+  private final List<String> randomExitMessages = Resources.cacheResourceChain("https://service.intave.de/exitmessages.txt", "exitmessages", TimeUnit.DAYS.toMillis(7)).lines();
+
+  private String randomExitMessage() {
+    return randomExitMessages.get(ThreadLocalRandom.current().nextInt(randomExitMessages.size()));
   }
 
   private void deleteIntegrityCache() {
@@ -820,8 +850,8 @@ public final class IntavePlugin extends JavaPlugin {
     return checkService;
   }
 
-  public ConfigurationService configurationService() {
-    return configurationService;
+  public YamlConfiguration settings() {
+    return configurationService.configuration();
   }
 
   public FakePlayerEventService fakePlayerEventService() {

@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 public final class IntaveLogger extends PluginLogger {
-
   public static boolean FILE_OUTPUT = true;
   public static final boolean VIOLATION_CONSOLE_OUTPUT = IntaveControl.GOMME_MODE;
   public static boolean DISABLE_COLOR_OUTPUT = IntaveControl.GOMME_MODE || JavaVersion.current() > 8;
@@ -200,7 +199,7 @@ public final class IntaveLogger extends PluginLogger {
       if (printWriter != null) {
         printWriter.close();
       }
-      this.printWriter = new PrintWriter(new FileWriter(activeFile, true));
+      this.printWriter = new PrintWriter(new BufferedWriter(new FileWriter(activeFile, true)));
     } catch (IOException exception) {
       throw new IllegalStateException("Unable to create log file " + activeFileName, exception);
     }

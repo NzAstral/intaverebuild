@@ -28,18 +28,18 @@ public final class ComponentLoader {
   }
 
   public void prepareComponents() {
-//    essentialComponents.put("ProtocolLib", "https://service.intave.de/resource/ProtocolLib-4-8-0.jar");
-    essentialComponents.put("ProtocolLib", "https://ci.dmulloy2.net/job/ProtocolLib/lastSuccessfulBuild/artifact/target/ProtocolLib.jar");
+//    essentialComponents.put("ProtocolLib", "https://ci.dmulloy2.net/job/ProtocolLib/lastSuccessfulBuild/artifact/target/ProtocolLib.jar");
+    essentialComponents.put("ProtocolLib", "https://service.intave.de/resource/ProtocolLib-4-8-0.jar");
   }
 
   public void loadComponents() {
-    for (String s : essentialComponents.keySet()) {
+    for (String component : essentialComponents.keySet()) {
       try {
-        if (!loadComponent(s)) {
+        if (!loadComponent(component)) {
           return;
         }
       } catch (Exception exception) {
-        throw new IntaveInternalException("Unable to load library " + s, exception);
+        throw new IntaveInternalException("Unable to load library " + component, exception);
       }
     }
   }

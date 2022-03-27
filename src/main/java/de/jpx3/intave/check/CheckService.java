@@ -50,12 +50,10 @@ public final class CheckService {
   private List<String> checkNames = new ArrayList<>();
   private Map<Class<?>, Check> classRequestCache = new HashMap<>();
   private Map<String, Check> nameRequestCache = new HashMap<>();
-
-  private final CheckLinker checkLinker;
+  private final CheckLinker checkLinker = new CheckLinker();
 
   public CheckService(IntavePlugin plugin) {
     this.plugin = plugin;
-    checkLinker = new CheckLinker();
   }
 
   /**

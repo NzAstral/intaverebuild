@@ -37,7 +37,7 @@ public final class CheckAccessor {
   private Check tryGetCheck(String name) {
     try {
       return plugin.checks().searchCheck(name);
-    } catch (NullPointerException nullptr) {
+    } catch (Exception exception) {
       throw new UnknownCheckException("Could not find check " + name);
     }
   }
@@ -91,7 +91,7 @@ public final class CheckAccessor {
       @Override
       public void setMitigationStrategy(MitigationStrategy mitigationStrategy) {
         if (check.mitigationStrategy() == MitigationStrategy.NOT_SUPPORTED) {
-          throw new UnsupportedOperationException("Check " + name() + " does not support a mitigation strategy");
+          throw new UnsupportedOperationException("Check " + name() + " does not support mitigation strategies");
         }
         check.setMitigationStrategy(mitigationStrategy);
       }

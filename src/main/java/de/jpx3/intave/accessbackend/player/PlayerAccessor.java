@@ -56,7 +56,7 @@ public final class PlayerAccessor {
       public double violationLevel(String check, String threshold) {
         check = check.toLowerCase(Locale.ROOT);
         if (!plugin.checks().hasCheck(check)) {
-          throw new UnknownCheckException("Unable to locale check \"" + check + "\"");
+          throw new UnknownCheckException("Unable to locate check \"" + check + "\"");
         }
         return violationLevel.getOrDefault(check, DEFAULT_RETURN).getOrDefault(threshold, 0d);
       }
@@ -70,7 +70,7 @@ public final class PlayerAccessor {
       public void addViolationPoints(String check, String threshold, double amount) {
         check = check.toLowerCase(Locale.ROOT);
         if (!plugin.checks().hasCheck(check)) {
-          throw new UnknownCheckException("Unable to locale check \"" + check + "\"");
+          throw new UnknownCheckException("Unable to locate check \"" + check + "\"");
         }
         violationLevel.getOrDefault(check, DEFAULT_RETURN).put(threshold, violationLevel(check, threshold) + amount);
       }
@@ -84,7 +84,7 @@ public final class PlayerAccessor {
       public void resetViolationLevel(String check, String threshold) {
         check = check.toLowerCase(Locale.ROOT);
         if (!plugin.checks().hasCheck(check)) {
-          throw new UnknownCheckException("Unable to locale check \"" + check + "\"");
+          throw new UnknownCheckException("Unable to locate check \"" + check + "\"");
         }
         violationLevel.getOrDefault(check, DEFAULT_RETURN).remove(threshold);
       }

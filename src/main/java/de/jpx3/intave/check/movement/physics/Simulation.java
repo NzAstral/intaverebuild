@@ -1,10 +1,11 @@
 package de.jpx3.intave.check.movement.physics;
 
-import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.player.collider.complex.ComplexColliderSimulationResult;
 import de.jpx3.intave.shade.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserLocal;
+
+import static de.jpx3.intave.math.MathHelper.distanceOf;
 
 public final class Simulation {
   private final static Simulation INVALID_SIMULATION = new Simulation(MovementConfiguration.empty(), ComplexColliderSimulationResult.invalid());
@@ -32,7 +33,7 @@ public final class Simulation {
   }
 
   public double accuracy(Motion motionVector) {
-    return MathHelper.distanceOf(motion(), motionVector);
+    return distanceOf(motion(), motionVector);
   }
 
   public Motion motion() {

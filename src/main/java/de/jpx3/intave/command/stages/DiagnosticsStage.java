@@ -86,6 +86,7 @@ public final class DiagnosticsStage extends CommandStage {
   )
   public void timingsCommand(CommandSender sender) {
     sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Currently unavailable");
+
 //    sender.sendMessage(IntavePlugin.prefix() + "Service status");
 //    List<Timing> timings = new ArrayList<>(Timings.timingPool());
 //    timings.sort(Timing::compareTo);
@@ -245,6 +246,7 @@ public final class DiagnosticsStage extends CommandStage {
     sender.sendMessage(IntavePlugin.prefix() + "Loading check statistics...");
     List<Check> checks = new ArrayList<>(plugin.checks().checks());
     checks.sort(Comparator.comparing(check -> check.baseStatistics().totalFails()));
+    boolean output = false;
     for (Check check : checks) {
       CheckStatistics statistics = check.baseStatistics();
       long processed = statistics.totalProcessed();
@@ -256,6 +258,10 @@ public final class DiagnosticsStage extends CommandStage {
       String checkFormat = ChatColor.RED + check.name();
       String message = checkFormat + IntavePlugin.defaultColor() + ": " + violations + " detections in " + processed + " processes (" + violatedRate + "%)";
       sender.sendMessage(message);
+      output = true;
+    }
+    if (!output) {
+      sender.sendMessage(IntavePlugin.prefix() + "No check statistics available");
     }
   }
 

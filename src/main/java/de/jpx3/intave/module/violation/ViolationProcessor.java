@@ -4,7 +4,6 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.access.check.event.IntaveCommandExecutionEvent;
 import de.jpx3.intave.access.check.event.IntaveViolationEvent;
 import de.jpx3.intave.access.player.trust.TrustFactor;
-import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckStatistics;
 import de.jpx3.intave.connect.proxy.protocol.packets.IntavePacketOutKicked;
@@ -58,7 +57,7 @@ public final class ViolationProcessor extends Module {
     }
     fillInVLContext(violationContext);
     processViolationEvent(violationContext);
-    processViolationOverflow(violationContext);
+    processViolationSpam(violationContext);
     processViolationStatistics(violationContext);
     processViolationVerbose(violationContext);
     noteViolationToStorage(violationContext);
@@ -126,7 +125,7 @@ public final class ViolationProcessor extends Module {
     }
   }
 
-  private void processViolationOverflow(
+  private void processViolationSpam(
     ViolationContext violationContext
   ) {
     if (violationContext.completed()) {
@@ -234,7 +233,6 @@ public final class ViolationProcessor extends Module {
     }
   }
 
-  @Native
   private void processThresholdsEvents(
     ViolationContext violationContext
   ) {
@@ -294,11 +292,15 @@ public final class ViolationProcessor extends Module {
   private final static MessageChannel NOTIFY_MESSAGE_CHANNEL = MessageChannel.NOTIFY;
 
   public void broadcastNotify(String fullMessage) {
+    Collection<Player> receivers = MessageChannelSubscriptions.receiverOf(NOTIFY_MESSAGE_CHANNEL);
+    if (receivers.isEmpty()) {
+      return;
+    }
     String notifyMessage = MessageFormatter.resolveNotifyReplacements(new TextContext(fullMessage));
-    for (Player allPlayers : MessageChannelSubscriptions.receiverOf(NOTIFY_MESSAGE_CHANNEL)/*Bukkit.getOnlinePlayers()*/) {
-      User user = UserRepository.userOf(allPlayers);
+    for (Player receiver : receivers/*Bukkit.getOnlinePlayers()*/) {
+      User user = UserRepository.userOf(receiver);
       if (user.receives(NOTIFY_MESSAGE_CHANNEL)) {
-        synchronizedMessage(allPlayers, notifyMessage);
+        synchronizedMessage(receiver, notifyMessage);
       }
     }
   }

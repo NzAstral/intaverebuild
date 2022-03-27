@@ -78,6 +78,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   public double positionX, positionY, positionZ;
   private double motionX, motionY, motionZ;
   public boolean sprinting, lastSprinting, hasSprintSpeed, sneaking, lastSneaking;
+  public int sneakingTicks;
   private boolean sprintingAllowed;
   private float yawSine, yawCosine, friction;
   public float rotationYaw, rotationPitch;
@@ -929,7 +930,7 @@ public final class MovementMetadata implements SimulationEnvironment {
 
   public void setVehicle(EntityShade ridingEntity) {
     this.attachVehicleTicks = 0;
-    this.attachMoveDistance = ridingEntity.distance(lastPosition());
+    this.attachMoveDistance = ridingEntity.distanceTo(lastPosition());
     this.vehicle = ridingEntity;
   }
 }

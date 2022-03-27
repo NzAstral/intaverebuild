@@ -20,6 +20,8 @@ import de.jpx3.intave.module.feedback.FeedbackCallback;
 import de.jpx3.intave.module.feedback.FeedbackTracker;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
+import de.jpx3.intave.packet.reader.EntityDestroyReader;
+import de.jpx3.intave.packet.reader.PacketReaders;
 import de.jpx3.intave.player.fake.FakePlayer;
 import de.jpx3.intave.shade.ClientMathHelper;
 import de.jpx3.intave.user.User;
@@ -54,8 +56,6 @@ public final class EntityTracker extends Module {
   private final EntityTypeResolver entityTypeResolver;
 
   private final boolean NEW_POSITION_PROCESSING_1_9 = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_9_0);
-  private final boolean HEALTH_PROCESSING_1_10 = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_10_0);
-  private final boolean HEALTH_PROCESSING_1_14 = ProtocolLibraryAdapter.serverVersion().isAtLeast(MinecraftVersions.VER1_14_0);
 
   public EntityTracker(IntavePlugin plugin) {
     this.plugin = plugin;
@@ -87,13 +87,13 @@ public final class EntityTracker extends Module {
       return;
     }
     ConnectionMetadata synchronizeData = user.meta().connection();
-    Vector location = new Vector(0, 0, 0);
+//    Vector location = new Vector(0, 0, 0);
     Vector playerLocation = player.getLocation().toVector();
     List<EntityShade> validEntities = new ArrayList<>();
     for (EntityShade entity : synchronizeData.entities()) {
       boolean firstSurvive = false;
       if (entity.typeData() != null) {
-        double distance = entity.distance(playerLocation);
+        double distance = entity.distanceTo(playerLocation);
         if (distance <= REQUIRED_DISTANCE) {
           validEntities.add(entity);
           entity.distanceToPlayerCache = distance;
@@ -250,9 +250,6 @@ public final class EntityTracker extends Module {
     processPacketSpawnMob(user, event.getPacketType(), entityTypeData, packet, entityId, entityIsPlayer);
   }
 
-  private final boolean INT_LIST_ENTITY_DESTROY = MinecraftVersions.VER1_17_1.atOrAbove();
-  private final boolean SINGLE_INT_ENTITY_DESTROY = !INT_LIST_ENTITY_DESTROY && MinecraftVersions.VER1_17_0.atOrAbove();
-  private final boolean INT_ARRAY_ENTITY_DESTROY = !SINGLE_INT_ENTITY_DESTROY;
 
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
@@ -264,29 +261,22 @@ public final class EntityTracker extends Module {
   public void receiveEntityDestroy(PacketEvent event) {
     Player player = event.getPlayer();
     PacketContainer packet = event.getPacket();
-
-    if (INT_LIST_ENTITY_DESTROY) {
-      List<Integer> entityIDs = packet.getIntLists().read(0);
-      entityIDs.forEach(entityID -> enterEntityDestroy(player, entityID));
-    } else if (INT_ARRAY_ENTITY_DESTROY) {
-      int[] entityIDs = packet.getIntegerArrays().read(0);
-      for (int entityID : entityIDs) {
-        enterEntityDestroy(player, entityID);
-      }
-    } else {
-      enterEntityDestroy(player, packet.getIntegers().read(0));
-    }
+    EntityDestroyReader reader = PacketReaders.readerOf(packet);
+    reader.readEntities(entityId -> enterEntityDestroy(player, entityId));
+    reader.close();
   }
 
   private void enterEntityDestroy(Player player, int entityID) {
+    // Entity destroy packets are NEVER to be synchronized
+
     /*
     Important: When the destroy entity packet is synchronised the spawn entity packet needs also be synchronized because:
     When you respawn the server sends a destroy entity packet and a spawn entity packet pretty fast one after another and if the
     destroy entity packet gets executed after the spawn packet the entity will be destroyed right after it gets spawned
      */
-    User user = UserRepository.userOf(player);
-    ConnectionMetadata synchronizeData = user.meta().connection();
-    EntityShade entityShade = synchronizeData.entityBy(entityID);
+//    User user = UserRepository.userOf(player);
+//    ConnectionMetadata synchronizeData = user.meta().connection();
+//    EntityShade entityShade = synchronizeData.entityBy(entityID);
     processEntityDestroy(player, entityID);
   }
 
@@ -301,8 +291,6 @@ public final class EntityTracker extends Module {
       movementData.dismountRidingEntity();
     }
     synchronizeData.destroyEntity(entityId);
-//    synchronizedEntityMap.put(entityId, WrappedEntity.destroyedEntity());
-
     if (attackData.lastAttackedEntity() != null && attackData.lastAttackedEntityID() == entityId) {
       attackData.nullifyLastAttackedEntity();
     }
@@ -328,17 +316,12 @@ public final class EntityTracker extends Module {
     User user = UserRepository.userOf(player);
     ConnectionMetadata synchronizeData = user.meta().connection();
     MovementMetadata movementData = user.meta().movement();
-
     if (movementData.lastTeleport == 0) {
       return;
     }
     for (EntityShade value : synchronizeData.entities()) {
       value.onUpdate();
     }
-//    for (Map.Entry<Integer, WrappedEntity> entry : synchronizeData.synchronizedEntityMap().entrySet()) {
-//      WrappedEntity entity = entry.getValue();
-//      entity.onUpdate();
-//    }
   }
 
   @PacketSubscription(
@@ -351,20 +334,19 @@ public final class EntityTracker extends Module {
   public void receiveEntityTeleport(PacketEvent event) {
     Player player = event.getPlayer();
     PacketContainer packet = event.getPacket();
-    final EntityShade entity = wrappedEntityByEntityTeleportPacket(event);
+    EntityShade entity = wrappedEntityByEntityTeleportPacket(event);
 
-    if (entity == null)
+    if (entity == null) {
       return;
-
+    }
+    entity.immediateEntityTeleport(packet);
     if (entity.typeData().isLivingEntity() && entity.tracingEnabled()) {
       FeedbackCallback<PacketEvent> task = (player1, event1) -> {
         entity.verifiedPosition = false;
         entity.handleEntityTeleport(packet);
         entity.clientSynchronized = true;
       };
-
       FeedbackTracker feedbackTracker = entity.feedbackTracker();
-
 //      if (entity.doubleVerification) {
 //        FeedbackCallback<PacketEvent> verificationTask = (x, theEvent) -> entity.verifiedPosition = true;
 //        Modules.feedback().tracedDoubleSynchronize(player, event, event, task, verificationTask, feedbackTracker, feedbackTracker);
@@ -415,6 +397,7 @@ public final class EntityTracker extends Module {
     if (entity == null) {
       return;
     }
+    entity.immediateEntityMovement(packet);
 
     if (entity.typeData().isLivingEntity() && entity.tracingEnabled()) {
       FeedbackCallback<PacketEvent> task = (player1, event1) -> {
@@ -736,6 +719,9 @@ public final class EntityTracker extends Module {
       });
     }
   }
+
+  private final boolean HEALTH_PROCESSING_1_10 = MinecraftVersions.VER1_10_0.atOrAbove();
+  private final boolean HEALTH_PROCESSING_1_14 = MinecraftVersions.VER1_14_0.atOrAbove();
 
   private Float readHealthOf(List<WrappedWatchableObject> watchableObjects) {
     for (WrappedWatchableObject watchableObject : watchableObjects) {

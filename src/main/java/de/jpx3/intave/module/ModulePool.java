@@ -28,11 +28,11 @@ public final class ModulePool {
 
   public void enableModule(Module module) {
     if (module.settings().shouldLinkSubscriptions()) {
-      PacketSubscriptionLinker packetSubscriptionLinker = lookup(PacketSubscriptionLinker.class);
       BukkitEventSubscriptionLinker bukkitEventLinker = lookup(BukkitEventSubscriptionLinker.class);
       if (bukkitEventLinker != null) {
         bukkitEventLinker.registerEventsIn(module);
       }
+      PacketSubscriptionLinker packetSubscriptionLinker = lookup(PacketSubscriptionLinker.class);
       if (packetSubscriptionLinker != null) {
         packetSubscriptionLinker.linkSubscriptionsIn(module);
       }

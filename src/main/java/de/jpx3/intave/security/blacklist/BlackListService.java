@@ -75,6 +75,6 @@ public final class BlackListService implements BukkitEventSubscriber {
   }
 
   public boolean enabled() {
-    return plugin.configurationService().configuration().getBoolean("blacklist.enable");
+    return plugin.settings().getBoolean("blacklist.enable");
   }
 }

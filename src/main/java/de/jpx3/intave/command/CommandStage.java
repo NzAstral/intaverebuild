@@ -2,6 +2,7 @@ package de.jpx3.intave.command;
 
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.Native;
+import de.jpx3.intave.diagnostic.natives.NativeCheck;
 import de.jpx3.intave.user.permission.BukkitPermissionCheck;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -41,8 +42,15 @@ public abstract class CommandStage {
 
   private final static String NO_PERMISSION_MESSAGE = ChatColor.RED + "I'm sorry, but you do not have permission to perform this command. Please contact the server administrators if you believe that this is in error.";
 
+  {
+    NativeCheck.registerNative(() -> execute(null, null));
+  }
+
   @Native
   public void execute(CommandSender sender, String currentCommand) {
+    if (NativeCheck.checkActive()) {
+      return;
+    }
     if (currentCommand.isEmpty()) {
       showAllCommands(sender);
       return;

@@ -20,7 +20,7 @@ public final class CommandFilter extends Filter {
 
   public CommandFilter(IntavePlugin plugin) {
     super("command");
-    separateEnable = plugin.configurationService().configuration().getBoolean("command.hide", true);
+    separateEnable = plugin.settings().getBoolean("command.hide", true);
   }
 
   @PacketSubscription(
@@ -38,7 +38,31 @@ public final class CommandFilter extends Filter {
     }
   }
 
+//  @PacketSubscription(
+////    engine = Engine.ASYNC_INTERNAL,
+//    packetsOut = {
+//      COMMANDS
+//    }
+//  )
+//  public void receiveCommands(PacketEvent event) {
+//    Player player = event.getPlayer();
+//    PacketContainer packet = event.getPacket();
+//    StructureModifier<RootCommandNode> rootModifier = packet.getSpecificModifier(RootCommandNode.class);
+//    RootCommandNode<?> rootCommandNode = rootModifier.readSafely(0);
+////    player.sendMessage("Removing " + rootCommandNode.getChildren());
+////    for (CommandNode<?> child : rootCommandNode.getChildren()) {
+////      System.out.println(child.getName() + " -> " + child.getUsageText());
+////    }
+//    rootCommandNode.removeCommand("iac");
+//    rootCommandNode.removeCommand("intave:iac");
+//    rootCommandNode.removeCommand("intave");
+//    rootCommandNode.removeCommand("intave:intave");
+////    rootModifier.write(0, new RootCommandNode());
+//    rootModifier.write(0, rootCommandNode);
+//  }
+
   @PacketSubscription(
+//    engine = Engine.ASYNC_INTERNAL,
     packetsOut = {
       TAB_COMPLETE_OUT
     }

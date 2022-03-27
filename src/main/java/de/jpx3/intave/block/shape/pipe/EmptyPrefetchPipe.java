@@ -36,8 +36,6 @@ public final class EmptyPrefetchPipe implements ShapeResolverPipeline {
     }
     switch (type) {
       case AIR:
-//      case GRASS:
-//      case LONG_GRASS:
       case SIGN:
       case SIGN_POST:
       case WALL_SIGN:

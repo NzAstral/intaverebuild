@@ -7,7 +7,7 @@ final class EmptyBlockVariant implements BlockVariant {
   }
 
   @Override
-  public <T extends Enum<T>> T enumProperty(Class<T> clazz, String name) {
+  public <T extends Enum<T>> T enumProperty(Class<T> klass, String name) {
     return null;
   }
 }

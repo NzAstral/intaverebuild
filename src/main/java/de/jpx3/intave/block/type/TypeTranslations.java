@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class TypeTranslations {
   private final Collection<TypeTranslation> translations;
@@ -20,21 +21,25 @@ public final class TypeTranslations {
 
   public TypeTranslations specifiedTo(MinecraftVersion serverVersion, MinecraftVersion clientVersion) {
     Predicate<TypeTranslation> typeTranslationFilter = typeTranslation -> appropriateTranslation(typeTranslation, serverVersion, clientVersion);
-    return clientVersion.isAtLeast(serverVersion) ? empty() : filtered(typeTranslationFilter);
+    return clientVersion.isAtLeast(serverVersion) ? empty() : filter(typeTranslationFilter);
   }
 
   private boolean appropriateTranslation(TypeTranslation typeTranslation, MinecraftVersion serverVersion, MinecraftVersion clientVersion) {
     return serverVersion.isAtLeast(typeTranslation.versionTo()) && !clientVersion.isAtLeast(typeTranslation.versionFrom()) && clientVersion.isAtLeast(typeTranslation.versionTo());
   }
 
-  public TypeTranslations filtered(Predicate<TypeTranslation> keepConstraint) {
-    return ofCollection(translations.stream().filter(keepConstraint).collect(Collectors.toList()));
+  public TypeTranslations filter(Predicate<TypeTranslation> keepConstraint) {
+    return ofCollection(stream().filter(keepConstraint).collect(Collectors.toList()));
+  }
+
+  public Stream<TypeTranslation> stream() {
+    return translations.stream();
   }
 
   private final static Collector<TypeTranslation, ?, Map<Material, Material>> MAP_COLLECTOR =
     Collectors.toMap(TypeTranslation::typeFrom, TypeTranslation::typeTo, (a, b) -> b);
 
-  public Map<Material, Material> asMap() {
+  public Map<Material, Material> asTypeMap() {
     return translations.stream().collect(MAP_COLLECTOR);
   }
 

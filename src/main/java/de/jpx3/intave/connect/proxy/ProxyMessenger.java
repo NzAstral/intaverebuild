@@ -51,7 +51,7 @@ public final class ProxyMessenger {
     boolean spigotExpectingProxyConnections = SpigotConfig.bungee;
     boolean serverInOnlineMode = plugin.getServer().getOnlineMode();
     IntaveLogger logger = plugin.logger();
-    this.packetOutputAllowed = plugin.configurationService().configuration().getBoolean("proxy.enable", false);
+    this.packetOutputAllowed = plugin.settings().getBoolean("proxy.enable", false);
     if (!packetOutputAllowed) {
       return;
     }

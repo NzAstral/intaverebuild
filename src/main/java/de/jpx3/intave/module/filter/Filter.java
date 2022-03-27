@@ -9,7 +9,7 @@ public class Filter implements EventProcessor {
 
   public Filter(String name) {
     this.name = name;
-    this.enabled = IntavePlugin.singletonInstance().configurationService().configuration().getBoolean("filter." + name);
+    this.enabled = IntavePlugin.singletonInstance().settings().getBoolean("filter." + name);
   }
 
   protected boolean enabled() {

@@ -18,6 +18,7 @@ import de.jpx3.intave.check.combat.heuristics.MiningStrategy;
 import de.jpx3.intave.check.combat.heuristics.detect.*;
 import de.jpx3.intave.check.combat.heuristics.mine.MiningStrategyContainer;
 import de.jpx3.intave.check.combat.heuristics.mine.MiningStrategyExecutor;
+import de.jpx3.intave.diagnostic.natives.NativeCheck;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.executor.TaskTracker;
 import de.jpx3.intave.module.Modules;
@@ -35,6 +36,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -42,6 +44,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import static de.jpx3.intave.check.combat.heuristics.Confidence.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
 public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
@@ -55,6 +58,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
     this.setupSubChecks();
     this.setupEvaluationScheduler(plugin);
+    this.registerNativeCheck();
   }
 
   private void setupEvaluationScheduler(IntavePlugin plugin) {
@@ -106,7 +110,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
   }
 
   public void saveAnomaly(Player player, Anomaly anomaly) {
-    if (anomaly.confidence().level() > Confidence.NONE.level()) {
+    if (anomaly.confidence().level() > NONE.level()) {
       HeuristicMeta meta = metaOf(player);
       int limit = anomaly.limit();
       int betterFound = (int) meta.anomalies.stream()
@@ -119,8 +123,18 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     Synchronizer.synchronize(() -> debug(player, anomaly));
   }
 
+  public void registerNativeCheck() {
+    NativeCheck.registerNative(() -> debug(null, null));
+    NativeCheck.registerNative(() -> evaluate(null, false));
+    NativeCheck.registerNative(() -> catchAnomaliesOf(null, false));
+    NativeCheck.registerNative(() -> resolveIdentifier(null));
+  }
+
   @Native
   private void debug(Player player, Anomaly anomaly) {
+    if (NativeCheck.checkActive() || anomaly == null) {
+      return;
+    }
     User user = userOf(player);
     List<Anomaly> anomalies = catchAnomaliesOf(user, false);
     List<Confidence> allConfidences = resolveConfidencesOf(anomalies);
@@ -129,7 +143,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     String pattern = anomaly.key();
     String description = anomaly.description();
 
-    String confidenceDetails = overallConfidence.output() + " (" + Confidence.levelFrom(allConfidences.toArray(new Confidence[0])) + "+" + anomaly.confidence().level() + ")";
+    String confidenceDetails = overallConfidence.output() + " (" + levelFrom(allConfidences.toArray(new Confidence[0])) + "+" + anomaly.confidence().level() + ")";
     String message = ChatColor.RED + "[IH] " + player.getName() + " on p[" + pattern + "]" + confidenceDetails + " " + description;
 
     if (IntaveControl.DEBUG_HEURISTICS && !plugin.sibylIntegrationService().isAuthenticated(player)) {
@@ -157,6 +171,9 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   @Native
   public void evaluate(Player player, boolean enforceDecision) {
+    if (NativeCheck.checkActive()) {
+      return;
+    }
     User user = userOf(player);
     AttackMetadata attackData = user.meta().attack();
 
@@ -174,8 +191,8 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       this.tryRemoveMiningStrategy(attackData.activeMiningStrategy);
     }
 
-    boolean suitableConfidence = overallConfidenceWithoutDelay.level() >= Confidence.MAYBE.level() && overallConfidenceWithoutDelay.level() < Confidence.CERTAIN.level();
-    if (IntaveControl.USE_MINING_STRATEGIES && suitableConfidence && !enforceDecision) {
+    boolean suitableConfidenceForMining = overallConfidenceWithoutDelay.atLeast(MAYBE) && !overallConfidenceWithoutDelay.atLeast(CERTAIN);
+    if (IntaveControl.USE_MINING_STRATEGIES && suitableConfidenceForMining && !enforceDecision) {
       // perform mining strategies
       if (attackData.activeMiningStrategy == null) {
         MiningStrategy strategy = findSuitableMiningStrategy(
@@ -189,7 +206,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       }
     }
 
-    if (overallConfidence.level() >= Confidence.VERY_LIKELY.level()) {
+    if (overallConfidence.atLeast(VERY_LIKELY)) {
       Anomaly.Type type = findDominantType(anomalies);
       String identifier;
       if (IntaveControl.DEBUG_HEURISTICS) {
@@ -237,7 +254,11 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   @SuppressWarnings("UnusedAssignment")
   @Native
+  @NotNull
   public List<Anomaly> catchAnomaliesOf(User user, boolean delay) {
+    if (NativeCheck.checkActive()) {
+      return null;
+    }
     Player player = user.player();
     Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
     boolean isPartner = (ProtocolMetadata.VERSION_DETAILS & 0x100) != 0;
@@ -328,7 +349,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
   }
 
   public Confidence computeOverallConfidence(Confidence... confidences) {
-    return Confidence.confidenceFrom(Confidence.levelFrom(confidences));
+    return confidenceFrom(levelFrom(confidences));
   }
 
   // events
@@ -410,12 +431,15 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   @Native
   private String resolveIdentifier(List<Anomaly> anomalies) {
+    if (NativeCheck.checkActive()) {
+      return null;
+    }
     return encryptAnomalies(restructureForOutput(anomalies));
   }
 
   private List<Anomaly> restructureForOutput(List<Anomaly> anomalies) {
     // Remove anomalies without effect
-    anomalies.removeIf(anomaly -> anomaly.confidence() == Confidence.NONE);
+    anomalies.removeIf(anomaly -> anomaly.confidence() == NONE);
 
     // Remove duplicated anomalies
     List<String> knownPatterns = Lists.newArrayList();
@@ -444,7 +468,15 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
   }
 
   @Native
+  public void nativeCheckEncryptAnomalies() {
+    encryptAnomalies(null);
+  }
+
+  @Native
   private String encryptAnomalies(List<Anomaly> anomalies) {
+    if (NativeCheck.checkActive()) {
+      return null;
+    }
     List<String> usableAnomalies = new ArrayList<>();
     for (Anomaly anomaly : anomalies) {
       String key = anomaly.key();

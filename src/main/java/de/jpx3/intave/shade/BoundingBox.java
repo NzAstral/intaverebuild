@@ -493,6 +493,21 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     return new BoundingBox(d0, d1, d2, d3, d4, d5);
   }
 
+  public static BoundingBox originFromBounds(
+    double x1, double y1, double z1,
+    double x2, double y2, double z2
+  ) {
+    double d0 = Math.min(x1, x2);
+    double d1 = Math.min(y1, y2);
+    double d2 = Math.min(z1, z2);
+    double d3 = Math.max(x1, x2);
+    double d4 = Math.max(y1, y2);
+    double d5 = Math.max(z1, z2);
+    BoundingBox boundingBox = new BoundingBox(d0, d1, d2, d3, d4, d5);
+    boundingBox.makeOriginBox();
+    return boundingBox;
+  }
+
   public static BoundingBox originFromX16(
     double x1, double y1, double z1,
     double x2, double y2, double z2

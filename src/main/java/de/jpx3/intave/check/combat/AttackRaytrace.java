@@ -176,10 +176,10 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
         double transactionTickAverage = transactionPingAverage / 50d;
         int historyBasedTransactionLimit = (int) ((LatencyStudy.cachedAverage() + transactionTickAverage + 1) * 0.9);
         boolean pendingOverAverage = transactionPingAverage > 0 && pendingFeedbackPackets > historyBasedTransactionLimit;
+        boolean blocked = !user.trustFactor().atLeast(TrustFactor.ORANGE);
 
         if (pendingOverAverage) {
-          boolean blocked = !user.trustFactor().atLeast(TrustFactor.ORANGE);
-          SibylBroadcast.broadcast(ChatColor.RED + "[R] " + player.getName() + " attacked with "+(pendingOverAverage ? "an above-average " : "acceptable ") + "latency ("+(blocked ? "blocked, " : "") + pendingFeedbackPackets + "/"+historyBasedTransactionLimit+" packets with " + transactionPingAverage + "ms trans-ping)");
+          SibylBroadcast.broadcast(ChatColor.RED + "[R] " + player.getName() + " attack latency ("+(blocked ? "blocked, " : "") + pendingFeedbackPackets + "/"+historyBasedTransactionLimit+"p with " + transactionPingAverage + "ms tra-ping, "+entity.immediateDistanceToClientPosition()+" dist)");
           if (blocked) {
             entityHasNotTimedOut = false;
           }

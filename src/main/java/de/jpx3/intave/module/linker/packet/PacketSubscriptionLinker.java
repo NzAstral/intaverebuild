@@ -19,11 +19,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntFunction;
 
-import static de.jpx3.intave.IntaveControl.DISABLE_CHUNK_PACKET_HOOK;
+import static de.jpx3.intave.IntaveControl.IGNORE_CHUNK_PACKETS;
 
 @DoNotFlowObfuscate
 public final class PacketSubscriptionLinker extends Module {
-  private final static boolean NO_CHAT_HOOKUP = false;
+  private final static boolean IGNORE_CHAT_PACKETS = false;
   private final IntavePlugin plugin;
   private final Map<PacketType, SCOWAList<FilteringPacketAdapter>> customEngineListenerMappings = new ConcurrentHashMap<>();
   private final Map<PacketType, SCOWAList<FilteringPacketAdapter>> internalPacketListenerMappings = new ConcurrentHashMap<>();
@@ -175,12 +175,12 @@ public final class PacketSubscriptionLinker extends Module {
   }
 
   private boolean excluded(PacketType packetType) {
-    if (NO_CHAT_HOOKUP) {
+    if (IGNORE_CHAT_PACKETS) {
       return packetType == PacketType.Play.Client.TAB_COMPLETE ||
         packetType == PacketType.Play.Server.TAB_COMPLETE ||
         packetType == PacketType.Play.Client.CHAT;
     }
-    if (DISABLE_CHUNK_PACKET_HOOK) {
+    if (IGNORE_CHUNK_PACKETS) {
       return packetType == PacketType.Play.Server.MAP_CHUNK ||
         packetType == PacketType.Play.Server.MAP_CHUNK_BULK;
     }

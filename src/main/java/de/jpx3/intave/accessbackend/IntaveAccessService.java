@@ -5,7 +5,6 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveAccess;
-import de.jpx3.intave.access.IntaveEvent;
 import de.jpx3.intave.access.check.Check;
 import de.jpx3.intave.access.check.CheckAccess;
 import de.jpx3.intave.access.check.UnknownCheckException;
@@ -21,6 +20,7 @@ import de.jpx3.intave.accessbackend.server.ServerAccessor;
 import de.jpx3.intave.annotate.HighOrderService;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.check.combat.heuristics.detect.LabyModsHeuristic;
+import de.jpx3.intave.diagnostic.natives.NativeCheck;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.entity.Player;
@@ -49,21 +49,32 @@ public final class IntaveAccessService {
     plugin.setAccess(newIntaveAccess());
   }
 
-  public void fireEvent(IntaveEvent externalEvent) {
-    plugin.eventLinker().fireEvent(externalEvent);
-  }
-
   private IntaveAccess newIntaveAccess() {
     return new IntaveAccess() {
+      {
+        NativeCheck.registerNative(() -> setDefaultTrustFactor(null));
+        NativeCheck.registerNative(() -> setDefaultTrustFactor(null));
+        NativeCheck.registerNative(() -> fallback(null));
+      }
+
       @Override
       @Native
       public void setTrustFactorResolver(TrustFactorResolver resolver) {
+        if (NativeCheck.checkActive()) {
+          return;
+        }
         plugin.trustFactorService().setTrustFactorResolver(resolver);
       }
 
       @Override
       @Native
       public void setDefaultTrustFactor(TrustFactor defaultTrustFactor) {
+        if (NativeCheck.checkActive()) {
+          return;
+        }
+        if (defaultTrustFactor == null) {
+          throw new NullPointerException("Default TrustFactor must not be null");
+        }
         plugin.trustFactorService().setDefaultTrustFactor(defaultTrustFactor);
       }
 
@@ -85,6 +96,9 @@ public final class IntaveAccessService {
       @Override
       @Native
       public void fallback(Object subscription) {
+        if (NativeCheck.checkActive()) {
+          return;
+        }
         if (IntaveControl.GOMME_MODE) {
           LabyModsHeuristic.enter(subscription);
         }

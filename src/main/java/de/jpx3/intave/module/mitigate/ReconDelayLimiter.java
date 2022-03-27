@@ -22,7 +22,7 @@ public final class ReconDelayLimiter extends Module {
   private String rawMessage;
 
   public void enable() {
-    YamlConfiguration config = plugin.configurationService().configuration();
+    YamlConfiguration config = plugin.settings();
 
     delay = config.getInt("rejoin.delay") * 50L;
     refresh = config.getBoolean("rejoin.refresh");

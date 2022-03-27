@@ -43,8 +43,8 @@ class BaseSimulator extends Simulator {
     MovementConfiguration configuration
   ) {
     // guessed movement configuration
-    float strafe = configuration.strafe();
     float forward = configuration.forward();
+    float strafe = configuration.strafe();
     boolean handActive = configuration.isHandActive();
     boolean attackReduce = configuration.isReducing();
     boolean jumped = configuration.isJumping();
@@ -70,12 +70,12 @@ class BaseSimulator extends Simulator {
     forward = ((int) forward) * 0.98f;
     strafe = ((int) strafe) * 0.98f;
     if (pose == Pose.CROUCHING || !clientData.beeUpdate() && environment.isSneaking()) {
-      strafe = (float) ((double) strafe * 0.3);
       forward = (float) ((double) forward * 0.3);
+      strafe = (float) ((double) strafe * 0.3);
     }
     if (handActive) {
-      strafe *= 0.2f;
       forward *= 0.2f;
+      strafe *= 0.2f;
     }
     if (attackReduce) {
       motion.motionX *= 0.6;

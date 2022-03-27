@@ -11,6 +11,7 @@ import de.jpx3.intave.module.feedback.FeedbackTracker;
 import de.jpx3.intave.module.feedback.PendingCountingFeedbackTracker;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.shade.ClientMathHelper;
+import de.jpx3.intave.shade.Position;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,6 +46,10 @@ public class EntityShade {
    * This value is used to interpolate the positions of the Entity
    */
   public long serverPosX, serverPosY, serverPosZ;
+
+  // Immediate values
+  public long immServerPosX, immServerPosY, immServerPosZ;
+  public final Position immediateServerPosition = new Position();
 
   public EntityPositionContext position;
   public EntityPositionContext lastPosition;
@@ -163,6 +168,37 @@ public class EntityShade {
     }
   }
 
+  public void immediateEntityTeleport(PacketContainer packet) {
+    double newPosX;
+    double newPosY;
+    double newPosZ;
+    if (NEW_POSITION_PROCESSING_1_9) {
+      newPosX = packet.getDoubles().read(0);
+      newPosY = packet.getDoubles().read(1);
+      newPosZ = packet.getDoubles().read(2);
+      immServerPosX = ClientMathHelper.positionLong(newPosX);
+      immServerPosY = ClientMathHelper.positionLong(newPosY);
+      immServerPosZ = ClientMathHelper.positionLong(newPosZ);
+    } else {
+      immServerPosX = packet.getIntegers().read(1);
+      immServerPosY = packet.getIntegers().read(2);
+      immServerPosZ = packet.getIntegers().read(3);
+      newPosX = immServerPosX / 32.0;
+      newPosY = immServerPosY / 32.0;
+      newPosZ = immServerPosZ / 32.0;
+    }
+    if (
+      Math.abs(immediateServerPosition.getX() - newPosX) < 0.03125d &&
+        Math.abs(immediateServerPosition.getY() - newPosY) < 0.015625d &&
+        Math.abs(immediateServerPosition.getZ() - newPosZ) < 0.03125d
+    ) {
+      return;
+    }
+    immediateServerPosition.setX(newPosX);
+    immediateServerPosition.setY(newPosY);
+    immediateServerPosition.setZ(newPosZ);
+  }
+
   /**
    * Handles a teleportation. Packets: ENTITY_TELEPORT
    *
@@ -204,10 +240,44 @@ public class EntityShade {
     if (Math.abs(position.posX - newPosX) < 0.03125d &&
       Math.abs(alternativePosition.posY - alternativeNewPosY) < 0.015625d &&
       Math.abs(position.posZ - newPosZ) < 0.03125d) {
-      setPositionAndRotationEntityLiving(alternativePosition.posY);
+      setAlternativeYPosition(alternativePosition.posY);
     } else {
-      setPositionAndRotationEntityLiving(alternativeNewPosY);
+      setAlternativeYPosition(alternativeNewPosY);
     }
+  }
+
+  public void immediateEntityMovement(PacketContainer packet) {
+    double newPosX;
+    double newPosY;
+    double newPosZ;
+    if (NEW_POSITION_PROCESSING_1_14) {
+      StructureModifier<Short> shorts = packet.getShorts();
+      this.immServerPosX += shorts.readSafely(0);
+      this.immServerPosY += shorts.readSafely(1);
+      this.immServerPosZ += shorts.readSafely(2);
+      newPosX = (double) immServerPosX / 4096d;
+      newPosY = (double) immServerPosY / 4096d;
+      newPosZ = (double) immServerPosZ / 4096d;
+    } else if (NEW_POSITION_PROCESSING_1_9) {
+      StructureModifier<Integer> integers = packet.getIntegers();
+      this.immServerPosX += integers.readSafely(1);
+      this.immServerPosY += integers.readSafely(2);
+      this.immServerPosZ += integers.readSafely(3);
+      newPosX = (double) immServerPosX / 4096d;
+      newPosY = (double) immServerPosY / 4096d;
+      newPosZ = (double) immServerPosZ / 4096d;
+    } else {
+      StructureModifier<Byte> bytes = packet.getBytes();
+      this.immServerPosX += bytes.readSafely(0);
+      this.immServerPosY += bytes.readSafely(1);
+      this.immServerPosZ += bytes.readSafely(2);
+      newPosX = (double) immServerPosX / 32d;
+      newPosY = (double) immServerPosY / 32d;
+      newPosZ = (double) immServerPosZ / 32d;
+    }
+    immediateServerPosition.setX(newPosX);
+    immediateServerPosition.setY(newPosY);
+    immediateServerPosition.setZ(newPosZ);
   }
 
   /**
@@ -255,7 +325,7 @@ public class EntityShade {
 
     // 3 is used to interpolate the entity position in new client ticks
     setPositionAndRotationEntityLiving(newPosX, newPosY, newPosZ, 3);
-    setPositionAndRotationEntityLiving(alternativeNewPosY);
+    setAlternativeYPosition(alternativeNewPosY);
   }
 
   /**
@@ -295,6 +365,14 @@ public class EntityShade {
     }
   }
 
+  public double immediateDistanceToClientPosition() {
+    return distance(
+      immediateServerPosition.getX(),
+      immediateServerPosition.getY(),
+      immediateServerPosition.getZ()
+    );
+  }
+
   public void setShiftedPositionY(double alternativeNewPosY) {
     alternativePosition.posY = alternativeNewPosY;
   }
@@ -306,7 +384,7 @@ public class EntityShade {
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
   }
 
-  public double distance(Vector position) {
+  public double distanceTo(Vector position) {
     return distance(position.getX(), position.getY(), position.getZ());
   }
 
@@ -328,7 +406,7 @@ public class EntityShade {
     position.newPosRotationIncrements = newPosRotationIncrements;
   }
 
-  public void setPositionAndRotationEntityLiving(double alternativeY) {
+  public void setAlternativeYPosition(double alternativeY) {
     if (!typeData().isLivingEntity()) {
       setShiftedPositionY(alternativeY);
       return;

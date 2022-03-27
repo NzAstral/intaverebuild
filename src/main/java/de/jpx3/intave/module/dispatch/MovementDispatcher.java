@@ -531,6 +531,14 @@ public final class MovementDispatcher extends Module {
     if (movementData.physicsJumped) {
       movementData.lastJump = System.currentTimeMillis();
     }
+    if (movementData.isSneaking()) {
+      movementData.sneakingTicks++;
+      if (movementData.sneakingTicks > 1) {
+        movementData.lastSneakingTimestamps = System.currentTimeMillis();
+      }
+    } else {
+      movementData.sneakingTicks = 0;
+    }
     movementData.pastBlockPlacement++;
     inventoryData.pastHotBarSlotChange++;
     inventoryData.pastItemUsageTransition++;
@@ -796,9 +804,9 @@ public final class MovementDispatcher extends Module {
         if (movementData.isInVehicle()) {
           movementData.dismountRidingEntity();
           movementData.sneaking = false;
+        } else {
+          movementData.sneaking = true;
         }
-        movementData.lastSneakingTimestamps = System.currentTimeMillis();
-        movementData.sneaking = true;
         break;
       case RELEASE_SHIFT_KEY:
       case STOP_SNEAKING:

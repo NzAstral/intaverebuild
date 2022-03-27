@@ -73,7 +73,11 @@ public final class ArrayBlockShape extends MemoryTraced implements BlockShape {
         if (boundingBoxes == null) {
           boundingBoxes = new ArrayList<>(contents.length);
         }
-        boundingBoxes.addAll(added);
+        if (added.size() == 1) {
+          boundingBoxes.add(added.get(0));
+        } else {
+          boundingBoxes.addAll(added);
+        }
       }
     }
     return boundingBoxes == null ? Collections.emptyList() : boundingBoxes;
@@ -82,7 +86,7 @@ public final class ArrayBlockShape extends MemoryTraced implements BlockShape {
   @Override
   public boolean isEmpty() {
     for (BlockShape content : contents) {
-      if (content.isEmpty()) {
+      if (!content.isEmpty()) {
         return false;
       }
     }
