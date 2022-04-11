@@ -17,12 +17,11 @@ public final class SwingDeviationHeuristics extends SwingBlueprint<SwingDeviatio
   @Override
   public void check(User user, List<Integer> delays) {
     SwingDeviationBlueprintMeta meta = metaOf(userOf(user.player()));
-    double cps = clickPerSecond(delays);
     double deviation = standardDeviation(delays);
     if (deviation < 0.45) {
       if (++meta.vl >= 3) {
-        String description = String.format("clicking too fast without double clicks %.2f", cps);
-        Anomaly anomaly = Anomaly.anomalyOf("300", Confidence.NONE, Anomaly.Type.AUTOCLICKER, description);
+        String description = String.format("clicking with a low deviation %.2f", deviation);
+        Anomaly anomaly = Anomaly.anomalyOf("310", Confidence.NONE, Anomaly.Type.AUTOCLICKER, description);
         parentCheck().saveAnomaly(user.player(), anomaly);
       }
     } else {

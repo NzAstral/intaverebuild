@@ -15,6 +15,7 @@ import de.jpx3.intave.check.combat.heuristics.Anomaly;
 import de.jpx3.intave.check.combat.heuristics.Combinator;
 import de.jpx3.intave.check.combat.heuristics.Confidence;
 import de.jpx3.intave.check.combat.heuristics.MiningStrategy;
+import de.jpx3.intave.check.combat.heuristics.detect.clickpatterns.SwingDeviationHeuristics;
 import de.jpx3.intave.check.combat.heuristics.detect.clickpatterns.SwingLimitHeuristics;
 import de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.*;
 import de.jpx3.intave.check.combat.heuristics.detect.inventory.PacketInventoryHeuristic;
@@ -96,6 +97,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     }
 
     appendCheckPart(new SwingLimitHeuristics(this));
+    appendCheckPart(new SwingDeviationHeuristics(this));
     appendCheckPart(new PreAttackHeuristic(this));
 //    appendCheckPart(new RotationAngleHeuristic(this));
 

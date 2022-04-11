@@ -13,6 +13,7 @@ import de.jpx3.intave.shade.NativeVector;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.world.raytrace.Raytracing;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -45,11 +46,9 @@ public abstract class SwingBlueprint<M extends SwingBlueprintMeta>
     this.requireCombat = false;
   }
 
-  // This isn't going to work because when we will extend it we won't know our user?
-  // Should we put it through parameters or something?
   public abstract void check(User user, List<Integer> delays);
 
-  private boolean breakingBlock(User user) {
+  private boolean lookingAtBlocks(User user) {
     Player player = user.player();
     World world = user.player().getWorld();
     MovementMetadata movementData = user.meta().movement();
@@ -57,14 +56,14 @@ public abstract class SwingBlueprint<M extends SwingBlueprintMeta>
       movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ,
       movementData.rotationYaw, movementData.rotationPitch);
 
-    MovingObjectPosition raycastResult;
+    MovingObjectPosition raytraceResult;
     try {
-      raycastResult = Raytracing.blockRayTrace(player, playerLocation);
+      raytraceResult = Raytracing.blockRayTrace(player, playerLocation);
     } catch (Exception exception) {
       exception.printStackTrace();
       return true;
     }
-    return raycastResult != null && raycastResult.hitVec != NativeVector.ZERO;
+    return raytraceResult != null && raytraceResult.hitVec != NativeVector.ZERO;
   }
 
   @PacketSubscription(
@@ -76,26 +75,22 @@ public abstract class SwingBlueprint<M extends SwingBlueprintMeta>
   public void clientSwing(PacketEvent event) {
     User user = userOf(event.getPlayer());
     SwingBlueprintMeta meta = metaOf(user);
-    // Completely ignore this swing, like it never existed!
-    if (user.meta().attack().inBreakProcess || meta.placedBlock || breakingBlock(user)) {
+    // SwingBlueprint detections only work on 1.8- !
+    if (!user.meta().protocol().flyingPacketStream()) {
       return;
     }
-
+    // Completely ignore this swing, like it never existed!
+    if (user.meta().attack().inBreakProcess || meta.placedBlock) {
+      return;
+    }
     boolean requireCombatCheck = !requireCombat || meta.lastAttack <= 10;
     boolean ignoreDoubleClickCheck = !ignoreDoubleClicks || meta.delay > 0;
-    if (meta.delay <= 15 && requireCombatCheck && ignoreDoubleClickCheck) {
-      if (meta.delay == 0) {
-        meta.doubleClicks++;
-      }
-      meta.delaysDelta.add(Math.abs(meta.delay - meta.lastDelay));
-      meta.delays.add(meta.delay);
-      if (meta.delays.size() == sampleSize) {
-        check(user, meta.delays);
-        meta.delays.clear();
-      }
+    if (meta.delay <= 15 && meta.lastDelay <= 15 && requireCombatCheck && ignoreDoubleClickCheck) {
+      SwingBlueprintMeta.ClickData clickData = new SwingBlueprintMeta.ClickData(meta.delay, meta.lastDelay);
+      meta.pendingClicks.add(clickData);
     }
-    meta.delay = 0;
     meta.lastDelay = meta.delay;
+    meta.delay = 0;
   }
 
   @PacketSubscription(
@@ -139,6 +134,21 @@ public abstract class SwingBlueprint<M extends SwingBlueprintMeta>
   public void clientTickUpdate(PacketEvent event) {
     User user = userOf(event.getPlayer());
     SwingBlueprintMeta meta = metaOf(user);
+    for (SwingBlueprintMeta.ClickData pendingClick : meta.pendingClicks) {
+      if (meta.lastAttack > 0 && lookingAtBlocks(user)) {
+        continue;
+      }
+      if (pendingClick.delay == 0) {
+        meta.doubleClicks++;
+      }
+      meta.delaysDelta.add(Math.abs(pendingClick.delay - pendingClick.lastDelay));
+      meta.delays.add(pendingClick.delay);
+      if (meta.delays.size() == sampleSize) {
+        check(user, meta.delays);
+        meta.delays.clear();
+      }
+    }
+    meta.pendingClicks.clear();
     meta.delay++;
     meta.lastAttack++;
     meta.placedBlock = false;
