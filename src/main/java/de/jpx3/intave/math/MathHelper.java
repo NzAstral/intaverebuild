@@ -55,6 +55,17 @@ public final class MathHelper {
     return minimum;
   }
 
+  public static float noAbsDistanceInDegrees(float alpha, float beta) {
+    float difference = alpha - beta % 360.0f;
+    if (difference > 180.0f) {
+      difference = 360.0f - difference;
+    }
+    if (difference < -180.0f) {
+      difference = 360.0f + difference;
+    }
+    return difference;
+  }
+
   public static float distanceInDegrees(float alpha, float beta) {
     float phi = Math.abs(beta - alpha) % 360;
     return phi > 180 ? 360 - phi : phi;

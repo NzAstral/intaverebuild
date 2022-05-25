@@ -3,6 +3,7 @@ package de.jpx3.intave.check.combat.heuristics.detect.experimental;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers;
+import com.google.common.util.concurrent.AtomicDouble;
 import de.jpx3.intave.check.Blueprint;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.math.Hypot;
@@ -23,11 +24,19 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 public abstract class RotationPrevisionBlueprint<M extends RotationPrevisionBlueprintMeta>
   extends Blueprint<Heuristics, RotationPrevisionBlueprintMeta, M> {
   private final int sampleSize;
+  private final boolean lenientCombat;
 
   // Could use bit-shift operations for these options in constructor?
   public RotationPrevisionBlueprint(Heuristics parentCheck, Class<M> metaClass, int sampleSize) {
     super(parentCheck, metaClass);
     this.sampleSize = sampleSize;
+    this.lenientCombat = false;
+  }
+
+  public RotationPrevisionBlueprint(Heuristics parentCheck, Class<M> metaClass, int sampleSize, boolean lenientCombat) {
+    super(parentCheck, metaClass);
+    this.sampleSize = sampleSize;
+    this.lenientCombat = lenientCombat;
   }
 
   public abstract void check(User user, List<RotationData> rotationValues);
@@ -76,7 +85,7 @@ public abstract class RotationPrevisionBlueprint<M extends RotationPrevisionBlue
 
     boolean moving = Hypot.fast(movementData.motionX(), movementData.motionZ()) + Math.abs(movementData.motionY()) >= 0.025;
     boolean combatRequirements = moving
-      && meta.lastAttack <= 1
+      && meta.lastAttack <= (lenientCombat ? 3 : 1)
       && target.moving(0.025)
       && target.ticksAlive > 25
       && attackData.lastReach() > 1.0;
@@ -118,25 +127,43 @@ public abstract class RotationPrevisionBlueprint<M extends RotationPrevisionBlue
     return corr * corr;
   }
 
-  public double average(List<Integer> values) {
+  public double average(List<Float> values) {
     return values.stream()
       .mapToDouble(Number::doubleValue)
       .average()
       .orElse(0D);
   }
 
+  public double standardDeviation(List<Float> values) {
+    double average = average(values);
+    AtomicDouble variance = new AtomicDouble(0D);
+    values.forEach(delay -> variance.getAndAdd(Math.pow(delay.doubleValue() - average, 2D)));
+    return Math.sqrt(variance.get() / values.size());
+  }
+
   private RotationData createRotationData(MovementMetadata movementData, EntityShade target) {
     float lastPlayerYaw = ClientMathHelper.wrapAngleTo180_float(movementData.lastRotationYaw);
-    float yawDelta = MathHelper.distanceInDegrees(ClientMathHelper.wrapAngleTo180_float(movementData.rotationYaw), lastPlayerYaw);
+    float yaw = ClientMathHelper.wrapAngleTo180_float(movementData.rotationYaw);
+    float yawDelta = MathHelper.noAbsDistanceInDegrees(yaw, lastPlayerYaw);
 
     float pitchDelta = Math.abs(movementData.rotationPitch - movementData.lastRotationPitch);
 
     float expectedYaw = expectedYaw(target.position, movementData.lastPositionX, movementData.lastPositionZ);
     float expectedPitch = expectedPitch(target.position, movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ);
 
-    float expectedYawDelta = MathHelper.distanceInDegrees(expectedYaw, lastPlayerYaw);
+    float expectedYawDelta = MathHelper.noAbsDistanceInDegrees(expectedYaw, lastPlayerYaw);
     float expectPitchDelta = Math.abs(expectedPitch - movementData.rotationPitch);
-    return new RotationData(yawDelta, expectedYawDelta, pitchDelta, expectPitchDelta);
+
+    return new RotationData.RotationDataBuilder()
+      .yaw(yaw)
+      .yawDelta(yawDelta)
+      .expectedYawDelta(expectedYawDelta)
+      .expectedYaw(expectedYaw)
+      .pitch(movementData.rotationPitch)
+      .pitchDelta(pitchDelta)
+      .expectedPitchDelta(expectPitchDelta)
+      .expectedPitch(expectedPitch)
+      .build();
   }
 
   private float expectedYaw(EntityShade.EntityPositionContext entityPositions, double posX, double posZ) {

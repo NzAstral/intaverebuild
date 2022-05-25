@@ -20,6 +20,7 @@ import de.jpx3.intave.check.combat.heuristics.detect.clickpatterns.SwingDeviatio
 import de.jpx3.intave.check.combat.heuristics.detect.clickpatterns.SwingLimitHeuristics;
 import de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.*;
 import de.jpx3.intave.check.combat.heuristics.detect.experimental.RotationPrevisionDetermination;
+import de.jpx3.intave.check.combat.heuristics.detect.experimental.RotationPrevisionFluctuation;
 import de.jpx3.intave.check.combat.heuristics.detect.inventory.PacketInventoryHeuristic;
 import de.jpx3.intave.check.combat.heuristics.detect.mods.LabyModsHeuristic;
 import de.jpx3.intave.check.combat.heuristics.detect.other.*;
@@ -104,6 +105,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     // for testing
     if (!IntaveControl.GOMME_MODE && IntaveControl.DISABLE_LICENSE_CHECK) {
       appendCheckPart(new RotationPrevisionDetermination(this));
+      appendCheckPart(new RotationPrevisionFluctuation(this));
       appendCheckPart(new TestingHeuristic(this));
     }
 
