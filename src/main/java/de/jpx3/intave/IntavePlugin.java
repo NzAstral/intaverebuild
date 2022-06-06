@@ -660,7 +660,7 @@ public final class IntavePlugin extends JavaPlugin {
 
     if (JavaVersion.current() < 17) {
       String noticePrefix = ChatColor.DARK_RED + "Notice" + ChatColor.DARK_GRAY + ": ";
-      logger.info(noticePrefix + ChatColor.RED + "Upgrading to Java 17 has incredible performance benefits (up to 40% faster)");
+      logger.info(noticePrefix + ChatColor.RED + "Upgrading Java has incredible performance benefits");
       logger.info(noticePrefix + ChatColor.RED + "We strongly recommend updating Java now");
       logger.info(noticePrefix + ChatColor.RED + "Support for older versions of Java might eventually be dropped");
     }
@@ -696,6 +696,10 @@ public final class IntavePlugin extends JavaPlugin {
     if (!(dataFolder.exists() || dataFolder.mkdirs())) {
       logger.error("Failed to create Intave folder " + dataFolder.getAbsolutePath());
     }
+  }
+
+  public double circ(double r) {
+    return 6.283185307179586 * r;
   }
 
   public File dataFolder() {
@@ -835,11 +839,27 @@ public final class IntavePlugin extends JavaPlugin {
       return;
     }
     try {
+      // clear unused files
       Files.walk(workDirectory.toPath())
         .filter(Files::isRegularFile)
         .map(Path::toFile)
         .filter(File::canWrite)
         .filter(File::canRead)
+        .filter(file -> (System.currentTimeMillis() - file.lastModified()) > FILE_EXPIRE)
+        .forEach(file -> {
+          try {
+            file.delete();
+          } catch (Exception exception) {
+            exception.printStackTrace();
+          }
+        });
+      // clear empty directories
+      Files.walk(workDirectory.toPath())
+        .filter(Files::isDirectory)
+        .map(Path::toFile)
+        .filter(File::canWrite)
+        .filter(File::canRead)
+        .filter(file -> file.listFiles() == null)
         .filter(file -> (System.currentTimeMillis() - file.lastModified()) > FILE_EXPIRE)
         .forEach(file -> {
           try {

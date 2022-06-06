@@ -11,14 +11,20 @@ check:
     # Trustfactor mappings and high-tolerance modes are supported throughout all of them
     mitigation: CAREFUL
 
-    reset-item-usage: true
+    speculative-forward-emulation:
+      enabled: false
+      activation-threshold: 0
+      ticks: 3
+      ticks-for-hard-sync: -1
 
-    close-inventory-on-detection: true
+    on-detection:
+      reset-item-usage: true
+      close-inventory: true
+      refresh-nearby-blocks: true
 
     thresholds:
       100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly"
-      400:
-        - "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly #2"
+      400: "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly #2"
       999:
         - "intave internals collectivekick {player} &cYou have been kicked, as an account with your ip address was removed from the game"
         - "kick {player} &cYou have been removed from the game based on data that was collected by the anti-cheat"
@@ -33,8 +39,7 @@ check:
 
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving too frequently / is lagging"
-      100:
-        - "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving too frequently / is lagging for a long period"
+      100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is moving too frequently / is lagging for a long period"
 
   heuristics:
 
@@ -84,8 +89,7 @@ check:
 
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously"
-      100:
-        - "intave internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously #2"
+      100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously #2"
 
   clickpatterns:
 

@@ -1,22 +1,14 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
-import de.jpx3.intave.shade.BoundingBox;
+import de.jpx3.intave.block.shape.BlockShape;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 final class FenceGateBlockPatch extends BoundingBoxPatch {
   @Override
-  public List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    return bbs;
-  }
-
-  @Override
-  public List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {
-    return bbs;
+  public BlockShape patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape shape) {
+    return shape;
   }
 
   private static final String NAME_PATTERN = "FENCE_GATE";

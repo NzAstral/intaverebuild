@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 final class ArrayBlockShape extends MemoryTraced implements BlockShape {
   private final BlockShape[] contents;
@@ -139,8 +140,6 @@ final class ArrayBlockShape extends MemoryTraced implements BlockShape {
 
   @Override
   public String toString() {
-    return "ArrayBlockShape{" +
-      "contents=" + Arrays.toString(contents) +
-      '}';
+    return "(" + Arrays.stream(contents).map(Object::toString).collect(Collectors.joining(", ")) + ")";
   }
 }

@@ -19,32 +19,40 @@ public final class FeedbackRequest<T> {
     this.time = System.currentTimeMillis();
   }
 
-  public void sent() {
+  void sent() {
     if (tracker != null) {
       tracker.sent(this);
     }
   }
 
-  public void acknowledge(Player player) {
+  void acknowledge(Player player) {
     callback.success(player, obj);
     if (tracker != null) {
       tracker.received(this);
     }
   }
 
-  public long passedTime() {
-    return System.currentTimeMillis() - this.time;
+  T target() {
+    return obj;
   }
 
-  public short key() {
+  FeedbackCallback<T> callback() {
+    return callback;
+  }
+
+  short key() {
     return key;
   }
 
-  public long num() {
+  long num() {
     return num;
   }
 
   public long requested() {
     return time;
+  }
+
+  public long passedTime() {
+    return System.currentTimeMillis() - this.time;
   }
 }

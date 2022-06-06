@@ -90,9 +90,6 @@ final class MergeBlockShape implements BlockShape {
 
   @Override
   public String toString() {
-    return "MergedShape{" +
-      "shapeA=" + shapeA +
-      ", shapeB=" + shapeB +
-      '}';
+    return shapeA + " and " + shapeB;
   }
 }

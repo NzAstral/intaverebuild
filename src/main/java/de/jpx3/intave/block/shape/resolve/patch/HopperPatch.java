@@ -3,9 +3,7 @@ package de.jpx3.intave.block.shape.resolve.patch;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.BlockShapes;
-import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.block.variant.BlockVariant;
-import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.shade.Direction;
@@ -13,10 +11,7 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_13;
 
@@ -41,16 +36,11 @@ final class HopperPatch extends BoundingBoxPatch {
   private static final BlockShape SHAPE_WEST = BlockShapes.merge(MAIN_SHAPE, BoundingBox.originFromX16(0.0D, 4.0D, 6.0D, 4.0D, 8.0D, 10.0D));
 
   @Override
-  public List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    return patch(world, player, block.getX(), block.getY(), block.getZ(), BlockTypeAccess.typeAccess(block, player), BlockVariantAccess.variantAccess(block), bbs);
-  }
-
-  @Override
-  protected List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {
+  protected BlockShape patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape originalShape) {
     User user = UserRepository.userOf(player);
     if (user.meta().protocol().protocolVersion() >= VER_1_13) {
       if (MinecraftVersion.AQUATIC_UPDATE.atOrAbove()) {
-        return bbs;
+        return originalShape;
       } else {
         BlockShape shape;
         Direction direction = directionFrom(blockState);
@@ -74,13 +64,13 @@ final class HopperPatch extends BoundingBoxPatch {
             shape = MAIN_SHAPE;
             break;
         }
-        return shape.contextualized(posX, posY, posZ).boundingBoxes();
+        return shape;
       }
     } else {
       if (MinecraftVersion.AQUATIC_UPDATE.atOrAbove()) {
-        return LEGACY_HOPPER_BOX_SHAPE.contextualized(posX, posY, posZ).boundingBoxes();
+        return LEGACY_HOPPER_BOX_SHAPE;
       } else {
-        return bbs;
+        return originalShape;
       }
     }
   }

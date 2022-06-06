@@ -143,11 +143,21 @@ public final class FeedbackReceiver extends Module {
     Queue<FeedbackRequest<?>> appendedRequests = appendMap.get(feedbackRequest.num());
     if (appendedRequests != null && !appendedRequests.isEmpty()) {
       for (FeedbackRequest<?> appendedRequest : appendedRequests) {
-        appendedRequest.acknowledge(player);
+        castSafeAcknowledgement(player, appendedRequest);
       }
       appendMap.remove(feedbackRequest.num());
     }
-    feedbackRequest.acknowledge(player);
+    castSafeAcknowledgement(player, feedbackRequest);
+  }
+
+  private void castSafeAcknowledgement(Player player, FeedbackRequest<?> feedbackRequest) {
+    try {
+      feedbackRequest.acknowledge(player);
+    } catch (Exception e) {
+      if (IntaveControl.DISABLE_LICENSE_CHECK) {
+        IntaveLogger.logger().error("Error while acknowledging " + feedbackRequest.callback() + " for " + feedbackRequest.target());
+      }
+    }
   }
 
   @PacketSubscription(

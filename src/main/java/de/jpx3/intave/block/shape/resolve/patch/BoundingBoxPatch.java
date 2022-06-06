@@ -1,9 +1,10 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
+import de.jpx3.intave.block.shape.BlockShape;
+import de.jpx3.intave.block.shape.BlockShapes;
 import de.jpx3.intave.shade.BoundingBox;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -16,12 +17,19 @@ abstract class BoundingBoxPatch {
     this.material = materials;
   }
 
-  protected List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
+  @Deprecated
+  protected List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {
     return bbs;
   }
 
-  protected List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {
-    return bbs;
+  protected BlockShape patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape shape) {
+    List<BoundingBox> input = shape.boundingBoxes();
+    List<BoundingBox> output = patch(world, player, posX, posY, posZ, type, blockState, input);
+    if (input == output) {
+      return shape;
+    } else {
+      return BlockShapes.shapeOf(output);
+    }
   }
 
   protected boolean requireNormalization() {

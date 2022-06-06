@@ -351,7 +351,7 @@ public final class ScheduledUploadService {
     file.setWritable(true);
     file.setReadable(true);
     // push input stream to file output stream
-    return new FileOutputStream(file);
+    return Files.newOutputStream(file.toPath());
   }
 
   private File tempDirectory() {
@@ -372,12 +372,12 @@ public final class ScheduledUploadService {
     File workDirectory;
     String filePath;
     if (operatingSystem.contains("win")) {
-      filePath = System.getenv("APPDATA") + "/Intave/Data/";
+      filePath = System.getenv("APPDATA") + "/Intave/Queue/";
     } else {
       if (GOMME_MODE) {
-        filePath = ContextSecrets.secret("cache-directory") + "data/";
+        filePath = ContextSecrets.secret("cache-directory") + "queue/";
       } else {
-        filePath = System.getProperty("user.home") + "/.intave/data/";
+        filePath = System.getProperty("user.home") + "/.intave/queue/";
       }
     }
     workDirectory = new File(filePath);

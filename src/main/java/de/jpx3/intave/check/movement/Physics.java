@@ -1,5 +1,9 @@
 package de.jpx3.intave.check.movement;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedBlockData;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.check.MitigationStrategy;
@@ -16,7 +20,9 @@ import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.fluid.LegacyWaterflow;
 import de.jpx3.intave.block.state.BlockStateAccess;
 import de.jpx3.intave.block.type.BlockTypeAccess;
+import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.check.Check;
+import de.jpx3.intave.check.CheckConfiguration.CheckSettings;
 import de.jpx3.intave.check.CheckStatistics;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
 import de.jpx3.intave.check.movement.physics.*;
@@ -29,11 +35,13 @@ import de.jpx3.intave.module.feedback.Superposition;
 import de.jpx3.intave.module.tracker.entity.EntityShade;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.module.violation.ViolationContext;
+import de.jpx3.intave.packet.PacketSender;
 import de.jpx3.intave.player.collider.Colliders;
 import de.jpx3.intave.player.collider.complex.ColliderResult;
 import de.jpx3.intave.player.collider.simple.SimpleColliderResult;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.shade.Motion;
+import de.jpx3.intave.shade.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.*;
 import org.bukkit.ChatColor;
@@ -46,6 +54,7 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.math.MathHelper.formatPosition;
@@ -61,14 +70,28 @@ public final class Physics extends Check {
   private final SimulationProcessor simulationProcessor;
   private final SimulationEvaluator simulationEvaluator;
   private final FallDamageApplier fallDamageApplier;
-  private final boolean highToleranceMode, resetItemUsage;
+  private final boolean highToleranceMode;
+  private final boolean resetItemUsage;
+  private final boolean closeInventory;
+  private final boolean refreshNearbyBlocks;
 
   public Physics(IntavePlugin plugin) {
     super("Physics", "physics");
     this.plugin = plugin;
     this.decrementer = new CheckViolationLevelDecrementer(this, VL_DECREMENT_PER_VALID_MOVE * 20);
-    this.highToleranceMode = configuration().settings().boolBy("high-tolerance", false);
-    this.resetItemUsage = configuration().settings().boolBy("reset-item-usage", true);
+
+    CheckSettings settings = configuration().settings();
+    this.highToleranceMode = settings.boolBy("high-tolerance", false);
+    if (settings.has("on-detection")) {
+      this.resetItemUsage = settings.boolBy("on-detection.reset-item-usage", true);
+      this.closeInventory = settings.boolBy("on-detection.close-inventory", true);
+      this.refreshNearbyBlocks = settings.boolBy("on-detection.refresh-nearby-blocks", true);
+    } else {
+      this.resetItemUsage = settings.boolBy("reset-item-usage", true);
+      this.closeInventory = settings.boolBy("close-inventory-on-detection", true);
+      this.refreshNearbyBlocks = settings.boolBy("refresh-nearby-blocks-on-detection", true);
+    }
+
     this.simulationProcessor = new PredictiveSimulationProcessor(resetItemUsage);
     this.simulationEvaluator = new SimulationEvaluator();
     setDefaultMitigationStrategy(MitigationStrategy.CAREFUL);
@@ -399,11 +422,11 @@ public final class Physics extends Check {
     BoundingBox verifiedBoundingBox = BoundingBox.fromPosition(user, verifiedLocation);
     BoundingBox currentBoundingBox = BoundingBox.fromPosition(user, receivedPositionX, receivedPositionY, receivedPositionZ);
 
-    boolean boundingBoxIntersectionLast = Collision.present(user.player(), verifiedBoundingBox);
-    boolean boundingBoxIntersectionCurrent = Collision.present(user.player(), currentBoundingBox);
+    boolean boundingBoxIntersectionLast = Collision.present(player, verifiedBoundingBox);
+    boolean boundingBoxIntersectionCurrent = Collision.present(player, currentBoundingBox);
     boolean movedIntoBlock = !boundingBoxIntersectionLast && boundingBoxIntersectionCurrent;
     if (boundingBoxIntersectionCurrent && !spectator) {
-      List<BoundingBox> intersectionBoundingBoxesCurrent = Collision.__INVALID__resolveBoxes(user.player(), currentBoundingBox);
+      List<BoundingBox> intersectionBoundingBoxesCurrent = Collision.__INVALID__resolveBoxes(player, currentBoundingBox);
       if (movedIntoBlock && !intersectionBoundingBoxesCurrent.isEmpty()) {
         movementData.invalidMovement = true;
         BoundingBox boundingBox = intersectionBoundingBoxesCurrent.get(0);
@@ -484,7 +507,7 @@ public final class Physics extends Check {
         details += ", strict";
       }
 
-      double vl = violationLevelIncrease / (highToleranceMode ? 75 : (violationLevelData.physicsVL >= 100 ? 20 : 50));
+      double vl = violationLevelIncrease / (highToleranceMode() ? 75 : (violationLevelData.physicsVL >= 100 ? 20 : 50));
       Violation violation = Violation.builderFor(Physics.class)
         .forPlayer(player)
         .withMessage(message)
@@ -512,7 +535,7 @@ public final class Physics extends Check {
       double manualOverrideDistance = 0;
       switch (mitigationStrategy) {
         case AGGRESSIVE:
-          setback = deepPitchViolationOverflow || (!highToleranceMode && highPitchViolationOverflow);
+          setback = deepPitchViolationOverflow || (!highToleranceMode() && highPitchViolationOverflow);
           manualOverrideDistance = 0.75;
           break;
         case CAREFUL:
@@ -545,6 +568,7 @@ public final class Physics extends Check {
       if (setback) {
         Simulator simulator = user.meta().movement().simulator();
         simulator.setback(user, predictedX, predictedY, predictedZ);
+        refreshNearbyBlocks(user, positionX, positionY, positionZ);
         movementData.invalidMovement = true;
       }
     }
@@ -634,30 +658,32 @@ public final class Physics extends Check {
     }
   }
 
-  private static boolean collidesWeb(User user, BoundingBox boundingBox) {
-    // boundingbox from last tick!
-    int blockPositionStartX = floor(boundingBox.minX + 0.001);
-    int blockPositionStartY = floor(boundingBox.minY + 0.001);
-    int blockPositionStartZ = floor(boundingBox.minZ + 0.001);
-    int blockPositionEndX = floor(boundingBox.maxX - 0.001);
-    int blockPositionEndY = floor(boundingBox.maxY - 0.001);
-    int blockPositionEndZ = floor(boundingBox.maxZ - 0.001);
-
-    for (int x = blockPositionStartX; x <= blockPositionEndX; x++) {
-      for (int y = blockPositionStartY; y <= blockPositionEndY; y++) {
-        for (int z = blockPositionStartZ; z <= blockPositionEndZ; z++) {
-          Material material = VolatileBlockAccess.typeAccess(user, x, y, z);
-          if (material == BlockTypeAccess.WEB) {
-            return true;
-          }
-        }
-      }
+  private void refreshNearbyBlocks(User user, double x, double y, double z) {
+    if (!refreshNearbyBlocksOnDetection()) {
+      return;
     }
-    return false;
+    Player player = user.player();
+    BoundingBox box = BoundingBox.fromPosition(user, x, y, z).grow(0.75);
+    List<Position> positions = Collision.collectCollidingPositions(player, box, 8, Collectors.toList());
+    Synchronizer.synchronize(() -> {
+      for (Position position : positions) {
+        refreshBlock(player, position.toLocation(player.getWorld()));
+      }
+    });
   }
 
-  private static String shortenBoolean(boolean bool) {
-    return bool ? "1" : "0";
+  private void refreshBlock(Player player, Location location) {
+    PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.BLOCK_CHANGE);
+    if (!VolatileBlockAccess.isInLoadedChunk(location.getWorld(), location.getBlockX(), location.getBlockZ())) {
+      return;
+    }
+    Block block = VolatileBlockAccess.blockAccess(location);
+    Object handle = BlockVariantAccess.nativeVariantAccess(block);
+    WrappedBlockData blockData = WrappedBlockData.fromHandle(handle);
+    com.comphenix.protocol.wrappers.BlockPosition position = new com.comphenix.protocol.wrappers.BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    packet.getBlockData().write(0, blockData);
+    packet.getBlockPositionModifier().write(0, position);
+    PacketSender.sendServerPacket(player, packet);
   }
 
   private static String resolveKeysFromInput(int forward, int strafe) {
@@ -693,27 +719,24 @@ public final class Physics extends Check {
     }
   }
 
-  private boolean containsBoundingBoxAny(
-    List<BoundingBox> intersectionBoundingBoxesCurrent,
-    BoundingBox compareBoundingBox
-  ) {
-    for (BoundingBox boundingBox : intersectionBoundingBoxesCurrent) {
-      boolean sameX = boundingBox.minX == compareBoundingBox.minX && boundingBox.maxX == compareBoundingBox.maxX;
-      boolean sameY = boundingBox.minY == compareBoundingBox.minY && boundingBox.maxY == compareBoundingBox.maxY;
-      boolean sameZ = boundingBox.minZ == compareBoundingBox.minZ && boundingBox.maxZ == compareBoundingBox.maxZ;
-      if (sameX && sameY && sameZ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private String shortenTypeName(Material type) {
     return type.name().toLowerCase().replace("_", "").replace("block", "");
   }
 
-  public SimulationProcessor simulationService() {
-    return simulationProcessor;
+  public boolean highToleranceMode() {
+    return highToleranceMode;
+  }
+
+  public boolean resetItemUsageOnDetection() {
+    return resetItemUsage;
+  }
+
+  public boolean closeInventoryOnDetection() {
+    return closeInventory;
+  }
+
+  public boolean refreshNearbyBlocksOnDetection() {
+    return refreshNearbyBlocks;
   }
 
   @Override

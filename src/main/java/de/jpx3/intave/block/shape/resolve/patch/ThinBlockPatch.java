@@ -1,14 +1,11 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
 import de.jpx3.intave.adapter.MinecraftVersions;
-import de.jpx3.intave.block.type.BlockTypeAccess;
-import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -39,11 +36,6 @@ final class ThinBlockPatch extends BoundingBoxPatch {
   }
 
   @Override
-  protected List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    return patch(world, player, block.getX(), block.getY(), block.getZ(), BlockTypeAccess.typeAccess(block, player), BlockVariantAccess.variantAccess(block), bbs);
-  }
-
-  @Override
   protected List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {
     User user = UserRepository.userOf(player);
     if (MinecraftVersions.VER1_9_0.atOrAbove()) {
@@ -54,22 +46,18 @@ final class ThinBlockPatch extends BoundingBoxPatch {
         for (BoundingBox bb : bbs) {
           indices[count++] = indexOf9(bb);
         }
-
         boolean north = false;
         boolean south = false;
         boolean west = false;
         boolean east = false;
-
         for (int index : indices) {
           north |= index == 1;
           east |= index == 2;
           south |= index == 3;
           west |= index == 4;
         }
-
         List<BoundingBox> bbList = new ArrayList<>(count + 2);
         boolean anyConnection = west || east || north || south;
-
         if ((!west || !east) && anyConnection) {
           if (west) {
             bbList.add(STATES_8[5]);
@@ -79,7 +67,6 @@ final class ThinBlockPatch extends BoundingBoxPatch {
         } else {
           bbList.add(STATES_8[0]);
         }
-
         if ((!north || !south) && anyConnection) {
           if (north) {
             bbList.add(STATES_8[2]);
@@ -99,24 +86,20 @@ final class ThinBlockPatch extends BoundingBoxPatch {
         for (BoundingBox bb : bbs) {
           indices[count++] = indexOf8(bb);
         }
-
         boolean north = false;
         boolean east = false;
         boolean south = false;
         boolean west = false;
-
         for (int index : indices) {
           north |= index == 2 || index == 1;
           east |= index == 3 || index == 0;
           south |= index == 4 || index == 1;
           west |= index == 5 || index == 0;
         }
-
         // via version emulates 1.8 behaviour of panes, we can account for it
         if (!(north || east || south || west) && user.meta().protocol().waterUpdate()) {
           north = south = east = west = true;
         }
-
         List<BoundingBox> bbList = new ArrayList<>(count);
         bbList.add(STATES_9[0]);
         if (north) bbList.add(STATES_9[1]);
@@ -126,8 +109,7 @@ final class ThinBlockPatch extends BoundingBoxPatch {
         return bbList;
       }
     }
-
-    return super.patch(world, player, posX, posY, posZ, type, blockState, bbs);
+    return bbs;
   }
 
   private int indexOf8(BoundingBox axisAlignedBB) {

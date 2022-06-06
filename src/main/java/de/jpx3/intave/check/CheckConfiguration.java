@@ -166,5 +166,9 @@ public final class CheckConfiguration {
     private Object uncheckedResolveOrDefault(String key, Object def) {
       return access.getOrDefault(key, def);
     }
+
+    public boolean has(String key) {
+      return access.containsKey(key);
+    }
   }
 }

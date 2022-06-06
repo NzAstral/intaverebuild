@@ -46,9 +46,9 @@ import org.bukkit.entity.Player;
  * @see User#checkMetadata(Class)
  */
 public abstract class MetaCheckPart<P extends Check, M extends CheckCustomMetadata> extends CheckPart<P> {
-  private final Class<? extends CheckCustomMetadata> metaClass;
+  private final Class<? extends M> metaClass;
 
-  public MetaCheckPart(P parentCheck, Class<M> metaClass) {
+  protected MetaCheckPart(P parentCheck, Class<? extends M> metaClass) {
     super(parentCheck);
     this.metaClass = metaClass;
   }

@@ -501,7 +501,7 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     return new BoundingBox(d0, d1, d2, d3, d4, d5);
   }
 
-  public static BoundingBox originFromBounds(
+  public static BoundingBox originFrom(
     double x1, double y1, double z1,
     double x2, double y2, double z2
   ) {

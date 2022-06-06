@@ -13,9 +13,9 @@ import java.util.function.Consumer;
 
 public final class Superposition<T> {
   private final User user;
-  private final BiConsumer<User, T> apply;
-  private final BiConsumer<User, @Nullable T> collapse;
-  private final Consumer<User> reset;
+  private final BiConsumer<? super User, ? super T> apply;
+  private final BiConsumer<? super User, ? super @Nullable T> collapse;
+  private final Consumer<? super User> reset;
   private final BinaryOperator<T> combine;
   private final int timeout;
 
@@ -27,7 +27,14 @@ public final class Superposition<T> {
   private T optionalValue;
   private int variationCount;
 
-  Superposition(User user, BiConsumer<User, T> apply, BiConsumer<User, @Nullable T> collapse, Consumer<User> reset, BinaryOperator<T> combine, int timeout) {
+  Superposition(
+    User user,
+    BiConsumer<? super User, ? super T> apply,
+    BiConsumer<? super User, ? super @Nullable T> collapse,
+    Consumer<? super User> reset,
+    BinaryOperator<T> combine,
+    int timeout
+  ) {
     this.user = user;
     this.apply = apply;
     this.collapse = collapse;
@@ -84,9 +91,9 @@ public final class Superposition<T> {
     certainValue = currentVariation;
     optionalValue = optionalVariation;
     // certain and optional -> compute certain and optional, 2 runs
-    // certain, but no optional -> compute certain, 1 runs
-    // no certain, but optional -> compute nothing and optional, 2 runs
-    // no certain, no optional -> compute nothing and no optional, 0 runs
+    // certain, but no optional -> compute certain, 1 run
+    // no certain, but optional -> compute without, but with optional, 2 runs
+    // no certain, no optional -> compute without, 1 run
     if (certainValue != null) {
       variationCount = optionalValue != null ? 2 : 1;
     } else {
@@ -262,9 +269,9 @@ public final class Superposition<T> {
 
   public static class Builder<T> {
     private User user;
-    private BiConsumer<User, T> apply;
-    private BiConsumer<User, @Nullable T> collapse;
-    private Consumer<User> reset;
+    private BiConsumer<? super User, ? super T> apply;
+    private BiConsumer<? super User, ? super @Nullable T> collapse;
+    private Consumer<? super User> reset;
     private BinaryOperator<T> combiner;
     private int timeout;
 
@@ -273,17 +280,17 @@ public final class Superposition<T> {
       return this;
     }
 
-    public Builder<T> apply(BiConsumer<User, T> apply) {
+    public Builder<T> apply(BiConsumer<? super User, ? super T> apply) {
       this.apply = apply;
       return this;
     }
 
-    public Builder<T> collapse(BiConsumer<User, @Nullable T> collapse) {
+    public Builder<T> collapse(BiConsumer<? super User, ? super @Nullable T> collapse) {
       this.collapse = collapse;
       return this;
     }
 
-    public Builder<T> reset(Consumer<User> reset) {
+    public Builder<T> reset(Consumer<? super User> reset) {
       this.reset = reset;
       return this;
     }

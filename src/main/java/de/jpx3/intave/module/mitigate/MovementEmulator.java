@@ -53,10 +53,7 @@ public final class MovementEmulator extends Module {
   @Override
   public void enable() {
     this.physicsCheck = plugin.checks().searchCheck(Physics.class);
-    this.closeInventoryOnDetection = physicsCheck
-      .configuration()
-      .settings()
-      .boolBy("close-inventory-on-detection", true);
+    this.closeInventoryOnDetection = physicsCheck.closeInventoryOnDetection();
     this.teleportMethodContainer = new InternalTeleportApplier();
   }
 

@@ -19,7 +19,6 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.SETTINGS;
 
 public final class SkinBlinker extends CheckPart<ProtocolScanner> {
   private static final boolean HAS_OFF_HAND = MinecraftVersions.VER1_9_0.atOrAbove();
-
   private static Class<?> enumMainHandClass;
 
   public SkinBlinker(ProtocolScanner parentCheck) {

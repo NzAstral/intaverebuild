@@ -55,6 +55,9 @@ public final class ModuleLoader {
     prepareModule("de.jpx3.intave.module.dispatch.AttackDispatcher", lateBoot);
     prepareModule("de.jpx3.intave.module.dispatch.MovementDispatcher", lateBoot);
 
+    // emulate
+    prepareModule("de.jpx3.intave.module.emulate.MovementEmulation", lateBoot);
+
     // misc
     prepareModule("de.jpx3.intave.module.nayoro.Nayoro", defaultBoot);
     prepareModule("de.jpx3.intave.module.warning.ClientWarningModule", defaultBoot);

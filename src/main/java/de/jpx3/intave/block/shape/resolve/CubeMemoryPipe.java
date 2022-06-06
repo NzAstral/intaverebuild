@@ -33,7 +33,7 @@ final class CubeMemoryPipe implements ShapeResolverPipeline {
   public BlockShape resolve(World world, Player player, Material type, int variantIndex, int posX, int posY, int posZ) {
     if (knownToBeCubic(type)) {
       ShapeAccessFlowStudy.incremDynamic();
-      return BlockShapes.cubicShapeAt(posX, posY, posZ);
+      return BlockShapes.cubeAt(posX, posY, posZ);
     } else if (knownToBeNonCubic(type)) {
       return forward.resolve(world, player, type, variantIndex, posX, posY, posZ);
     }

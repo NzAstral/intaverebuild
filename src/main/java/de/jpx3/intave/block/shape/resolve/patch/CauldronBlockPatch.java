@@ -1,19 +1,16 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
 import com.google.common.collect.Lists;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.BlockShapes;
-import de.jpx3.intave.block.type.BlockTypeAccess;
-import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-import java.util.List;
 import java.util.Locale;
 
 final class CauldronBlockPatch extends BoundingBoxPatch {
@@ -38,24 +35,24 @@ final class CauldronBlockPatch extends BoundingBoxPatch {
     ));
   }
 
-  @Override
-  public List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    return patch(world, player, block.getX(), block.getY(), block.getZ(), BlockTypeAccess.typeAccess(block, player), BlockVariantAccess.variantAccess(block), bbs);
-  }
+  private static final boolean SERVER_IS_1_13 = MinecraftVersions.VER1_13_0.atOrAbove();
 
   @Override
-  protected List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {
+  protected BlockShape patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape shape) {
     User user = UserRepository.userOf(player);
-    if (!user.meta().protocol().waterUpdate()) {
-      return shape8.boundingBoxes();
+    if (user.meta().protocol().waterUpdate()) {
+      if (SERVER_IS_1_13) {
+        return shape;
+      } else {
+        return shape13;
+      }
     } else {
-      return shape13.boundingBoxes();
+      if (SERVER_IS_1_13) {
+        return shape8;
+      } else {
+        return shape;
+      }
     }
-  }
-
-  @Override
-  protected boolean requireNormalization() {
-    return true;
   }
 
   @Override

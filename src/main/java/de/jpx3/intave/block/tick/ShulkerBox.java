@@ -45,7 +45,7 @@ public final class ShulkerBox {
   }
 
   private static final int INTRINSIC_OFFSET = 3;
-  private static final BoundingBox FULL_BLOCK = BoundingBox.originFromBounds(0, 0, 0, 1, 1, 1);
+  private static final BoundingBox FULL_BLOCK = BoundingBox.originFrom(0, 0, 0, 1, 1, 1);
   private static final BlockShape[][] CACHE = new BoundingBox[Direction.values().length][10 + INTRINSIC_OFFSET * 2];
 
   public BlockShape originShape() {

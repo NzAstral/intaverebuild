@@ -26,8 +26,17 @@ public final class Resources {
     return new FileResource(file);
   }
 
+  public static Resource hashProtected(String path, Resource target) {
+    Resource hashResource = Resources.resourceFromFile(new File(path + ".hash"));
+    return new HashProtectedLayer(path, target, hashResource);
+  }
+
   public static Resource resourceFromFileWithLock(File file) {
     return resourceFromFile(file).locked(file);
+  }
+
+  public static Resource resourceFromFileWithHashAndLock(File file) {
+    return resourceFromFile(file).hashProtected(file).locked(file);
   }
 
   public static Resource resourceFromWeb(URL url) {
@@ -59,19 +68,19 @@ public final class Resources {
     return new FileSpreadLayer(file, resourcer, spreads);
   }
 
-  private static final int CLASS_VERSION = 4;
+//  private static final int CLASS_VERSION = 4;
 
-  @Native
-  public static Resource versionDependentEncryptedFileResourceChain(String identifier) {
-    File file = fileLocationOf(new UUID(~identifier.hashCode() | (CLASS_VERSION | CLASS_VERSION << 2), ~IntavePlugin.version().hashCode()) + "e");
-    return refreshFileAccessDateOnRead(file, resourceFromFile(file).encrypted());
-  }
-
-  @Native
-  public static Resource encryptedFileResourceChain(String identifier) {
-    File file = fileLocationOf(new UUID(~identifier.hashCode() | (CLASS_VERSION | CLASS_VERSION << 2), -391180952) + "e");
-    return refreshFileAccessDateOnRead(file, resourceFromFile(file).encrypted());
-  }
+//  @Native
+//  public static Resource versionDependentEncryptedFileResourceChain(String identifier) {
+//    File file = fileLocationOf(new UUID(~identifier.hashCode() | (CLASS_VERSION | CLASS_VERSION << 2), ~IntavePlugin.version().hashCode()) + "e");
+//    return refreshFileAccessDateOnRead(file, resourceFromFile(file).encrypted());
+//  }
+//
+//  @Native
+//  public static Resource encryptedFileResourceChain(String identifier) {
+//    File file = fileLocationOf(new UUID(~identifier.hashCode() | (CLASS_VERSION | CLASS_VERSION << 2), -391180952) + "e");
+//    return refreshFileAccessDateOnRead(file, resourceFromFile(file).encrypted());
+//  }
 
   public static Resource cacheResourceChain(
     String url,
@@ -91,7 +100,7 @@ public final class Resources {
     String identifier,
     long expires
   ) {
-    File initialFile = fileLocationOf(new UUID(identifier.hashCode() | versionResourceKey(), ~IntavePlugin.version().hashCode()).toString().replace("-", "") + "c");
+    File initialFile = fileLocationOf(nameFrom(url, identifier, expires));
     Resource cache = fileSpread(initialFile, Resources::resourceFromFileWithLock, 8).encrypted();
     Resource access = resourceFromWeb(url);
     Resource resourceCache = new ResourceCache(cache, access, expires).retryReads(3);
@@ -99,14 +108,43 @@ public final class Resources {
     return resourceCache;
   }
 
+  @Native
+  private static String nameFrom(URL url, String identifier, long expires) {
+    long seed = expires % (1L << 32);
+    seed *= 31;
+    seed += identifier.hashCode();
+    seed *= 31;
+    seed += url.hashCode();
+    seed *= 31;
+    Random random = new Random();
+    random.setSeed(seed);
+    int lastInt = random.nextInt();
+    for (int i = 0; i < identifier.length(); i++) {
+      lastInt = Math.abs(random.nextInt(Math.abs(url.hashCode() ^ lastInt) + 1)) + 1;
+    }
+    random.nextInt(Math.abs(lastInt) + 1);
+    random.nextInt(IntavePlugin.version().hashCode());
+    UUID uuid = new UUID(
+      (long) (identifier.hashCode() ^ Math.abs(random.nextInt(Byte.MAX_VALUE))) | versionResourceKey(),
+      (long) ((IntavePlugin.version().hashCode()) ^ Math.abs(random.nextInt(Short.MAX_VALUE))) << 32 | random.nextInt()
+    );
+    return uuid.toString().replace("-", "")
+      .replace("f", "r")
+      .replace("e", "y")
+      .replace("c", "i");
+  }
+
   private static int fileHashCode = 0;
 
   @Native
-  public static long versionResourceKey() {
+  private static long versionResourceKey() {
     if (!IntaveControl.DISABLE_LICENSE_CHECK && fileHashCode == 0) {
       try {
         File currentJarFile = new File(IntavePlugin.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         fileHashCode = HashAccess.hashOf(currentJarFile).hashCode();
+        if (fileHashCode == 0) {
+          fileHashCode = 1;
+        }
       } catch (URISyntaxException exception) {
         exception.printStackTrace();
         fileHashCode = -1;
@@ -152,17 +190,17 @@ public final class Resources {
     File workDirectory;
     String filePath;
     if (operatingSystem.contains("win")) {
-      filePath = System.getenv("APPDATA") + "/Intave/";
+      filePath = System.getenv("APPDATA") + "/Intave/Cache/";
     } else {
       if (GOMME_MODE) {
-        filePath = ContextSecrets.secret("cache-directory");
+        filePath = ContextSecrets.secret("cache-directory") + "cache/";
       } else {
-        filePath = System.getProperty("user.home") + "/.intave/";
+        filePath = System.getProperty("user.home") + "/.intave/cache/";
       }
     }
-    workDirectory = new File(filePath);
+    workDirectory = new File(filePath + "/" + (resourceId.length() > 4 ? resourceId.substring(0, 4) : "????") + "/");
     if (!workDirectory.exists()) {
-      workDirectory.mkdir();
+      workDirectory.mkdirs();
     }
     return new File(workDirectory, resourceId);
   }

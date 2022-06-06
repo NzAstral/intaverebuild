@@ -3,12 +3,9 @@ package de.jpx3.intave.block.shape.resolve.patch;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.block.shape.BlockShape;
-import de.jpx3.intave.block.shape.BlockShapes;
-import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.shade.BoundingBox;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -51,41 +48,14 @@ public final class BoundingBoxPatcher {
     materials.forEach(type -> patches.put(type, patch));
   }
 
-  @Deprecated
-  public static List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    BoundingBoxPatch patch = patches.get(BlockTypeAccess.typeAccess(block, player));
-    if (patch == null) {
-      return bbs;
-    } else {
-      List<BoundingBox> reposedBoxes = normalize(patch, bbs, block.getX(), block.getY(), block.getZ());
-      List<BoundingBox> patchedBoxes = patch.patch(world, player, block, reposedBoxes);
-      return contextualizeModifying(patchedBoxes, block.getX(), block.getY(), block.getZ());
-    }
-  }
-
   public static BlockShape patch(World world, Player player, int blockX, int blockY, int blockZ, Material type, int blockState, BlockShape shape) {
-    BoundingBoxPatch patch = patches.get(type);
-    if (patch == null) {
+    BoundingBoxPatch blockPatch = patches.get(type);
+    if (blockPatch == null) {
       return shape;
     } else {
-      List<BoundingBox> normalized = normalize(patch, shape.boundingBoxes(), blockX, blockY, blockZ);
-      return BlockShapes.shapeOf(contextualizeModifying(
-        patch.patch(world, player, blockX, blockY, blockZ, type, blockState, normalized),
-        blockX, blockY, blockZ
-      ));
-    }
-  }
-
-  public static List<BoundingBox> patch(World world, Player player, int blockX, int blockY, int blockZ, Material type, int blockState, List<BoundingBox> boxes) {
-    BoundingBoxPatch patch = patches.get(type);
-    if (patch == null) {
-      return boxes;
-    } else {
-      List<BoundingBox> normalized = normalize(patch, boxes, blockX, blockY, blockZ);
-      return contextualizeModifying(
-        patch.patch(world, player, blockX, blockY, blockZ, type, blockState, normalized),
-        blockX, blockY, blockZ
-      );
+      BlockShape normalized = normalize(blockPatch, shape, blockX, blockY, blockZ);
+      BlockShape patched = blockPatch.patch(world, player, blockX, blockY, blockZ, type, blockState, normalized);
+      return contextualize(patched, blockX, blockY, blockZ);
     }
   }
 
@@ -93,7 +63,7 @@ public final class BoundingBoxPatcher {
     if (boundingBoxes.isEmpty()) {
       return boundingBoxes;
     }
-//    boundingBoxes = new ArrayList<>(boundingBoxes);
+    boundingBoxes = new ArrayList<>(boundingBoxes);
     for (int i = 0; i < boundingBoxes.size(); i++) {
       BoundingBox boundingBox = boundingBoxes.get(i);
       if (boundingBox.isOriginBox()) {
@@ -103,17 +73,17 @@ public final class BoundingBoxPatcher {
     return boundingBoxes;
   }
 
-  private static List<BoundingBox> normalize(BoundingBoxPatch patch, List<BoundingBox> boundingBoxes, int posX, int posY, int posZ) {
-    if (!patch.requireNormalization() || boundingBoxes.isEmpty()) {
-      return boundingBoxes;
+  private static BlockShape normalize(BoundingBoxPatch patch, BlockShape input, int posX, int posY, int posZ) {
+    if (!patch.requireNormalization() || input.isEmpty()) {
+      return input;
     }
-    List<BoundingBox> reposedList = new ArrayList<>(boundingBoxes);
-    for (int i = 0; i < reposedList.size(); i++) {
-      BoundingBox boundingBox = reposedList.get(i);
-      BoundingBox newBox = boundingBox.offset(-posX, -posY, -posZ);
-      newBox.makeOriginBox();
-      reposedList.set(i, newBox);
+    return input.normalized(posX, posY, posZ);
+  }
+
+  private static BlockShape contextualize(BlockShape shape, int posX, int posY, int posZ) {
+    if (shape.isEmpty()) {
+      return shape;
     }
-    return reposedList;
+    return shape.contextualized(posX, posY, posZ);
   }
 }

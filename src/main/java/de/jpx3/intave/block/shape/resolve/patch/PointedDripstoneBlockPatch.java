@@ -1,9 +1,8 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
 import de.jpx3.intave.annotate.KeepEnumInternalNames;
-import de.jpx3.intave.block.type.BlockTypeAccess;
+import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.variant.BlockVariant;
-import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.shade.BoundingBox;
@@ -11,12 +10,7 @@ import de.jpx3.intave.shade.ClientMathHelper;
 import de.jpx3.intave.shade.Direction;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 final class PointedDripstoneBlockPatch extends BoundingBoxPatch {
   private final BoundingBox TIP_MERGE_SHAPE = BoundingBox.originFromX16(5.0D, 0.0D, 5.0D, 11.0D, 16.0D, 11.0D);
@@ -28,12 +22,7 @@ final class PointedDripstoneBlockPatch extends BoundingBoxPatch {
   private final BoundingBox DEF_SHAPE = BoundingBox.originFromX16(6.0D, 0.0D, 6.0D, 10.0D, 16.0D, 10.0D);
 
   @Override
-  public List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    return patch(world, player, block.getX(), block.getY(), block.getZ(), BlockTypeAccess.typeAccess(block, player), BlockVariantAccess.variantAccess(block), bbs);
-  }
-
-  @Override
-  public List<BoundingBox> patch(World world, Player player, int x, int y, int z, Material type, int variant, List<BoundingBox> bbs) {
+  public BlockShape patch(World world, Player player, int x, int y, int z, Material type, int variant, BlockShape shape) {
     BlockVariant blockVariant = BlockVariantRegister.variantOf(type, variant);
     DripstoneThickness thickness = blockVariant.enumProperty(DripstoneThickness.class, "thickness");
     Direction verticalDirection = blockVariant.enumProperty(Direction.class, "vertical_direction");
@@ -73,7 +62,7 @@ final class PointedDripstoneBlockPatch extends BoundingBoxPatch {
     double offsetY = 0.0;
     BoundingBox boundingBox = selected.offset(offsetX, offsetY, offsetZ);
     boundingBox.makeOriginBox();
-    return new ArrayList<>(Collections.singletonList(boundingBox));
+    return boundingBox;
   }
 
   @Override

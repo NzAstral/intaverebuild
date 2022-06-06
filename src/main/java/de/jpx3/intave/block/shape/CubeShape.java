@@ -164,10 +164,6 @@ final class CubeShape extends MemoryTraced implements BlockShape {
 
   @Override
   public String toString() {
-    return "CubeShape{" +
-      "x=" + x +
-      ", y=" + y +
-      ", z=" + z +
-      '}';
+    return String.format("Cube{%d, %d, %d}", x, y, z);
   }
 }

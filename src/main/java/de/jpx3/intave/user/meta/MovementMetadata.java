@@ -279,7 +279,6 @@ public final class MovementMetadata implements SimulationEnvironment {
     PacketContainer packet,
     boolean hasMovement, boolean hasRotation
   ) {
-    ProtocolMetadata protocol = user.meta().protocol();
     if (!boundingBoxSetup) {
       setupDefaults();
     }
@@ -737,6 +736,14 @@ public final class MovementMetadata implements SimulationEnvironment {
   }
 
   public void dismountRidingEntity() {
+    dismountRidingEntity(false);
+  }
+
+  public void dismountRidingEntityWithForce() {
+    dismountRidingEntity(true);
+  }
+
+  private void dismountRidingEntity(boolean force) {
     if (!isInVehicle()) {
       return;
     }

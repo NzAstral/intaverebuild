@@ -21,7 +21,6 @@ public final class PatchyLoadingInjector {
       if (!classIsLoaded(classLoader, className)) {
         classBytes = classBytesOf(classLoader, className);
         classBytes = PatchyTranslator.translateClass(classBytes);
-//        System.out.println("[Intave/Patchy] Loaded class " + className);
         de.jpx3.classloader.ClassLoader.classLoad(classBytes);
       }
       return classByName(className);

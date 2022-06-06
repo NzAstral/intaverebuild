@@ -151,13 +151,13 @@ public final class BlockUpdateTracker extends Module {
     Location location = player.getLocation();
     boolean transactionSynchronize = inDistance(blockPositions, location, 8);
     if (transactionSynchronize) {
-      Modules.feedback().synchronize(player, null, process, APPEND_ON_OVERFLOW);
+      Modules.feedback().synchronize(player, process, APPEND_ON_OVERFLOW);
     } else {
       process.success(player, null);
     }
   }
 
-  private static boolean inDistance(Collection<BlockPosition> blockPositions, Location playerLocation, int requiredDistance) {
+  private static boolean inDistance(Collection<? extends BlockPosition> blockPositions, Location playerLocation, int requiredDistance) {
     for (BlockPosition blockPosition : blockPositions) {
       if (distance(playerLocation, blockPosition) < requiredDistance) {
         return true;

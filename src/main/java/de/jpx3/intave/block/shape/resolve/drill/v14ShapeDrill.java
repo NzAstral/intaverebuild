@@ -34,7 +34,7 @@ public final class v14ShapeDrill extends AbstractShapeDrill {
     }
     // check if shape is static cube
     if (VoxelShapes.b() == collisionShape) {
-      return BlockShapes.cubicShapeAt(posX, posY, posZ);
+      return BlockShapes.cubeAt(posX, posY, posZ);
     }
     // convert complex blocks to native BBs
     List<AxisAlignedBB> nativeBoxes = collisionShape.d();

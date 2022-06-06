@@ -49,7 +49,7 @@ public final class EncryptedLegacyResource implements LegacyResource {
     }
     fileStore().setLastModified(System.currentTimeMillis());
     PluginInvocation pluginInvocation = Caller.pluginInfo();
-    if (pluginInvocation != null && !pluginInvocation.pluginName().equals("Intave")) {
+    if (pluginInvocation != null && !"Intave".equals(pluginInvocation.pluginName())) {
       throw new IllegalStateException("Unable to access resource file \"" + resourceId() + "\", is it corrupted?");
     }
     FileChannel fileInputStream = acquireInputFileChannel();
@@ -90,7 +90,7 @@ public final class EncryptedLegacyResource implements LegacyResource {
       return false;
     }
     PluginInvocation pluginInvocation = Caller.pluginInfo();
-    if (pluginInvocation == null || !pluginInvocation.pluginName().equals("Intave")) {
+    if (pluginInvocation == null || !"Intave".equals(pluginInvocation.pluginName())) {
       throw new IllegalStateException("Unable to access resource file \"" + resourceId() + "\", is it corrupted?");
     }
     // lock file early

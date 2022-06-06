@@ -5,13 +5,14 @@ import de.jpx3.intave.annotate.Relocate;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.block.shape.BlockShape;
-import de.jpx3.intave.block.shape.ShapeCombiner;
+import de.jpx3.intave.block.shape.BlockShapes;
 import de.jpx3.intave.block.shape.ShapeResolverPipeline;
 import de.jpx3.intave.block.shape.resolve.ShapeResolver;
 import de.jpx3.intave.block.state.BlockStateAccess;
 import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.shade.BoundingBox;
+import de.jpx3.intave.shade.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.MovementMetadata;
@@ -26,7 +27,9 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static de.jpx3.intave.shade.ClientMathHelper.floor;
 
@@ -34,20 +37,46 @@ import static de.jpx3.intave.shade.ClientMathHelper.floor;
 @DoNotFlowObfuscate
 public final class Collision {
   // usually we collide with 8 blocks, so a limit of 256 comes with a very big margin
-  private static final int COLLISION_LIMIT = 256;
+  private static final int COLLISION_CHECK_LIMIT = 256;
+
+  private static final Collector<BlockShape, ?, BlockShape> SHAPE_COMPILATION =
+    Collectors.collectingAndThen(Collectors.toList(), BlockShapes.mergeShapes());
+//    Collectors.reducing(BlockShapes.emptyShape(), BlockShapes::merge, BlockShapes::merge);
+
+  private static final Collector<BlockShape, ?, Boolean> EXISTS_ANY_SHAPE = shapeCountMatch(s -> s > 0);
+  private static final Collector<BlockShape, ?, Boolean> EXISTS_NO_SHAPE = shapeCountMatch(s -> s == 0);
+
+  private static Collector<BlockShape, ?, Boolean> shapeCountMatch(LongPredicate predicate) {
+    return Collectors.collectingAndThen(Collectors.counting(), predicate::test);
+  }
 
   public static BlockShape collisionShape(Player player, BoundingBox playerBoundingBox) {
-    int minX = floor(playerBoundingBox.minX);
-    int maxX = floor(playerBoundingBox.maxX);
-    int minY = floor(playerBoundingBox.minY);
-    int maxY = floor(playerBoundingBox.maxY);
-    int minZ = floor(playerBoundingBox.minZ);
-    int maxZ = floor(playerBoundingBox.maxZ);
+    return collectCollisionShapes(player, playerBoundingBox, false, COLLISION_CHECK_LIMIT, SHAPE_COMPILATION);
+  }
+
+  public static boolean present(Player player, BoundingBox playerBox) {
+    return collectCollisionShapes(player, playerBox, true, 1, EXISTS_ANY_SHAPE);
+  }
+
+  public static boolean nonePresent(Player player, BoundingBox playerBox) {
+    return collectCollisionShapes(player, playerBox, true, 1, EXISTS_NO_SHAPE);
+  }
+
+  public static <C, R> R collectCollisionShapes(Player player, BoundingBox playerBox, boolean enforceContainer, int collisionLimit, Collector<BlockShape, C, R> collector) {
+    Supplier<C> containerSupplier = collector.supplier();
+    C container = enforceContainer ? containerSupplier.get() : null;
+    BiConsumer<C, BlockShape> accumulator = collector.accumulator();
+    Function<C, R> finisher = collector.finisher();
+    int minX = floor(playerBox.minX);
+    int maxX = floor(playerBox.maxX);
+    int minY = floor(playerBox.minY);
+    int maxY = floor(playerBox.maxY);
+    int minZ = floor(playerBox.minZ);
+    int maxZ = floor(playerBox.maxZ);
     int ystart = Math.max(minY - 1, WorldHeight.LOWER_WORLD_LIMIT);
     User user = UserRepository.userOf(player);
     World world = player.getWorld();
     MovementMetadata movementData = user.meta().movement();
-    ShapeCombiner shapeCombiner = ShapeCombiner.create();
     BlockStateAccess stateAccess = user.blockStates();
     boolean outsideBorderLast = movementData.outsideBorder;
     boolean outsideBorderCurrent = playerOutsideBorder(user);
@@ -56,45 +85,53 @@ public final class Collision {
     } else if (!outsideBorderLast && !outsideBorderCurrent) {
       movementData.outsideBorder = true;
     }
-    int blocksRemaining = COLLISION_LIMIT;
+    int collisionChecksRemaining = COLLISION_CHECK_LIMIT;
+    int collisionsRemaining = Math.min(collisionLimit, COLLISION_CHECK_LIMIT);
     exit:
     for (int x = minX; x <= maxX; ++x) {
       for (int z = minZ; z <= maxZ; ++z) {
         for (int y = ystart; y <= maxY; ++y) {
-          if (blocksRemaining-- <= 0) {
+          if (collisionChecksRemaining-- <= 0) {
             break exit;
           }
           BlockShape resolve = stateAccess.shapeAt(x, y, z);
           Material material = stateAccess.typeAt(x, y, z);
           if (CollisionModifiers.isModified(material)) {
             // this should not happen too often
-            resolve = CollisionModifiers.modified(material, user, playerBoundingBox, x, y, z, resolve);
+            resolve = CollisionModifiers.modified(material, user, playerBox, x, y, z, resolve);
           }
           boolean blockOutsideBorder = !blockInsideBorder(world, x, z);
           if (blockOutsideBorder && !movementData.outsideBorder) {
             BoundingBox borderShape = BoundingBox.fromBounds(x, y, z, x + 1, y, z + 1);
-            if (borderShape.intersectsWith(playerBoundingBox)) {
-              shapeCombiner = shapeCombiner.append(borderShape);
+            if (borderShape.intersectsWith(playerBox)) {
+              if (!enforceContainer && container == null) {
+                container = containerSupplier.get();
+              }
+              accumulator.accept(container, borderShape);
+              if (--collisionsRemaining <= 0) {
+                return finisher.apply(container);
+              }
             }
           }
-          if (resolve.intersectsWith(playerBoundingBox)) {
-            shapeCombiner = shapeCombiner.append(resolve);
+          if (resolve.intersectsWith(playerBox)) {
+            if (!enforceContainer && container == null) {
+              container = containerSupplier.get();
+            }
+            accumulator.accept(container, resolve);
+            if (--collisionsRemaining <= 0) {
+              return finisher.apply(container);
+            }
           }
         }
       }
     }
-    return shapeCombiner.compile();
+    return finisher.apply(container);
   }
 
-  public static boolean present(Player player, BoundingBox playerBox) {
-    return !nonePresent(player, playerBox);
-  }
-
-  public static boolean unsafePresent(World world, Player player, BoundingBox playerBox) {
-    return !unsafeNonePresent(world, player, playerBox);
-  }
-
-  public static boolean nonePresent(Player player, BoundingBox playerBox) {
+  public static <C, R> R collectCollidingPositions(Player player, BoundingBox playerBox, int collisionLimit, Collector<Position, C, R> collector) {
+    C container = collector.supplier().get();
+    BiConsumer<C, Position> accumulator = collector.accumulator();
+    Function<C, R> finisher = collector.finisher();
     int minX = floor(playerBox.minX);
     int maxX = floor(playerBox.maxX);
     int minY = floor(playerBox.minY);
@@ -103,44 +140,35 @@ public final class Collision {
     int maxZ = floor(playerBox.maxZ);
     int ystart = Math.max(minY - 1, WorldHeight.LOWER_WORLD_LIMIT);
     User user = UserRepository.userOf(player);
-    World world = player.getWorld();
-    BlockStateAccess blockStates = user.blockStates();
-    MovementMetadata movementData = user.meta().movement();
-    boolean outsideBorderLast = movementData.outsideBorder;
-    boolean outsideBorderCurrent = playerOutsideBorder(user);
-    if (outsideBorderLast && outsideBorderCurrent) {
-      movementData.outsideBorder = false;
-    } else if (!outsideBorderLast && !outsideBorderCurrent) {
-      movementData.outsideBorder = true;
-    }
-    int blockRemaining = COLLISION_LIMIT;
+    BlockStateAccess stateAccess = user.blockStates();
+    int blocksRemaining = COLLISION_CHECK_LIMIT;
+    int collisionsRemaining = Math.min(collisionLimit, COLLISION_CHECK_LIMIT);
     exit:
     for (int x = minX; x <= maxX; ++x) {
       for (int z = minZ; z <= maxZ; ++z) {
         for (int y = ystart; y <= maxY; ++y) {
-          if (blockRemaining-- <= 0) {
+          if (blocksRemaining-- <= 0) {
             break exit;
           }
-          BlockShape shape = blockStates.shapeAt(x, y, z);
-          Material material = blockStates.typeAt(x, y, z);
-          if (CollisionModifiers.isModified(material)) {
-            shape = CollisionModifiers.modified(material, user, playerBox, x, y, z, shape);
-          }
-          if (shape.intersectsWith(playerBox)) {
-            return false;
-          }
-          boolean blockOutsideBorder = !blockInsideBorder(world, x, z);
-          if (blockOutsideBorder && !movementData.outsideBorder) {
-            if (intersects(playerBox, x, y, z, x + 1, y, z + 1)) {
-              return false;
+          BlockShape resolve = stateAccess.shapeAt(x, y, z);
+          if (resolve.intersectsWith(playerBox)) {
+            accumulator.accept(container, new Position(x, y, z));
+            if (--collisionsRemaining <= 0) {
+              return finisher.apply(container);
             }
           }
         }
       }
     }
-    return true;
+    return finisher.apply(container);
   }
 
+  @Deprecated
+  public static boolean unsafePresent(World world, Player player, BoundingBox playerBox) {
+    return !unsafeNonePresent(world, player, playerBox);
+  }
+
+  @Deprecated
   public static boolean unsafeNonePresent(World world, Player player, BoundingBox playerBox) {
     int minX = floor(playerBox.minX);
     int maxX = floor(playerBox.maxX);
@@ -149,7 +177,7 @@ public final class Collision {
     int minZ = floor(playerBox.minZ);
     int maxZ = floor(playerBox.maxZ);
     int ystart = Math.max(minY - 1, WorldHeight.LOWER_WORLD_LIMIT);
-    int blockRemaining = COLLISION_LIMIT;
+    int blockRemaining = COLLISION_CHECK_LIMIT;
     exit:
     for (int x = minX; x <= maxX; ++x) {
       for (int z = minZ; z <= maxZ; ++z) {
@@ -160,7 +188,7 @@ public final class Collision {
           Block block = VolatileBlockAccess.blockAccess(world, x, y, z);
           Material type = BlockTypeAccess.typeAccess(block, player);
           int variant = BlockVariantAccess.variantAccess(block);
-          BlockShape shape = shapeResolver.resolve(world, player, type, variant, x, y, z);
+          BlockShape shape = SHAPE_RESOLVER.resolve(world, player, type, variant, x, y, z);
           if (shape.intersectsWith(playerBox)) {
             return false;
           }
@@ -174,7 +202,7 @@ public final class Collision {
     return boundingBox.maxX > minX && boundingBox.minX < maxX && (boundingBox.maxY > minY && boundingBox.minY < maxY && boundingBox.maxZ > minZ && boundingBox.minZ < maxZ);
   }
 
-  private static final ShapeResolverPipeline shapeResolver = ShapeResolver.pipelineHead();
+  private static final ShapeResolverPipeline SHAPE_RESOLVER = ShapeResolver.pipelineHead();
 
   @Deprecated
   // I suck, please remove
@@ -198,7 +226,7 @@ public final class Collision {
     }
     BlockStateAccess stateAccess = user.blockStates();
     World world = player.getWorld();
-    int blockRemaining = COLLISION_LIMIT;
+    int blockRemaining = COLLISION_CHECK_LIMIT;
     exit:
     // this looks 1000x slower than it actually is
     for (int chunkx = minX >> 4; chunkx <= maxX - 1 >> 4; ++chunkx) {
@@ -291,7 +319,7 @@ public final class Collision {
   }
 
   public static boolean playerInImaginaryBlock(User user, World world, int posX, int posY, int posZ, Material type, int data) {
-    BlockShape boundingBoxes = shapeResolver.resolve(world, user.player(), type, data, posX, posY, posZ);
+    BlockShape boundingBoxes = SHAPE_RESOLVER.resolve(world, user.player(), type, data, posX, posY, posZ);
     if (boundingBoxes == null || boundingBoxes.isEmpty()) {
       return false;
     }

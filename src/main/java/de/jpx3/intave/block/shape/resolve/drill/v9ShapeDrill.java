@@ -34,7 +34,7 @@ public final class v9ShapeDrill extends AbstractShapeDrill {
       // we catch irregularities here elsewhere
       return BoundingBox
         // anything but a full or empty box
-        .originFromBounds(0.25, 0.25, 0.25, 0.75, 0.75, 0.75)
+        .originFrom(0.25, 0.25, 0.25, 0.75, 0.75, 0.75)
         .contextualized(posX, posY, posZ);
     }
   }

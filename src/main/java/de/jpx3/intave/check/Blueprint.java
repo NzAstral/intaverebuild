@@ -59,7 +59,7 @@ public abstract class Blueprint
     BLUEPRINT_META extends CheckCustomMetadata,
     CHECK_META extends BLUEPRINT_META>
   extends MetaCheckPart<PARENT, CHECK_META> {
-  public Blueprint(PARENT parentCheck, Class<CHECK_META> metaClass) {
+  protected Blueprint(PARENT parentCheck, Class<? extends CHECK_META> metaClass) {
     super(parentCheck, metaClass);
   }
 }

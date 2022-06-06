@@ -183,7 +183,11 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
     float yaw = movementData.rotationYaw;
 
     boolean inventoryOpen = inventoryData.inventoryOpen();
-    if (!inventoryOpen && directionPredictionError(differenceX, differenceZ, yaw) > REQUIRED_PREDICTION_ACCURACY_FOR_PRED_BIAS_PROCEED) {
+
+    double directionPrediction = directionFrom(differenceX, differenceZ, yaw);
+    int direction = (int) Math.round(directionPrediction);
+
+    if (!inventoryOpen && (directionPrediction < 0 || Math.abs(directionPrediction - direction) > REQUIRED_PREDICTION_ACCURACY_FOR_PRED_BIAS_PROCEED)) {
       movementData.physicsJumped = false;
       movementData.keyForward = -2;
       movementData.keyStrafe = -2;
@@ -194,8 +198,7 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
     }
     MovementConfiguration configuration = MovementConfiguration.empty();
     // keys
-    int directionPrediction = directionFrom(differenceX, differenceZ, yaw);
-    configuration = configuration.withKeyPress(forwardKeyFrom(directionPrediction), strafeKeyFrom(directionPrediction));
+    configuration = configuration.withKeyPress(forwardKeyFrom(direction), strafeKeyFrom(direction));
     // jump
     if (jumped) {
       configuration = configuration.withJump();
@@ -230,7 +233,7 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
     return simulation;
   }
 
-  private int directionFrom(double differenceX, double differenceZ, float yaw) {
+  private double directionFrom(double differenceX, double differenceZ, float yaw) {
     if (Hypot.fast(differenceX, differenceZ) > 0.001) {
       double direction;
       direction = Math.toDegrees(Math.atan2(differenceZ, differenceX)) - 90d;

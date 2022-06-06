@@ -110,7 +110,7 @@ public abstract class Check implements EventProcessor {
     }
   }
 
-  protected void appendCheckParts(Iterable<CheckPart<?>> checkParts) {
+  protected void appendCheckParts(Iterable<? extends CheckPart<?>> checkParts) {
     for (CheckPart<?> checkPart : checkParts) {
       appendCheckParts(checkPart);
     }
@@ -134,7 +134,7 @@ public abstract class Check implements EventProcessor {
    * @param user    the affected user
    * @param applier the player statistic applier
    */
-  public void statisticApply(User user, Consumer<CheckStatistics> applier) {
+  public void statisticApply(User user, Consumer<? super CheckStatistics> applier) {
     applier.accept(baseStatistics());
     applier.accept(statisticsFor(user.trustFactor()));
   }
@@ -162,7 +162,7 @@ public abstract class Check implements EventProcessor {
    *
    * @return the check's configuration key
    */
-  public String configurationKey() {
+  protected String configurationKey() {
     return configurationKey;
   }
 

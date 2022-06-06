@@ -115,6 +115,9 @@ public final class EncryptionLayer implements Resource {
     try {
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       InputStream inputStream = target.read();
+      if (inputStream == null) {
+        return null;
+      }
       byte[] buf = new byte[4096];
       int i;
       while ((i = inputStream.read(buf)) != -1) {

@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Set;
 
-public final class InternalTeleportApplier {
+final class InternalTeleportApplier {
   private static final boolean WEIRD_BOOLEAN_IN_INVOKE = MinecraftVersions.VER1_17_0.atOrAbove();
   //  private final Set<Object> teleportFlags = new HashSet<>();
   private final Method internalTeleportMethod;
@@ -35,7 +35,7 @@ public final class InternalTeleportApplier {
     }
   }
 
-  public void teleport(Player player, Location dest, float yaw, float pitch, boolean rotationFlags) {
+  void teleport(Player player, Location dest, float yaw, float pitch, boolean rotationFlags) {
     try {
       User user = UserRepository.userOf(player);
       if (!user.hasPlayer()) {

@@ -124,7 +124,7 @@ public final class MovementDispatcher extends Module {
     User user = UserRepository.userOf(player);
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
-    movementData.dismountRidingEntity();
+    movementData.dismountRidingEntityWithForce();
   }
 
   @BukkitEventSubscription
@@ -134,7 +134,7 @@ public final class MovementDispatcher extends Module {
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     movementData.artificialFallDistance = 0;
-    movementData.dismountRidingEntity();
+    movementData.dismountRidingEntityWithForce();
     FakePlayer fakePlayer = meta.attack().fakePlayer();
     if (fakePlayer != null) {
       fakePlayer.respawn();
@@ -308,7 +308,7 @@ public final class MovementDispatcher extends Module {
       }
     }
 
-    if (hasMovement) {
+    if (hasMovement || movementData.isInVehicle()) {
       movementData.lastPositionUpdate = 0;
     } else if (++movementData.lastPositionUpdate > 20 && !user.trustFactor().atLeast(BYPASS)) {
       user.kick("Missing position update after 20 ticks");
@@ -369,7 +369,9 @@ public final class MovementDispatcher extends Module {
     }
 
     EntityShade attachedEntity = movementData.ridingEntity();
-    if (attachedEntity != null && !attachedEntity.isEntityAlive() && !"Boat".equals(attachedEntity.entityName())) {
+    if (attachedEntity != null && !attachedEntity.isEntityAlive()
+      && attachedEntity.hasTypeData() && attachedEntity.typeData().isLivingEntity()
+    ) {
       movementData.dismountRidingEntity();
     }
 
@@ -987,7 +989,7 @@ public final class MovementDispatcher extends Module {
           event.setCancelled(true);
         }
         if (movementData.isInVehicle()) {
-          movementData.dismountRidingEntity();
+          movementData.dismountRidingEntityWithForce();
           movementData.sneaking = false;
         } else {
           movementData.sneaking = true;

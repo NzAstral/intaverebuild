@@ -36,5 +36,4 @@ public final class InvalidPitch extends CheckPart<ProtocolScanner> {
       Modules.violationProcessor().processViolation(violation);
     }
   }
-
 }

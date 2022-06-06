@@ -62,6 +62,6 @@ final class EmptyBlockShape implements BlockShape {
 
   @Override
   public String toString() {
-    return "EmptyBlockShape{}";
+    return "Empty";
   }
 }

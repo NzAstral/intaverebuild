@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 public abstract class CheckPart<P extends Check> implements EventProcessor {
   private final P parentCheck;
 
-  public CheckPart(P parentCheck) {
+  protected CheckPart(P parentCheck) {
     this.parentCheck = parentCheck;
   }
 
@@ -57,7 +57,7 @@ public abstract class CheckPart<P extends Check> implements EventProcessor {
    * @param user    the affected user
    * @param applier the player statistic applier
    */
-  public void statisticApply(User user, Consumer<CheckStatistics> applier) {
+  public void statisticApply(User user, Consumer<? super CheckStatistics> applier) {
     parentCheck.statisticApply(user, applier);
   }
 

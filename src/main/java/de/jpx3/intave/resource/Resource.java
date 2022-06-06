@@ -2,11 +2,15 @@ package de.jpx3.intave.resource;
 
 import de.jpx3.intave.resource.legacy.LegacyResource;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -16,6 +20,10 @@ public interface Resource extends LegacyResource {
   long lastModified();
 
   void write(InputStream inputStream);
+
+  default void write(byte[] bytes) {
+    write(new ByteArrayInputStream(bytes));
+  }
 
   InputStream read();
 
@@ -30,19 +38,22 @@ public interface Resource extends LegacyResource {
   }
 
   default <C, R> R collectLines(Collector<? super String, C, R> collector) {
-    C container = collector.supplier().get();
+    Supplier<C> supplier = collector.supplier();
+    BiConsumer<C, ? super String> accumulator = collector.accumulator();
+    Function<C, R> finisher = collector.finisher();
+    C container = supplier.get();
     try (InputStream inputStream = read()) {
       if (inputStream == null) {
-        return collector.finisher().apply(container);
+        return finisher.apply(container);
       }
       Scanner scanner = new Scanner(inputStream, "UTF-8");
       while (scanner.hasNextLine()) {
-        collector.accumulator().accept(container, scanner.nextLine());
+        accumulator.accept(container, scanner.nextLine());
       }
     } catch (IOException exception) {
       exception.printStackTrace();
     }
-    return collector.finisher().apply(container);
+    return finisher.apply(container);
   }
 
   default Resource compressed() {
@@ -59,5 +70,9 @@ public interface Resource extends LegacyResource {
 
   default Resource retryReads(int retries) {
     return Resources.retryRead(this, retries);
+  }
+
+  default Resource hashProtected(File file) {
+    return Resources.hashProtected(file.getAbsolutePath(), this);
   }
 }

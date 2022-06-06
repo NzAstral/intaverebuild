@@ -7,6 +7,7 @@ import de.jpx3.intave.module.mitigate.HurttimeModifier;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
@@ -41,7 +42,7 @@ public final class UserRepository {
     repository.remove(player.getUniqueId());
   }
 
-  public static @NotNull User userOf(Player player) {
+  public static @NotNull User userOf(@Nullable Player player) {
     if (player == null) {
       return fallbackUser;
     }

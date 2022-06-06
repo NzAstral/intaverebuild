@@ -8,6 +8,7 @@ import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -44,7 +45,7 @@ public final class NativeLibrary {
       tempFile = new File(tempDirectory, name + i + suffix());
     } while (tempFile.exists() && i++ < 100);
     tempFile.createNewFile();
-    InputStream resourceAsStream = new FileInputStream(cacheFile());
+    InputStream resourceAsStream = Files.newInputStream(cacheFile().toPath());
     FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
     int read;
     byte[] array = new byte[512];

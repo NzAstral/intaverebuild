@@ -1,26 +1,18 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
 import de.jpx3.intave.block.access.VolatileBlockAccess;
-import de.jpx3.intave.block.type.BlockTypeAccess;
-import de.jpx3.intave.block.variant.BlockVariantAccess;
 import de.jpx3.intave.shade.BoundingBox;
 import de.jpx3.intave.shade.Direction;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 
 final class DoorBlockPatch extends BoundingBoxPatch {
   private static final ThreadLocal<Boolean> topAcquire = ThreadLocal.withInitial(() -> false);
-
-  @Override
-  public List<BoundingBox> patch(World world, Player player, Block block, List<BoundingBox> bbs) {
-    return patch(world, player, block.getX(), block.getY(), block.getZ(), BlockTypeAccess.typeAccess(block, player), BlockVariantAccess.variantAccess(block), bbs);
-  }
 
   @Override
   public List<BoundingBox> patch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, List<BoundingBox> bbs) {

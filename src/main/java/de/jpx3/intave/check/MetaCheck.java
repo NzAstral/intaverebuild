@@ -49,7 +49,7 @@ import org.bukkit.entity.Player;
 public abstract class MetaCheck<M extends CheckCustomMetadata> extends Check {
   private final Class<? extends M> metaClass;
 
-  public MetaCheck(String checkName, String configurationName, Class<? extends M> metaClass) {
+  protected MetaCheck(String checkName, String configurationName, Class<? extends M> metaClass) {
     super(checkName, configurationName);
     this.metaClass = metaClass;
   }
