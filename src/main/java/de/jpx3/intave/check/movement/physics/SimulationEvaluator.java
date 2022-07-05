@@ -18,6 +18,9 @@ import org.bukkit.util.Vector;
 @Relocate
 public final class SimulationEvaluator {
   private static final double LADDER_UPWARDS_MOTION = (0.2 - 0.08) * 0.98005f;
+  private static final double RIPTIDE_TOLERANCE = 3.005;
+  private static final double RIPTIDE_TOLERANCE_2 = 0.05;
+  private static final double RIPTIDE_GROUND_TOLERANCE_2 = 2.5;
 
   @SplitMeUp
   public double calculateVerticalViolationLevelIncrease(
@@ -96,7 +99,8 @@ public final class SimulationEvaluator {
       } else if (Math.abs(Math.abs(receivedMotionY - crouchingHeightGap) - movement.jumpMotion()) < 0.01) {
         scuffed = true;
       }
-      boolean collides = Collision.present(player, BoundingBox.fromPosition(user, movement.positionX, movement.positionY, movement.positionZ).expand(movement.motionX(), receivedMotionY + 0.1, movement.motionZ()));
+      boolean collides = Collision.present(player, BoundingBox.fromPosition(user, movement.positionX, movement.positionY, movement.positionZ)
+        .expand(movement.motionX(), Math.abs(receivedMotionY + 0.1), movement.motionZ()));
 //      player.sendMessage(scuffed + " " + movement.isSneaking() + " " + Math.abs(receivedMotionY - crouchingHeightGap) + " " + Math.abs(receivedMotionY - standingHeightGap));
       if (scuffed && collides) {
         differenceY = 0;
@@ -372,10 +376,6 @@ public final class SimulationEvaluator {
     double multiplier = abuseHorizontally > 0.1 ? 20.0 : 10.0;
     return abuseHorizontally * multiplier;
   }
-
-  private static final double RIPTIDE_TOLERANCE = 3.005;
-  private static final double RIPTIDE_TOLERANCE_2 = 0.05;
-  private static final double RIPTIDE_GROUND_TOLERANCE_2 = 2.5;
 
   private double resolveRiptideDeviation(MovementMetadata movementData) {
     double riptideTolerance;
