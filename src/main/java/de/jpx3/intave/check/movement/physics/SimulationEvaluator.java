@@ -203,7 +203,7 @@ public final class SimulationEvaluator {
     }
 
     boolean justInPowderSnow = movement.pastInPowderSnow < 5;
-    double maxLadderVel = justInPowderSnow ? LADDER_UPWARDS_MOTION * 2 : LADDER_UPWARDS_MOTION;
+    double maxLadderVel = justInPowderSnow ? LADDER_UPWARDS_MOTION * 1.5 : LADDER_UPWARDS_MOTION;
     if ((onLadder || justInPowderSnow) && movement.motionY() <= maxLadderVel) {
       abuseVertically = 0;
     }
