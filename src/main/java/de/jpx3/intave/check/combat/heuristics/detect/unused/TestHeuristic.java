@@ -21,7 +21,6 @@ import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
 import static com.comphenix.protocol.PacketType.Play.Server.POSITION;
@@ -50,13 +49,9 @@ public final class TestHeuristic extends MetaCheckPart<Heuristics, TestHeuristic
     Set<?> allTeleportFlags = TeleportFlag.setOfAllFlags();
     packet.getSpecificModifier(Set.class).write(0, allTeleportFlags);
     // add teleport flags
-    try {
-      userOf(player).ignoreNextOutboundPacket();
-      protocol.sendServerPacket(player, packet);
-      userOf(player).receiveNextOutboundPacketAgain();
-    } catch (InvocationTargetException exception) {
-      exception.printStackTrace();
-    }
+    userOf(player).ignoreNextOutboundPacket();
+    protocol.sendServerPacket(player, packet);
+    userOf(player).receiveNextOutboundPacketAgain();
   }
 
   @PacketSubscription(

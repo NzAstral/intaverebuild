@@ -19,7 +19,6 @@ import de.jpx3.intave.user.meta.ConnectionMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.DelayQueue;
@@ -192,11 +191,7 @@ public final class PacketDelayer extends Module {
   }
 
   private void sendPacket(Player player, Object packet) {
-    try {
-      ProtocolLibrary.getProtocolManager().sendServerPacket(player, PacketContainer.fromPacket(packet), true);
-    } catch (InvocationTargetException exception) {
-      exception.printStackTrace();
-    }
+    ProtocolLibrary.getProtocolManager().sendServerPacket(player, PacketContainer.fromPacket(packet), true);
   }
 
   private long oldestPendingTransaction(User user) {

@@ -13,27 +13,6 @@ import java.util.Arrays;
 
 public final class PacketSender {
   private static final PacketFilterManager protocolManager = (PacketFilterManager) ProtocolLibrary.getProtocolManager();
-
-  public static void sendServerPacket(Player receiver, PacketContainer packet) {
-    if (!protocolManager.isClosed()) {
-      try {
-        protocolManager.sendServerPacket(receiver, packet);
-      } catch (InvocationTargetException exception) {
-        exception.printStackTrace();
-      }
-    }
-  }
-
-  public static void sendServerPacketWithoutEvent(Player receiver, PacketContainer packet) {
-    if (!protocolManager.isClosed()) {
-      try {
-        protocolManager.sendServerPacket(receiver, packet, false);
-      } catch (InvocationTargetException exception) {
-        exception.printStackTrace();
-      }
-    }
-  }
-
   private static final boolean PROTOCOL_LIB_CORRECTED_THEIR_TYPO = Arrays.stream(ProtocolManager.class.getDeclaredMethods()).anyMatch(method -> method.getName().equalsIgnoreCase("receiveClientPacket"));
   private static final Method RECEIVE_PACKET_METHOD;
 
@@ -47,6 +26,18 @@ public final class PacketSender {
       exception.printStackTrace();
     }
     RECEIVE_PACKET_METHOD = method;
+  }
+
+  public static void sendServerPacket(Player receiver, PacketContainer packet) {
+    if (!protocolManager.isClosed()) {
+      protocolManager.sendServerPacket(receiver, packet);
+    }
+  }
+
+  public static void sendServerPacketWithoutEvent(Player receiver, PacketContainer packet) {
+    if (!protocolManager.isClosed()) {
+      protocolManager.sendServerPacket(receiver, packet, false);
+    }
   }
 
   public static void receiveClientPacketFrom(Player receiver, PacketContainer packet) {
