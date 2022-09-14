@@ -1,5 +1,6 @@
 package de.jpx3.intave.block.variant;
 
+import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.block.variant.index.VariantIndex;
 import org.bukkit.Material;
@@ -24,7 +25,7 @@ public final class BlockVariantRegister {
       count += index.size();
       blockCount++;
     }
-    IntaveLogger.logger().info("Indexed " + count + " variations of " + blockCount + " blocks");
+    IntaveLogger.logger().info("Indexed " + count + " variations of " + blockCount + " blocks for " + MinecraftVersion.getCurrentVersion().getVersion());
   }
 
   public static BlockVariant variantOf(Material type, int variantIndex) {

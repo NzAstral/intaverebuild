@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class InjectionService implements EventProcessor {
   private final Map<PacketType, Collection<FilteringPacketAdapter>> packetListeners = new ConcurrentHashMap<>();
-
   private final IntavePlugin plugin;
   private final TinyProtocol pipelineInjector;
 
@@ -31,7 +30,7 @@ public final class InjectionService implements EventProcessor {
     this.plugin.eventLinker().registerEventsIn(this);
   }
 
-  protected Collection<FilteringPacketAdapter> subscriptionsOf(PacketType type) {
+  Collection<FilteringPacketAdapter> subscriptionsOf(PacketType type) {
     return packetListeners.get(type);
   }
 
@@ -46,7 +45,7 @@ public final class InjectionService implements EventProcessor {
   @BukkitEventSubscription
   public void onJoin(PlayerJoinEvent join) {
     Player player = join.getPlayer();
-    Synchronizer.synchronize(() -> inject(player));
+    Synchronizer.synchronizeDelayed(() -> inject(player), 20);
   }
 
   @BukkitEventSubscription
