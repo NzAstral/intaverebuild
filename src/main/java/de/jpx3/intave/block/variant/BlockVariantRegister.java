@@ -25,7 +25,7 @@ public final class BlockVariantRegister {
       count += index.size();
       blockCount++;
     }
-    IntaveLogger.logger().info("Indexed " + count + " variations of " + blockCount + " blocks for " + MinecraftVersion.getCurrentVersion().getVersion());
+    IntaveLogger.logger().info("Indexed " + count + " variations of " + blockCount + " blocks");
   }
 
   public static BlockVariant variantOf(Material type, int variantIndex) {
