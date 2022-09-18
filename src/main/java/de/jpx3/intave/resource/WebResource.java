@@ -2,6 +2,7 @@ package de.jpx3.intave.resource;
 
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.security.LicenseAccess;
 
 import java.io.ByteArrayInputStream;
@@ -11,13 +12,23 @@ import java.net.*;
 
 final class WebResource implements Resource {
   private final URL url;
+  private final Resource fallback;
 
   public WebResource(String url) throws MalformedURLException {
-    this(new URL(url));
+    this(new URL(url), null);
+  }
+
+  public WebResource(String url, @Nullable Resource fallback) throws MalformedURLException {
+    this(new URL(url), fallback);
   }
 
   public WebResource(URL url) {
+    this(url, null);
+  }
+
+  public WebResource(URL url, @Nullable Resource fallback) {
     this.url = url;
+    this.fallback = fallback;
   }
 
   @Override
@@ -68,14 +79,23 @@ final class WebResource implements Resource {
       if (IntaveControl.DISABLE_LICENSE_CHECK) {
         System.out.println("[debug] Timeout reading " + url);
       }
+      if (fallback != null) {
+        return fallback.read();
+      }
       return new ByteArrayInputStream(new byte[0]);
     } catch (UnknownHostException host) {
       if (IntaveControl.DISABLE_LICENSE_CHECK) {
         System.out.println("[debug] Unable to connect to " + url);
       }
+      if (fallback != null) {
+        return fallback.read();
+      }
       return new ByteArrayInputStream(new byte[0]);
     } catch (Exception exception) {
       exception.printStackTrace();
+      if (fallback != null) {
+        return fallback.read();
+      }
       return new ByteArrayInputStream(new byte[0]);
     }
   }

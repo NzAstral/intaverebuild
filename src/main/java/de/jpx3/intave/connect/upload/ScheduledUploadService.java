@@ -251,7 +251,8 @@ public final class ScheduledUploadService {
     } catch (Exception e) {
       finalFile.delete();
       unlock("X3-2-S");
-      throw new RuntimeException("Upload failed: " + e.getMessage());
+      return;
+//      throw new RuntimeException("Upload failed: " + e.getMessage());
     }
     File[] files = workingFolder.listFiles();
     if (files != null) {

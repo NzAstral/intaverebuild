@@ -10,7 +10,10 @@ import de.jpx3.intave.agent.AgentAccessor;
 import de.jpx3.intave.analytics.Analytics;
 import de.jpx3.intave.annotate.NameIntrinsicallyImportant;
 import de.jpx3.intave.annotate.Native;
-import de.jpx3.intave.block.access.*;
+import de.jpx3.intave.block.access.BlockAccess;
+import de.jpx3.intave.block.access.BlockInteractionAccess;
+import de.jpx3.intave.block.access.BlockWrapper;
+import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.CollisionModifiers;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.physics.BlockPhysics;
@@ -24,6 +27,7 @@ import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.command.CommandForwarder;
 import de.jpx3.intave.config.ConfigurationService;
+import de.jpx3.intave.connect.IntaveDomains;
 import de.jpx3.intave.connect.customclient.CustomClientSupportService;
 import de.jpx3.intave.connect.proxy.ProxyMessenger;
 import de.jpx3.intave.connect.sibyl.SibylBroadcast;
@@ -152,6 +156,8 @@ public final class IntavePlugin extends JavaPlugin {
   @Override
   public void onEnable() {
     logger.info("Please stand by..");
+    IntaveDomains.setup();
+
     // stage 4
     Modules.proceedBoot(BootSegment.STAGE_4);
 
@@ -214,7 +220,7 @@ public final class IntavePlugin extends JavaPlugin {
 
       // causes interceptor output
       for (int i = 0; i < 1; i++) {
-        URL url = new URL("https://service.intave.de/versions");
+        URL url = new URL("https://"+IntaveDomains.firstServiceDomain()+"/versions");
         url.getDefaultPort();
       }
 
@@ -313,7 +319,7 @@ public final class IntavePlugin extends JavaPlugin {
         }
 
         try {
-          String path = "https://service.intave.de/auth.php";
+          String path = "https://" + IntaveDomains.firstServiceDomain() + "/auth.php";
           URL url = new URL(path);
           URLConnection connection = url.openConnection();
           connection.setUseCaches(false);
@@ -689,7 +695,7 @@ public final class IntavePlugin extends JavaPlugin {
     Modules.linker().packetEvents().refreshLinkages();
     displayVersionInformation();
     successfullyBooted = true;
-    randomExitMessages = Resources.cacheResourceChain("https://service.intave.de/exitmessages", "exitmessages", TimeUnit.DAYS.toMillis(7)).lines();
+    randomExitMessages = Resources.localServiceCacheResource("exitmessages","exitmessages", TimeUnit.DAYS.toMillis(7)).lines();
     logger.info("Intave booted successfully");
 
     Synchronizer.synchronize(() -> {
@@ -793,7 +799,8 @@ public final class IntavePlugin extends JavaPlugin {
           } catch (IOException ignored) {
           }
         });
-    } catch (Exception ignored) {}
+    } catch (Exception ignored) {
+    }
   }
 
   private void clearDirectory(File directory) throws IOException {

@@ -22,7 +22,7 @@ final class ProtocolVersionRanges implements Iterable<ProtocolVersionRange> {
       versionRanges.stream()
         .filter(range -> range.includes(version))
         .findFirst()
-        .orElseGet(() -> newest().orElseGet(() -> new ProtocolVersionRange(Integer.MIN_VALUE, Integer.MAX_VALUE, "error")));
+        .orElseGet(() -> newest().orElseGet(() -> new ProtocolVersionRange(Integer.MIN_VALUE, Integer.MAX_VALUE, "1.0.0")));
     return protocolVersionRange.version();
   }
 

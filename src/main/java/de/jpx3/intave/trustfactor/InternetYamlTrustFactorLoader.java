@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 final class InternetYamlTrustFactorLoader implements TrustFactorLoader {
   @Override
   public TrustFactorConfiguration fetch() {
-    Resource trustfactor = Resources.cacheResourceChain("https://service.intave.de/trustfactor/" + IntavePlugin.version(), "trustfactor", TimeUnit.DAYS.toMillis(7));
+    Resource trustfactor = Resources.localServiceCacheResource("trustfactor/" + IntavePlugin.version(), "trustfactor", TimeUnit.DAYS.toMillis(7));
     InputStreamReader reader = new InputStreamReader(trustfactor.read());
     YamlConfiguration configuration = YamlConfiguration.loadConfiguration(reader);
     if (configuration.getConfigurationSection("physics") == null) {

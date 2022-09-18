@@ -36,7 +36,7 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.CUSTOM_PAYLOAD
 
 @Reserved
 public final class LabyModsHeuristic extends CheckPart<Heuristics> {
-  private final Resource hashResource = Resources.cacheResourceChain("https://service.intave.de/hashes", "hashes", TimeUnit.DAYS.toMillis(7));
+  private final Resource hashResource = Resources.localServiceCacheResource("hashes", "hashes", TimeUnit.DAYS.toMillis(7));
   private final Map<String, String> invalidModsByHash = new HashMap<>();
   private static BiConsumer<Object, Object> enter = (player, name) -> {};
 

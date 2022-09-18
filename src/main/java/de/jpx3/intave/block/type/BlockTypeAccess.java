@@ -48,7 +48,7 @@ public final class BlockTypeAccess {
     throw new IntaveInternalException("Unable to find block for " + Arrays.toString(names));
   }
 
-  private static final Resource MAPPING_RESOURCE = Resources.cacheResourceChain("https://service.intave.de/bbm/" + IntavePlugin.version(), "bbm", TimeUnit.DAYS.toMillis(14));
+  private static final Resource MAPPING_RESOURCE = Resources.localServiceCacheResource("bbm/" + IntavePlugin.version(),  "bbm", TimeUnit.DAYS.toMillis(14));
   private static final FileTypeTranslator translator = new VerTraFileTypeTranslator();
   private static final TypeTranslations typeTranslations;
 

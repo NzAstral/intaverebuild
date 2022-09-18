@@ -2,6 +2,7 @@ package de.jpx3.intave.resource;
 
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.Native;
+import de.jpx3.intave.connect.IntaveDomains;
 import de.jpx3.intave.lib.asm.ByteVector;
 import de.jpx3.intave.security.ContextSecrets;
 import de.jpx3.intave.security.HashAccess;
@@ -12,6 +13,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
@@ -43,6 +45,18 @@ public final class Resources {
     return new WebResource(url);
   }
 
+  public static Resource resourceFromWebWithFallback(URL url, Resource fallback) {
+    return new WebResource(url, fallback);
+  }
+
+  public static Resource resourceFromOneOf(URL[] urls) {
+    Resource previous = null;
+    for (int i = urls.length - 1; i >= 0; i--) {
+      previous = resourceFromWebWithFallback(urls[i], previous);
+    }
+    return previous;
+  }
+
   static Resource locked(File targetFile, Resource resource) {
     return new LockingLayer(targetFile, resource);
   }
@@ -68,20 +82,6 @@ public final class Resources {
     return new FileSpreadLayer(file, resourcer, spreads);
   }
 
-//  private static final int CLASS_VERSION = 4;
-
-//  @Native
-//  public static Resource versionDependentEncryptedFileResourceChain(String identifier) {
-//    File file = fileLocationOf(new UUID(~identifier.hashCode() | (CLASS_VERSION | CLASS_VERSION << 2), ~IntavePlugin.version().hashCode()) + "e");
-//    return refreshFileAccessDateOnRead(file, resourceFromFile(file).encrypted());
-//  }
-//
-//  @Native
-//  public static Resource encryptedFileResourceChain(String identifier) {
-//    File file = fileLocationOf(new UUID(~identifier.hashCode() | (CLASS_VERSION | CLASS_VERSION << 2), -391180952) + "e");
-//    return refreshFileAccessDateOnRead(file, resourceFromFile(file).encrypted());
-//  }
-
   @Native
   public static Resource fileCache(
     String identifier
@@ -94,27 +94,56 @@ public final class Resources {
     }
   }
 
+  @Native
   public static Resource cacheResourceChain(
-    String url,
+    String urlString,
     String identifier,
     long expires
   ) {
+    URL url;
     try {
-      return cacheResourceChain(new URL(url), identifier, expires);
+      url = new URL(urlString);
     } catch (MalformedURLException exception) {
       throw new IllegalStateException(exception);
     }
-  }
-
-  @Native
-  public static Resource cacheResourceChain(
-    URL url,
-    String identifier,
-    long expires
-  ) {
     File initialFile = fileLocationOf(nameFrom(url, identifier, expires));
     Resource cache = fileSpread(initialFile, Resources::resourceFromFileWithLock, 8).encrypted();
     Resource access = resourceFromWeb(url);
+    Resource resourceCache = new ResourceCache(cache, access, expires).retryReads(3);
+    ResourceRegistry.registerResource(identifier, resourceCache);
+    return resourceCache;
+  }
+
+  public static Resource localServiceCacheResource(
+    String localPath,
+    String identifier,
+    long expires
+  ) {
+    return cacheResourceChainWithMultipleDomains(
+      "https://{DOMAIN}/" + localPath,
+      IntaveDomains.serviceDomains(),
+      identifier, expires
+    );
+  }
+
+  @Native
+  private static Resource cacheResourceChainWithMultipleDomains(
+    String pattern,
+    List<String> domains,
+    String identifier,
+    long expires
+  ) {
+    URL[] urls = new URL[domains.size()];
+    for (int i = 0; i < urls.length; i++) {
+      try {
+        urls[i] = new URL(pattern.replace("{DOMAIN}", domains.get(i)));
+      } catch (MalformedURLException exception) {
+        throw new IllegalStateException(exception);
+      }
+    }
+    File initialFile = fileLocationOf(nameFrom(urls[0], identifier, expires));
+    Resource cache = fileSpread(initialFile, Resources::resourceFromFileWithLock, 8).encrypted();
+    Resource access = resourceFromOneOf(urls);
     Resource resourceCache = new ResourceCache(cache, access, expires).retryReads(3);
     ResourceRegistry.registerResource(identifier, resourceCache);
     return resourceCache;

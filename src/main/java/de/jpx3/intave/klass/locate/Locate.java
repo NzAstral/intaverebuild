@@ -17,7 +17,7 @@ public final class Locate {
   private static final Resource LOCATE_RESOURCE =
     IntaveControl.USE_DEBUG_LOCATE_RESOURCE ?
       Resources.resourceFromFile(new File(IntavePlugin.singletonInstance().dataFolder(), "locate")) :
-      Resources.cacheResourceChain("https://service.intave.de/locate/" + IntavePlugin.version(), "locate", TimeUnit.DAYS.toMillis(14));
+      Resources.localServiceCacheResource("locate/" + IntavePlugin.version(), "locate", TimeUnit.DAYS.toMillis(14));
   private static final Locations CLASS_AND_FIELD_LOCATIONS = LocateFileCompiler.create().fromResource(LOCATE_RESOURCE).reduced();
   private static final ClassLocations classLocations = CLASS_AND_FIELD_LOCATIONS.classLocations();
   private static final FieldLocations fieldLocations = CLASS_AND_FIELD_LOCATIONS.fieldLocations();

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.Resources;
@@ -21,25 +22,29 @@ public final class IntaveVersionList {
   }
 
   public void setup() {
-    Resource cachedResource = Resources.cacheResourceChain(
-      "https://service.intave.de/versions",
+    Resource cachedResource = Resources.localServiceCacheResource(
+      "versions",
       "versions",
       TimeUnit.DAYS.toMillis(2)
     );
-    JsonReader json = new JsonReader(new StringReader(cachedResource.asString()));
-    json.setLenient(true);
-    JsonArray jsonArray = new JsonParser().parse(json).getAsJsonArray();
-    for (JsonElement jsonElement : jsonArray) {
-      JsonObject jsonObject = jsonElement.getAsJsonObject();
-      String name = jsonObject.get("name").getAsString();
-      String release = jsonObject.get("release").getAsString();
-      String status = jsonObject.get("status").getAsString();
-      IntaveVersion version = new IntaveVersion(
-        name, Long.parseLong(release),
-        IntaveVersion.Status.fromName(status)
-      );
-      content.add(version);
-      contentLookup.put(version.version().toLowerCase(Locale.ROOT), version);
+    try {
+      JsonReader json = new JsonReader(new StringReader(cachedResource.asString()));
+      json.setLenient(true);
+      JsonArray jsonArray = new JsonParser().parse(json).getAsJsonArray();
+      for (JsonElement jsonElement : jsonArray) {
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        String name = jsonObject.get("name").getAsString();
+        String release = jsonObject.get("release").getAsString();
+        String status = jsonObject.get("status").getAsString();
+        IntaveVersion version = new IntaveVersion(
+          name, Long.parseLong(release),
+          IntaveVersion.Status.fromName(status)
+        );
+        content.add(version);
+        contentLookup.put(version.version().toLowerCase(Locale.ROOT), version);
+      }
+    } catch (Exception e) {
+      IntaveLogger.logger().warn("Failed to load version list");
     }
   }
 
