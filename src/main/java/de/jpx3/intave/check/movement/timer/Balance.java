@@ -102,7 +102,6 @@ public final class Balance extends MetaCheckPart<Timer, Balance.BalanceMeta> {
     boolean suspicious = /*violationLevelOf(user) > 10 && */!user.trustFactor().atLeast(TrustFactor.ORANGE) /*&& System.currentTimeMillis() - timerData.lastTimerFlag < 2000*/;
     int overflowLimit = highToleranceMode ? 750 : (suspicious ? 100 : 250);
 
-    player.sendMessage("timer: " + timerData.timerBalance + " / " + overflowLimit);
     if (timerData.timerBalance > overflowLimit && !user.meta().movement().isInVehicle()) {
       String balanceAsString = MathHelper.formatDouble(timerData.timerBalance / 50, 2);
       statisticApply(user, CheckStatistics::increaseFails);
