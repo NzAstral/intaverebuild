@@ -100,7 +100,9 @@ public final class AttackMetadata {
     BoundingBox targetBoundingBox = EntityShade.entityBoundingBoxFrom(entityPositions, entity);
     double bestTargetX = ClientMathHelper.clamp_double(posX, targetBoundingBox.minX, targetBoundingBox.maxX);
     double bestTargetZ = ClientMathHelper.clamp_double(posZ, targetBoundingBox.minZ, targetBoundingBox.maxZ);
-    return resolveYawRotation(entityPositions, bestTargetX, bestTargetZ);
+    double diffX = bestTargetX - posX;
+    double diffZ = bestTargetZ - posZ;
+    return (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90.0f;
   }
 
   public FakePlayer fakePlayer() {
@@ -131,12 +133,20 @@ public final class AttackMetadata {
     return perfectPitch;
   }
 
+  public float perfectClosestYaw() {
+    return perfectClosestYaw;
+  }
+
   public float previousPerfectYaw() {
     return previousPerfectYaw;
   }
 
   public float previousPerfectPitch() {
     return previousPerfectPitch;
+  }
+
+  public float previousPerfectClosestYaw() {
+    return previousPerfectClosestYaw;
   }
 
   @Nullable

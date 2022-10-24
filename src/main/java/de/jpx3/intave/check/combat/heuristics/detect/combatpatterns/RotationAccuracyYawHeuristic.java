@@ -47,8 +47,10 @@ public final class RotationAccuracyYawHeuristic extends MetaCheckPart<Heuristics
     EntityShade entity = attackData.lastAttackedEntity();
     float rotationYaw = movementData.rotationYaw;
     float perfectYaw = attackData.perfectYaw();
+    float closestPerfectYaw = attackData.perfectClosestYaw();
     float yawSpeed = MathHelper.distanceInDegrees(rotationYaw, movementData.lastRotationYaw);
     float distanceToPerfectYaw = MathHelper.distanceInDegrees(perfectYaw, rotationYaw);
+    float distanceToClosestPerfectYaw = MathHelper.distanceInDegrees(closestPerfectYaw, rotationYaw);
     if (entity == null || movementData.lastTeleport < 5) {
       return;
     }
@@ -86,7 +88,7 @@ public final class RotationAccuracyYawHeuristic extends MetaCheckPart<Heuristics
           }
         }
         // Check perfect yaw
-        if (distanceToPerfectYaw == 0) {
+        if (distanceToPerfectYaw == 0 || distanceToClosestPerfectYaw == 0) {
           String description = "rotated yaw too precise (0.0)";
           int options = LIMIT_2 | DELAY_128s | SUGGEST_MINING;
           Anomaly anomaly = Anomaly.anomalyOf("82", Confidence.PROBABLE, Anomaly.Type.KILLAURA, description, options);
