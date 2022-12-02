@@ -62,6 +62,10 @@ public final class Motion {
     return this;
   }
 
+  public Motion add(Motion other) {
+    return add(other.motionX, other.motionY, other.motionZ);
+  }
+
   public void resetTo(Motion motion) {
     reset(motion.motionX, motion.motionY, motion.motionZ);
   }
@@ -80,5 +84,10 @@ public final class Motion {
 
   public static Motion copyFrom(Motion context) {
     return new Motion(context.motionX, context.motionY, context.motionZ);
+  }
+
+  @Override
+  public String toString() {
+    return "(" + motionX + ", " + motionY + ", " + motionZ + ")";
   }
 }

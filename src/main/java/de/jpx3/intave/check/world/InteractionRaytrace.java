@@ -95,7 +95,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       if (enumDirection == 255) {
         return;
       }
-      Material clickedType = VolatileBlockAccess.typeAccess(user, blockPosition.toLocation(player.getWorld()));
+      Material clickedType = blockPosition == null ? Material.AIR : VolatileBlockAccess.typeAccess(user, blockPosition.toLocation(player.getWorld()));
       boolean clickableInteraction = BlockInteractionAccess.isClickable(clickedType);
       ItemStack heldItem = user.meta().inventory().heldItem();
 
@@ -114,6 +114,10 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
         && !clickableInteraction
         && !abilityMetadata.inGameMode(GameMode.ADVENTURE);
 
+      boolean interactionIsBlank =
+        enumDirection == 255 && blockPosition == null;
+
+      InteractionType type = interactionIsBlank ? InteractionType.EMPTY_INTERACT : (interactionIsPlacement ? InteractionType.PLACE : InteractionType.INTERACT);
       Interaction interaction =
           new Interaction(
               packet.deepClone(),
@@ -121,7 +125,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
               player,
               blockPosition,
               enumDirection,
-              interactionIsPlacement ? InteractionType.PLACE : InteractionType.INTERACT,
+            type,
               interactedBlockType,
               handSlot == EnumWrappers.Hand.MAIN_HAND
                   ? heldItem
@@ -132,14 +136,16 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       boolean mustPostValidate = interactionMeta.remainingBlockStart > 0;
       if (!mustPostValidate && preprocessInteraction(interaction)) {
         if (interactionEmulator.emulate(interaction) == FAILED) {
-          refreshBlocksAround(player, blockPosition.toLocation(player.getWorld()));
+          if (blockPosition != null) {
+            refreshBlocksAround(player, blockPosition.toLocation(player.getWorld()));
+          }
           event.setCancelled(true);
         }
       } else {
         interactionMeta.interactionList.add(interaction);
-        // For items which require longer consume time, the cancellation should be done after double checking
+        // For items which require longer consume time, the cancellation should be done after double-checking
         boolean usable = ItemProperties.canItemBeUsed(player, heldItem)
-               && !ItemProperties.isPotion(interaction.itemTypeInHand());
+          && !ItemProperties.isPotion(interaction.itemTypeInHand());
         if (!usable) {
           event.setCancelled(true);
         }
@@ -198,6 +204,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     if (nullBlock && enumDirection == 0) {
       return;
     }
+
     if (protocol.deadOldVersion() &&
       nullBlock &&
       direction == EnumWrappers.Direction.SOUTH &&
@@ -260,45 +267,48 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     MovementMetadata movementData = user.meta().movement();
     InteractionMeta interactionMeta = metaOf(user);
 
-    Location playerLocation = new Location(player.getWorld(), movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ);
-    playerLocation.setYaw(movementData.rotationYaw);
-    playerLocation.setPitch(movementData.rotationPitch);
-    Location playerLocationmdf = playerLocation.clone();
-    playerLocationmdf.setYaw(movementData.lastRotationYaw);
+    if (interaction.hasTargetBlock()) {
+      Location playerLocation = new Location(player.getWorld(), movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ);
+      playerLocation.setYaw(movementData.rotationYaw);
+      playerLocation.setPitch(movementData.rotationPitch);
+      Location playerLocationmdf = playerLocation.clone();
+      playerLocationmdf.setYaw(movementData.lastRotationYaw);
 
-    MovingObjectPosition raycastResult;
-    MovingObjectPosition raycastResultmdf;
-    try {
-      raycastResult = Raytracing.blockRayTrace(player, playerLocation);
-      raycastResultmdf = Raytracing.blockRayTrace(player, playerLocationmdf);
-    } catch (Exception exception) {
-      exception.printStackTrace();
-      return interaction.targetBlock().toLocation(world).distance(player.getLocation()) < 6;
+      MovingObjectPosition raycastResult;
+      MovingObjectPosition raycastResultmdf;
+      try {
+        raycastResult = Raytracing.blockRayTrace(player, playerLocation);
+        raycastResultmdf = Raytracing.blockRayTrace(player, playerLocationmdf);
+      } catch (Exception exception) {
+        exception.printStackTrace();
+        return interaction.targetBlock().toLocation(world).distance(player.getLocation()) < 6;
+      }
+      boolean estimateMouseDelayFix = interactionMeta.estimateMouseDelayFix;
+
+      // first raytrace check
+      MovingObjectPosition firstRaytraceResult = estimateMouseDelayFix ? raycastResultmdf : raycastResult;
+      boolean hitMiss = (firstRaytraceResult == null || firstRaytraceResult.hitVec == NativeVector.ZERO);
+      BlockPosition raycastVector = hitMiss ? BlockPosition.ORIGIN : firstRaytraceResult.getBlockPos();
+      Location raycastLocation = raycastVector.toLocation(world);
+      Location targetLocation = interaction.targetBlock().toLocation(world);
+      boolean raytraceFailed = hitMiss ||
+        raycastLocation.distance(targetLocation) > 0 ||
+        wrongBlockFace(interaction, firstRaytraceResult);
+
+      // if first raytrace failed..
+      if (raytraceFailed) {
+        // ..try again with mouse delay fix toggled differently
+        MovingObjectPosition secondRaytraceResult = estimateMouseDelayFix ? raycastResult : raycastResultmdf;
+        boolean hitMiss2 = secondRaytraceResult == null || secondRaytraceResult.hitVec == NativeVector.ZERO;
+        BlockPosition raycastVector2 = hitMiss2 ? BlockPosition.ORIGIN : secondRaytraceResult.getBlockPos();
+        Location raycastLocation2 = raycastVector2.toLocation(world);
+        raytraceFailed = hitMiss2 ||
+          raycastLocation2.distance(targetLocation) > 0 ||
+          wrongBlockFace(interaction, secondRaytraceResult);
+      }
+      return !raytraceFailed;
     }
-    boolean estimateMouseDelayFix = interactionMeta.estimateMouseDelayFix;
-
-    // first raytrace check
-    MovingObjectPosition firstRaytraceResult = estimateMouseDelayFix ? raycastResultmdf : raycastResult;
-    boolean hitMiss = (firstRaytraceResult == null || firstRaytraceResult.hitVec == NativeVector.ZERO);
-    BlockPosition raycastVector = hitMiss ? BlockPosition.ORIGIN : firstRaytraceResult.getBlockPos();
-    Location raycastLocation = raycastVector.toLocation(world);
-    Location targetLocation = interaction.targetBlock().toLocation(world);
-    boolean raytraceFailed = hitMiss ||
-      raycastLocation.distance(targetLocation) > 0 ||
-      wrongBlockFace(interaction, firstRaytraceResult);
-
-    // if first raytrace failed..
-    if (raytraceFailed) {
-      // ..try again with mouse delay fix toggled differently
-      MovingObjectPosition secondRaytraceResult = estimateMouseDelayFix ? raycastResult : raycastResultmdf;
-      boolean hitMiss2 = secondRaytraceResult == null || secondRaytraceResult.hitVec == NativeVector.ZERO;
-      BlockPosition raycastVector2 = hitMiss2 ? BlockPosition.ORIGIN : secondRaytraceResult.getBlockPos();
-      Location raycastLocation2 = raycastVector2.toLocation(world);
-      raytraceFailed = hitMiss2 ||
-        raycastLocation2.distance(targetLocation) > 0 ||
-        wrongBlockFace(interaction, secondRaytraceResult);
-    }
-    return !raytraceFailed;
+    return true;
   }
 
   private void processInteraction(
@@ -316,10 +326,15 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     User user = userOf(player);
     InteractionMeta interactionMeta = metaOf(player);
     boolean usable = ItemProperties.canItemBeUsed(player, interaction.itemInHand())
-           && !ItemProperties.isPotion(interaction.itemTypeInHand());
+      && !ItemProperties.isPotion(interaction.itemTypeInHand());
 
     if (interaction.digType() == START_DESTROY_BLOCK) {
       interactionMeta.remainingBlockStart--;
+    }
+
+    if (!interaction.hasTargetBlock()) {
+      interactionEmulator.emulate(interaction);
+      return;
     }
 
     MovingObjectPosition raycastResult;
@@ -334,9 +349,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       }
       return;
     }
-
     boolean estimateMouseDelayFix = interactionMeta.estimateMouseDelayFix;
-
     // first raytrace check
     MovingObjectPosition firstRaytraceResult = estimateMouseDelayFix ? raycastResultmdf : raycastResult;
     boolean hitMiss = (firstRaytraceResult == null || firstRaytraceResult.hitVec == NativeVector.ZERO);
@@ -346,7 +359,6 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     boolean raytraceFailed = hitMiss ||
       raycastLocation.distance(targetLocation) > 0 ||
       wrongBlockFace(interaction, firstRaytraceResult);
-
     // if first raytrace failed..
     if (raytraceFailed) {
       // ..try again with mouse delay fix toggled differently
@@ -359,9 +371,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
         wrongBlockFace(interaction, secondRaytraceResult);
       interactionMeta.estimateMouseDelayFix = raytraceFailed == interactionMeta.estimateMouseDelayFix;
     }
-
     boolean flag, mustCancelPacket;
-
     if (!raytraceFailed) {
       // everything is fine
       decrementer.decrement(user, 0.25);

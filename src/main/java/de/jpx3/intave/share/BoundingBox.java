@@ -363,7 +363,7 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
   /**
    * Returns the average length of the edges of the bounding box.
    */
-  public double getAverageEdgeLength() {
+  public double averageEdgeLength() {
     double d0 = this.maxX - this.minX;
     double d1 = this.maxY - this.minY;
     double d2 = this.maxZ - this.minZ;

@@ -33,7 +33,7 @@ public final class LinearRegressionHeuristic extends MetaCheckPart<Heuristics, L
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
   public void sneakStart(PacketEvent event) {

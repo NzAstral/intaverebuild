@@ -1,6 +1,7 @@
 package de.jpx3.intave.check.other.inventoryclickanalysis;
 
 import com.comphenix.protocol.events.PacketEvent;
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
@@ -116,14 +117,17 @@ public final class InventoryClickDelayAnalyzer extends MetaCheckPart<InventoryCl
         .withMessage("is switching too quickly between item slots")
         .withDetails("moved from slot " + meta.lastClickedSlot + " to slot " + slot + " in " + MathHelper.formatDouble(time, 3) + " seconds")
         .withVL(5).build();
-      ViolationContext violationContext = Modules.violationProcessor().processViolation(violation);
-      if (violationContext.violationLevelAfter() >= 50) {
-        userOf(player).applyAttackNerfer(GARBAGE_HITS, "29");
-      }
-      if (violationContext.violationLevelAfter() >= 200) {
-        userOf(player).applyAttackNerfer(CANCEL_FIRST_HIT, "29");
-        userOf(player).applyAttackNerfer(DMG_MEDIUM, "29");
-        userOf(player).applyAttackNerfer(BLOCKING, "29");
+
+      if (IntaveControl.GOMME_MODE) {
+        ViolationContext violationContext = Modules.violationProcessor().processViolation(violation);
+        if (violationContext.violationLevelAfter() >= 50) {
+          userOf(player).applyAttackNerfer(GARBAGE_HITS, "29");
+        }
+        if (violationContext.violationLevelAfter() >= 100) {
+          userOf(player).applyAttackNerfer(CANCEL_FIRST_HIT, "29");
+          userOf(player).applyAttackNerfer(DMG_MEDIUM, "29");
+          userOf(player).applyAttackNerfer(BLOCKING, "29");
+        }
       }
     }
 

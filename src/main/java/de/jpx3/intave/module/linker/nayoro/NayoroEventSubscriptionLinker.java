@@ -16,6 +16,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntUnaryOperator;
 
 public final class NayoroEventSubscriptionLinker extends Module {
   private final IntavePlugin plugin;
@@ -94,7 +95,8 @@ public final class NayoroEventSubscriptionLinker extends Module {
           method.getName(),
           Type.getMethodDescriptor(method),
           false,
-          false
+          false,
+          IntUnaryOperator.identity()
         );
         NayoroEventExecutor executor;
         try {

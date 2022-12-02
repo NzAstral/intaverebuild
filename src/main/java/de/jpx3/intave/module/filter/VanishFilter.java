@@ -84,9 +84,8 @@ public final class VanishFilter extends Filter {
         });
         break;
     }
-
     Collections.shuffle(playerInfoDataList);
-    lists.write(0, playerInfoDataList);
+//    lists.write(0, playerInfoDataList);
   }
 
   @Override

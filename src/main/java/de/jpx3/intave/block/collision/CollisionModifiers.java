@@ -18,6 +18,7 @@ public final class CollisionModifiers {
     setup(CarpetCollisionModifier.class);
     setup(ShulkerCollisionModifier.class);
     setup(PowderSnowCollisionModifier.class);
+    setup(PistonCollisionModifier.class);
   }
 
   private static void setup(Class<? extends CollisionModifier> modifierClass) {

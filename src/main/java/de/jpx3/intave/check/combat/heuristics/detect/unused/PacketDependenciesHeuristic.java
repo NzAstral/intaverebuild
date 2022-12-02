@@ -148,7 +148,7 @@ public final class PacketDependenciesHeuristic extends MetaCheckPart<Heuristics,
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
     packetsIn = {
-      ENTITY_ACTION,
+      ENTITY_ACTION_IN,
       USE_ENTITY,
       ARM_ANIMATION,
       BLOCK_DIG,

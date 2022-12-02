@@ -33,11 +33,11 @@ public final class BlockVariantTests extends Tests {
   )
   public void highestVariantTesting() {
     Optional<Material> max = Arrays.stream(Material.values()).filter(Material::isBlock)
-      .max(Comparator.comparing(BlockVariantRegister::variantCountOf));
+      .max(Comparator.comparing(material -> BlockVariantRegister.variantIdsOf(material).size()));
     if (max.isPresent()) {
       Material material = max.get();
       Set<BlockVariant> variants = new HashSet<>();
-      for (int i = 0; i < BlockVariantRegister.variantCountOf(material); i++) {
+      for (int i : BlockVariantRegister.variantIdsOf(material)) {
         BlockVariant blockVariant = BlockVariantRegister.variantOf(material, i);
         assertEquals(blockVariant.index(), i);
         assertDoesNotContain(variants, blockVariant);

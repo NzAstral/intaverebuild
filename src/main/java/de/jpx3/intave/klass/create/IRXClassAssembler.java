@@ -7,6 +7,8 @@ import de.jpx3.intave.lib.asm.Label;
 import de.jpx3.intave.lib.asm.MethodVisitor;
 import de.jpx3.intave.lib.asm.Type;
 
+import java.util.function.IntUnaryOperator;
+
 import static de.jpx3.intave.lib.asm.Opcodes.*;
 
 final class IRXClassAssembler {
@@ -18,7 +20,8 @@ final class IRXClassAssembler {
     String callerMethodName, String callerMethodDescription, String castedCallerMethodDescription,
     String calledClassName,
     String calledMethodName, String calledMethodDescription,
-    boolean isStatic, boolean interfaceCall
+    boolean isStatic, boolean interfaceCall,
+    IntUnaryOperator swaps
   ) {
     byte[] callerClassBytes = prepareCallerClassBytes(
       className,
@@ -27,7 +30,8 @@ final class IRXClassAssembler {
       callerMethodName, callerMethodDescription, castedCallerMethodDescription,
       calledClassName,
       calledMethodName, calledMethodDescription,
-      isStatic, interfaceCall
+      isStatic, interfaceCall,
+      swaps
     );
     return loadAndGetClass(classLoader, className, callerClassBytes);
   }
@@ -38,8 +42,8 @@ final class IRXClassAssembler {
     String callerMethodName, String callerMethodDescription,
     String castedCallerMethodDescription, String calledClassName,
     String calledMethodName, String calledMethodDescription,
-    boolean isStatic,
-    boolean interfaceCall
+    boolean isStatic, boolean interfaceCall,
+    IntUnaryOperator swaps
   ) {
     ClassWriter classWriter = new ClassWriter(0);
     pushClassData(classWriter, className, sourceName, superClass);
@@ -52,8 +56,8 @@ final class IRXClassAssembler {
       calledClassName,
       calledMethodName,
       calledMethodDescription,
-      isStatic,
-      interfaceCall
+      isStatic, interfaceCall,
+      swaps
     );
     return endAndFetchBytes(classWriter);
   }
@@ -135,8 +139,8 @@ final class IRXClassAssembler {
     String calledClassName,
     String calledMethodName,
     String calledMethodDescription,
-    boolean isStatic,
-    boolean interfaceCall
+    boolean isStatic, boolean interfaceCall,
+    IntUnaryOperator swaps
   ) {
     MethodVisitor methodVisitor = classWriter.visitMethod(
       ACC_PUBLIC | ACC_SYNTHETIC,
@@ -156,7 +160,7 @@ final class IRXClassAssembler {
     for (Type type : callerMethodParameterTypes) {
       Type nestedType = castCallerMethodParameterTypes[index];
       int typeOpcode = resolveTypeOpcode(type, ILOAD);
-      methodVisitor.visitVarInsn(typeOpcode, ++index);
+      methodVisitor.visitVarInsn(typeOpcode, swaps.applyAsInt(++index));
       if (!nestedType.equals(type)) {
         String nestedTypeClassPath = nestedType.getClassName().replaceAll("\\.", "/");
         methodVisitor.visitTypeInsn(CHECKCAST, nestedTypeClassPath);

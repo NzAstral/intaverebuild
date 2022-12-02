@@ -38,14 +38,14 @@ final class IndexedBlockVariant implements BlockVariant {
   public <T extends Enum<T>> T enumProperty(Class<T> klass, String name) {
     name = name.toLowerCase(Locale.ROOT);
     Setting<?> setting = namedSettings.get(name);
-    Integer enumIndex = (Integer) namedConfig.get(name);
-    if (setting == null || enumIndex == null) {
+    String enumFieldName = (String) namedConfig.get(name);
+    if (setting == null || enumFieldName == null) {
       return null;
     }
     if (!(setting instanceof EnumSetting)) {
       throw new IllegalStateException(type + "/" + name + " is not a enum property");
     }
-    return ((EnumSetting) setting).enumType(klass, enumIndex);
+    return ((EnumSetting) setting).enumType(klass, enumFieldName);
   }
 
   @Override

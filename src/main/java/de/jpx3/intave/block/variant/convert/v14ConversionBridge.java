@@ -43,7 +43,7 @@ public final class v14ConversionBridge implements ConversionBridge{
   @PatchyAutoTranslation
   private static Comparable<?> convertEnumToIndexIfPresent(Comparable<?> initial) {
     if (initial.getClass().isEnum()) {
-      return ((Enum<?>) initial).ordinal();
+      return ((Enum<?>) initial).name();
     }
     return initial;
   }

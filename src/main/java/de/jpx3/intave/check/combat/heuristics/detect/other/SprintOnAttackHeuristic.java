@@ -28,7 +28,7 @@ public final class SprintOnAttackHeuristic extends MetaCheckPart<Heuristics, Spr
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
   public void receiveEntityActionPacket(PacketEvent event) {

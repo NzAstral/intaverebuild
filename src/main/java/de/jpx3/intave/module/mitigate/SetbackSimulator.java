@@ -4,8 +4,11 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.access.IntaveBootFailureException;
 import de.jpx3.intave.access.IntaveInternalException;
+import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.Collision;
+import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.block.shape.BlockShape;
+import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.check.movement.Physics;
 import de.jpx3.intave.check.movement.physics.MovementCharacteristics;
 import de.jpx3.intave.check.movement.physics.Pose;
@@ -297,7 +300,7 @@ public final class SetbackSimulator extends Module {
 
       movementData.willReceiveSetbackVelocity = true;
       movementData.setbackOverrideVelocity = futureMotion;
-      // this is not the real setback motion motion - velocity will be altered later
+      // this is not the real setback motion - velocity will be altered later
       player.setVelocity(new Vector(0, 0, 0));
     }
   }
@@ -388,7 +391,7 @@ public final class SetbackSimulator extends Module {
     motionX *= multiplier;
     motionZ *= multiplier;
     if (applyPhysics) {
-      if (movementData.inWeb) {
+      if (movementData.inWeb || /* manual check */ VolatileBlockAccess.typeAccess(user, movementData.position().toLocation(player.getWorld())) == BlockTypeAccess.WEB) {
         motionX *= 0.25D;
         motionY *= 0.25f;
         motionZ *= 0.25D;

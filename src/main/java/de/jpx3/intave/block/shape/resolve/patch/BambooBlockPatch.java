@@ -7,6 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import static de.jpx3.intave.share.ClientMathHelper.coordinateRandom;
+
 final class BambooBlockPatch extends BoundingBoxPatch {
   private static final BoundingBox LEAF = BoundingBox.originFromX16(6.5D, 0.0D, 6.5D, 9.5D, 16.0, 9.5D);
   private static final BlockShape[][] CACHE = new BlockShape[16][16];
@@ -17,7 +19,7 @@ final class BambooBlockPatch extends BoundingBoxPatch {
     if (shape.isEmpty()) {
       return shape;
     }
-    long randomCoordinate = ClientMathHelper.coordinateRandom(posX, 0, posZ);
+    long randomCoordinate = coordinateRandom(posX, 0, posZ);
     int xOffsetKey = (int) (randomCoordinate & 15L);
     int zOffsetKey = (int) (randomCoordinate >> 8 & 15L);
     BlockShape box = CACHE[xOffsetKey][zOffsetKey];

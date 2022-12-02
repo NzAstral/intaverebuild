@@ -9,7 +9,6 @@ import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
-import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.annotate.Relocate;
@@ -37,10 +36,8 @@ import de.jpx3.intave.module.linker.packet.PrioritySlot;
 import de.jpx3.intave.module.tracker.entity.EntityShade;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.packet.PacketSender;
-import de.jpx3.intave.packet.converter.PlayerAction;
-import de.jpx3.intave.packet.converter.PlayerActionResolver;
 import de.jpx3.intave.packet.reader.BlockActionReader;
-import de.jpx3.intave.packet.reader.PacketReaders;
+import de.jpx3.intave.packet.reader.PlayerActionReader;
 import de.jpx3.intave.player.FaultKicks;
 import de.jpx3.intave.player.ItemProperties;
 import de.jpx3.intave.player.fake.FakePlayer;
@@ -55,6 +52,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -68,7 +66,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static de.jpx3.intave.IntaveControl.*;
+import static de.jpx3.intave.IntaveControl.DEBUG_MOVEMENT_IGNORE;
+import static de.jpx3.intave.IntaveControl.USE_SUPERPOSITIONS;
 import static de.jpx3.intave.module.feedback.FeedbackOptions.SELF_SYNCHRONIZATION;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.VEHICLE_MOVE;
@@ -79,7 +78,8 @@ import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_9;
 
 @Relocate
 public final class MovementDispatcher extends Module {
-  private static final Set<Material> shulkerBoxes = MaterialSearch.materialsThatContain("SHULKER_BOX");
+  private static final Set<Material> SHULKER_BOX_MATERIALS = MaterialSearch.materialsThatContain("SHULKER_BOX");
+  private static final Set<Material> PISTON_MATERIALS = MaterialSearch.materialsThatContain("PISTON");
   private final boolean ELYTRA_SUPPORTED = MinecraftVersions.VER1_9_0.atOrAbove();
   private TeleportApplyEnforcer teleportApplyEnforcer;
   private Physics physicsCheck;
@@ -386,7 +386,7 @@ public final class MovementDispatcher extends Module {
       protocol.cavesAndCliffsUpdate() && !movementData.awaitTeleport
         && !movementData.awaitOutgoingTeleport
         && packet.getType() == PacketType.Play.Client.POSITION_LOOK
-      // maybe check for actual rightclick packet?
+//       && movementData.awaitClickMovementSkip
     ) {
       StructureModifier<Double> modifier = packet.getDoubles();
       double positionX = modifier.read(0);
@@ -395,10 +395,12 @@ public final class MovementDispatcher extends Module {
       double motionX = positionX - movementData.verifiedPositionX;
       double motionY = positionY - movementData.verifiedPositionY;
       double motionZ = positionZ - movementData.verifiedPositionZ;
-      if (MathHelper.hypot3d(motionX, motionY, motionZ) < 0.00001) {
+      double distance = MathHelper.hypot3d(motionX, motionY, motionZ);
+      if (distance < 0.00001) {
         movementData.dropPostTickMotionProcessing = true;
+        movementData.awaitClickMovementSkip = false;
         if (DEBUG_MOVEMENT_IGNORE) {
-          player.sendMessage("Click movement ignore");
+          player.sendMessage("Click movement ignore distance: " + distance);
         }
         return;
       }
@@ -670,6 +672,13 @@ public final class MovementDispatcher extends Module {
     }
     if (movement.shulkerZToleranceRemaining > 0) {
       movement.shulkerZToleranceRemaining--;
+    }
+
+    if (movement.pistonMotionToleranceRemaining > 0) {
+      movement.pistonMotionToleranceRemaining--;
+      if (movement.pistonMotionToleranceRemaining == 0) {
+        movement.toleratedPistonMotions.clear();
+      }
     }
 
     boolean flyingWithElytra = movement.elytraFlying;//movement.pose() == Pose.FALL_FLYING;
@@ -944,15 +953,13 @@ public final class MovementDispatcher extends Module {
       BLOCK_ACTION
     }
   )
-  public void onBlockAction(PacketEvent event) {
-    Player player = event.getPlayer();
-    User user = UserRepository.userOf(player);
+  public void onBlockAction(
+    User user, BlockActionReader reader
+  ) {
+    Player player = user.player();
     MovementMetadata movement = user.meta().movement();
-    PacketContainer packet = event.getPacket();
-    BlockActionReader reader = PacketReaders.readerOf(packet);
     Material material = reader.blockType();
-
-    if (shulkerBoxes.contains(material)) {
+    if (SHULKER_BOX_MATERIALS.contains(material)) {
       BlockPosition blockPosition = reader.blockPosition();
       World world = player.getWorld();
       BlockVariant variant = VolatileBlockAccess.variantAccess(user, blockPosition.toLocation(world));
@@ -993,28 +1000,43 @@ public final class MovementDispatcher extends Module {
           }
         }
       });
+    } else if (PISTON_MATERIALS.contains(material)) {
+      BlockPosition blockPosition = reader.blockPosition();
+      World world = player.getWorld();
+      BlockVariant variant = VolatileBlockAccess.variantAccess(user, blockPosition.toLocation(world));
+      Direction facing = variant.enumProperty(Direction.class, "facing");
+      Boolean extended = variant.propertyOf("extended");
+      boolean isExtending = true;//extended == null || !extended;
+      if (isExtending) {
+        Motion vector = facing.getDirectionVecAsMotion();
+//        Thread.dumpStack();
+//        Modules.feedback().synchronize(player, nothing -> {
+//          movement.toleratedPistonMotions.add(vector);
+//          movement.pistonMotionToleranceRemaining = 4;
+//        });
+//        player.teleport(player.getLocation().add(vector.toBukkitVector()));
+      }
     }
     reader.release();
   }
 
+
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
-  public void receiveEntityActionPacket(PacketEvent event) {
-    Player player = event.getPlayer();
-    User user = UserRepository.userOf(player);
+  public void receiveEntityActionPacket(
+    User user, PlayerActionReader reader, Cancellable cancelable
+  ) {
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     ProtocolMetadata protocol = meta.protocol();
     PunishmentMetadata punishmentData = meta.punishment();
-    PacketContainer packet = event.getPacket();
-    PlayerAction playerAction = PlayerActionResolver.resolveActionFromPacket(packet);
-    switch (playerAction) {
+    switch (reader.playerAction()) {
       case START_SPRINTING:
-        if (allowSprinting(player)) {
+        if (allowSprinting(user)) {
           movementData.setSprinting(true);
         }
         break;
@@ -1024,7 +1046,7 @@ public final class MovementDispatcher extends Module {
       case PRESS_SHIFT_KEY:
       case START_SNEAKING:
         if (System.currentTimeMillis() - punishmentData.timeLastSneakToggleCancel < 2000) {
-          event.setCancelled(true);
+          cancelable.setCancelled(true);
         }
         if (movementData.isInVehicle()) {
           movementData.dismountRidingEntity();
@@ -1051,10 +1073,7 @@ public final class MovementDispatcher extends Module {
     }
   }
 
-  private boolean allowSprinting(Player player) {
-    User user = UserRepository.userOf(player);
-    MetadataBundle meta = user.meta();
-    InventoryMetadata inventoryData = meta.inventory();
-    return !inventoryData.inventoryOpen();
+  private boolean allowSprinting(User user) {
+    return !user.meta().inventory().inventoryOpen();
   }
 }

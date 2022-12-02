@@ -17,7 +17,7 @@ import java.util.List;
 
 import static net.minecraft.server.v1_12_R1.BlockStairs.*;
 
-public class StairPatch extends BoundingBoxPatch {
+class StairPatch extends BoundingBoxPatch {
   private static final boolean AQUATIC_UPDATE = MinecraftVersions.VER1_13_0.atOrAbove();
   private static final boolean COLOR_UPDATE = MinecraftVersions.VER1_12_0.atOrAbove();
 
@@ -75,7 +75,7 @@ public class StairPatch extends BoundingBoxPatch {
       World serverWorld = ((CraftWorld) world).getHandle();
       BlockPosition pos = new BlockPosition(posX, posY, posZ);
       BlockStairs stairs = (BlockStairs) block;
-      List<BoundingBox> shapes = calcualteCollisionShapes(serverWorld, stairs.getBlockData(), variantIndex, pos);
+      List<BoundingBox> shapes = calculateCollisionShapes(serverWorld, stairs.getBlockData(), variantIndex, pos);
       // Contextualize corrected collision boxes to position
       List<BlockShape> contextualizedShapes = new ArrayList<>();
       for (BoundingBox boundingBox : shapes) {
@@ -86,10 +86,11 @@ public class StairPatch extends BoundingBoxPatch {
     return shape;
   }
 
-  private List<BoundingBox> calcualteCollisionShapes(World world, IBlockData data, int state, BlockPosition pos) {
+  private List<BoundingBox> calculateCollisionShapes(World world, IBlockData data, int state, BlockPosition pos) {
     List<BoundingBox> shapes = Lists.newArrayList();
     BlockStairs block = (BlockStairs) data.getBlock();
     // Override stair data as only the legacy one contains correct properties
+    // meh meh meh
     data = block.fromLegacyData(state);
     boolean top = data.get(HALF) == BlockStairs.EnumHalf.TOP;
     shapes.add(top ? AABB_SLAB_TOP : AABB_SLAB_BOTTOM);

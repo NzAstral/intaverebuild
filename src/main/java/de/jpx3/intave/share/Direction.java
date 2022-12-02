@@ -5,6 +5,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import de.jpx3.intave.annotate.KeepEnumInternalNames;
+import org.bukkit.util.Vector;
 
 import java.util.Iterator;
 import java.util.Locale;
@@ -46,6 +47,8 @@ public enum Direction {
    * Normalized Vector that points in the direction of this Facing
    */
   private final NativeVector directionVec;
+  private final Motion directionVecAsMotion;
+  private final Vector directionVecAsVector;
 
   /**
    * All facings in D-U-N-S-W-E order
@@ -66,6 +69,8 @@ public enum Direction {
     this.axis = axisIn;
     this.axisDirection = axisDirectionIn;
     this.directionVec = directionVecIn;
+    this.directionVecAsMotion = directionVecIn.toMotion();
+    this.directionVecAsVector = directionVecIn.convertToBukkitVec();
   }
 
   public static Direction getFacingFromAxisDirection(Direction.Axis axisIn, Direction.AxisDirection axisDirectionIn) {
@@ -326,6 +331,14 @@ public enum Direction {
    */
   public NativeVector getDirectionVec() {
     return this.directionVec;
+  }
+
+  public Motion getDirectionVecAsMotion() {
+    return this.directionVecAsMotion;
+  }
+
+  public Vector getDirectionVecAsVector() {
+    return this.directionVecAsVector;
   }
 
   static {

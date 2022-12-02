@@ -8,15 +8,15 @@ public final class BlockActionReader extends AbstractPacketReader {
     return packet().getBlockPositionModifier().read(0);
   }
 
+  public Material blockType() {
+    return packet().getBlocks().read(0);
+  }
+
   public int action() {
     return packet().getIntegers().read(0);
   }
 
   public int data() {
     return packet().getIntegers().read(1);
-  }
-
-  public Material blockType() {
-    return packet().getBlocks().read(0);
   }
 }

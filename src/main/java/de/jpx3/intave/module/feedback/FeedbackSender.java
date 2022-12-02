@@ -19,6 +19,8 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 import static de.jpx3.intave.module.feedback.FeedbackOptions.*;
 
@@ -26,11 +28,11 @@ public final class FeedbackSender extends Module {
   public static final short TRANSACTION_MIN_CODE = -32768;
   public static final short TRANSACTION_MAX_CODE = -16370;
   public static final int PING_MASK = 0xf5550000;
-  private final boolean USE_PING_PONG_PACKETS = MinecraftVersions.VER1_17_0.atOrAbove();
+  private static final boolean USE_PING_PONG_PACKETS = MinecraftVersions.VER1_17_0.atOrAbove();
   private static final long OPTIONAL_PENDING_LIMIT = 20;
   private static final long OPTIONAL_SENT_LIMIT = 100;
 
-  private final ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
+  private final ProtocolManager protocol = ProtocolLibrary.getProtocolManager();
 
   public <T> void doubleSynchronize(
     Player player, PacketEvent event, T target,
@@ -95,6 +97,10 @@ public final class FeedbackSender extends Module {
     sendPacket(player, encapsulate);
     user.receiveNextOutboundPacketAgain();
     tracedSingleSynchronize(player, target, secondCallback, secondTracker, options);
+  }
+
+  public void synchronize(Player player, Consumer<Void> callback) {
+    synchronize(player, callback, (player1, target) -> target.accept(null));
   }
 
   public void synchronize(Player player, FeedbackCallback<Object> callback) {
@@ -256,12 +262,14 @@ public final class FeedbackSender extends Module {
     return feedbackEntry;
   }
 
+  private static final short ID_START = (short) (USE_PING_PONG_PACKETS ? 13 : TRANSACTION_MIN_CODE + ThreadLocalRandom.current().nextInt(0, 1000));
+
   private /* synchronized (is already always sync) */ short findAvailableTransactionIdFor(Player player) {
     User user = UserRepository.userOf(player);
     ConnectionMetadata connection = user.meta().connection();
     Map<Short, FeedbackRequest<?>> transactionFeedBackMap = connection.transactionShortKeyMap();
     int attempts = 1000;
-    short counter = (short) (USE_PING_PONG_PACKETS ? 13 : TRANSACTION_MIN_CODE + connection.randomTransactionIdShift);
+    short counter = ID_START;
     int pending = transactionFeedBackMap.size();
     if (pending > 500) {
       counter += pending;
@@ -282,20 +290,31 @@ public final class FeedbackSender extends Module {
     }
   }
 
+  private final PacketContainer[] PACKET_CACHE = new PacketContainer[256];
+  // for the potentially billions of transaction packets we send, caching does make sense here
+
   private void performRequest(Player receiver, FeedbackRequest<?> request) {
     if (request == null) {
       return;
     }
     short id = request.key();
+    int index = id - ID_START;
     PacketContainer packet;
-    if (USE_PING_PONG_PACKETS) {
-      packet = protocolManager.createPacket(PacketType.Play.Server.PING);
-      packet.getIntegers().write(0, PING_MASK | id);
-    } else {
-      packet = protocolManager.createPacket(PacketType.Play.Server.TRANSACTION);
-      packet.getIntegers().write(0, 0);
-      packet.getShorts().write(0, id);
-      packet.getBooleans().write(0, false);
+    PacketContainer[] packetCache = PACKET_CACHE;
+    packet = index >= packetCache.length ? null : packetCache[index];
+    if (packet == null) {
+      if (USE_PING_PONG_PACKETS) {
+        packet = protocol.createPacket(PacketType.Play.Server.PING);
+        packet.getIntegers().write(0, PING_MASK | id);
+      } else {
+        packet = protocol.createPacket(PacketType.Play.Server.TRANSACTION);
+        packet.getIntegers().write(0, 0);
+        packet.getShorts().write(0, id);
+        packet.getBooleans().write(0, false);
+      }
+      if (index < packetCache.length) {
+        packetCache[index] = packet;
+      }
     }
     sendPacket(receiver, packet);
     request.sent();

@@ -153,7 +153,7 @@ public final class Balance extends MetaCheckPart<Timer, Balance.BalanceMeta> {
 
   @BukkitEventSubscription
   public void receiveAttackUpdate(EntityDamageByEntityEvent event) {
-    Entity entity = event.getEntity();
+    Entity entity = event.getDamager();
     if (entity instanceof Player && event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
       Player player = (Player) entity;
       int attackCancelThreshold = trustFactorSetting("act", player);

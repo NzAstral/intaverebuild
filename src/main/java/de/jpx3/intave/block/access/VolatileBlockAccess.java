@@ -97,6 +97,10 @@ public final class VolatileBlockAccess {
     return variantAccess(user, blockAccess, floor(x), floor(y), floor(z));
   }
 
+  public static BlockVariant variantAccess(User user, Position lastPosition) {
+    return variantAccess(user, user.player().getWorld(), lastPosition.getBlockX(), lastPosition.getBlockY(), lastPosition.getBlockZ());
+  }
+
   public static BlockVariant variantAccess(User user, World blockAccess, int blockX, int blockY, int blockZ) {
     Material type = typeAccess(user, blockAccess, blockX, blockY, blockZ);
     int variantIndex = variantIndexAccess(user, blockAccess, blockX, blockY, blockZ);

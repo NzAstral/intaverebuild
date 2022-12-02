@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.function.IntUnaryOperator;
 
 public final class IRXClassFactory {
   public static <T> Class<T> assembleCallerClass(
@@ -13,7 +14,8 @@ public final class IRXClassFactory {
     String callerMethodName, String callerMethodDescription, String castCalledMethodDescription,
     String calledClassName,
     String calledMethodName, String calledMethodDescription,
-    boolean isStatic, boolean interfaceCall
+    boolean isStatic, boolean interfaceCall,
+    IntUnaryOperator swaps
   ) {
     //noinspection unchecked
     return (Class<T>) IRXClassAssembler.generateCallerClass(
@@ -23,7 +25,8 @@ public final class IRXClassFactory {
       callerMethodName, callerMethodDescription, castCalledMethodDescription,
       calledClassName,
       calledMethodName, calledMethodDescription,
-      isStatic, interfaceCall
+      isStatic, interfaceCall,
+      swaps
     );
   }
 

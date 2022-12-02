@@ -7,14 +7,13 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
 import java.util.List;
 
 abstract class BoundingBoxPatch {
-  private final Material[] material;
+  private final Material[] materials;
 
   protected BoundingBoxPatch(Material... materials) {
-    this.material = materials;
+    this.materials = materials;
   }
 
   protected BlockShape collisionPatch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape shape) {
@@ -39,6 +38,14 @@ abstract class BoundingBoxPatch {
   }
 
   public boolean appliesTo(Material material) {
-    return Arrays.stream(this.material).anyMatch(matcher -> matcher == material);
+    if (this.materials == null) {
+      return false;
+    }
+    for (Material matcher : this.materials) {
+      if (matcher == material) {
+        return true;
+      }
+    }
+    return false;
   }
 }

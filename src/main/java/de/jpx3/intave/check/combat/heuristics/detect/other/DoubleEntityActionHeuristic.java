@@ -26,7 +26,7 @@ public final class DoubleEntityActionHeuristic extends MetaCheckPart<Heuristics,
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
   public void receiveEntityActionPacket(PacketEvent event) {

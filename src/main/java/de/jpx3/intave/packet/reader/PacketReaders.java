@@ -38,6 +38,7 @@ public final class PacketReaders {
     setup(BLOCK_BREAK_ANIMATION, EntityReader::new);
     setup(ABILITIES_OUT, AbilityOutReader::new);
 
+    setup(ENTITY_ACTION_IN, PlayerActionReader::new);
     setup(ENTITY_DESTROY, EntityDestroyReader::new);
     setup(CUSTOM_PAYLOAD_IN, PayloadInReader::new);
     setup(BLOCK_PLACE, BlockInteractionReader::new);

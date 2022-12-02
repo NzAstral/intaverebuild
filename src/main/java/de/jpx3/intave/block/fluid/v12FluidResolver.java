@@ -3,11 +3,10 @@ package de.jpx3.intave.block.fluid;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.block.type.BlockTypeAccess;
+import de.jpx3.intave.block.variant.BlockVariant;
 import de.jpx3.intave.block.variant.BlockVariantNativeAccess;
-import de.jpx3.intave.share.BlockPosition;
-import de.jpx3.intave.share.BoundingBox;
-import de.jpx3.intave.share.ClientMathHelper;
-import de.jpx3.intave.share.NativeVector;
+import de.jpx3.intave.block.variant.BlockVariantRegister;
+import de.jpx3.intave.share.*;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.world.WorldHeight;
@@ -15,6 +14,9 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+
+import static de.jpx3.intave.share.ClientMathHelper.ceil;
+import static de.jpx3.intave.share.ClientMathHelper.floor;
 
 final class v12FluidResolver extends FluidResolver {
   @Override
@@ -24,8 +26,10 @@ final class v12FluidResolver extends FluidResolver {
     if (block.getY() < WorldHeight.LOWER_WORLD_LIMIT) {
       return Fluid.empty();
     }
-    float height = LegacyWaterflow.resolveLiquidHeightPercentage(BlockVariantNativeAccess.variantAccess(block));
     Material type = BlockTypeAccess.typeAccess(block, player);
+    int variantIndex = BlockVariantNativeAccess.variantAccess(block);
+    int level = levelOfLiquidAt(type, variantIndex);
+    float height = LegacyWaterflow.resolveLiquidHeightPercentage(level);
     FluidTag fluidTag = FluidTag.EMPTY;
     if (MaterialMagic.isWater(type)) {
       fluidTag = FluidTag.WATER;
@@ -47,12 +51,12 @@ final class v12FluidResolver extends FluidResolver {
     MovementMetadata movementData = user.meta().movement();
     BoundingBox entityBoundingBox = boundingBox.shrink(0.001D);
 
-    int minX = ClientMathHelper.floor(entityBoundingBox.minX);
-    int minY = ClientMathHelper.floor(entityBoundingBox.minY);
-    int minZ = ClientMathHelper.floor(entityBoundingBox.minZ);
-    int maxX = ClientMathHelper.ceil(entityBoundingBox.maxX);
-    int maxY = ClientMathHelper.ceil(entityBoundingBox.maxY);
-    int maxZ = ClientMathHelper.ceil(entityBoundingBox.maxZ);
+    int minX = floor(entityBoundingBox.minX);
+    int minY = floor(entityBoundingBox.minY);
+    int minZ = floor(entityBoundingBox.minZ);
+    int maxX = ceil(entityBoundingBox.maxX);
+    int maxY = ceil(entityBoundingBox.maxY);
+    int maxZ = ceil(entityBoundingBox.maxZ);
 
     double d0 = 0;
     boolean inWater = false;
@@ -67,7 +71,8 @@ final class v12FluidResolver extends FluidResolver {
           boolean waterServerSide = MaterialMagic.isWater(BlockTypeAccess.typeAccess(block, player));
           boolean waterClientSide = MaterialMagic.isWater(clientSideBlock);
           if (waterServerSide) {
-            double height = 1 - LegacyWaterflow.resolveLiquidHeightPercentage(BlockVariantNativeAccess.variantAccess(block));
+            int liquidLevel = levelOfLiquidAt(BlockTypeAccess.typeAccess(block), BlockVariantNativeAccess.variantAccess(block));
+            double height = 1 - LegacyWaterflow.resolveLiquidHeightPercentage(liquidLevel);
             double d1 = (float) y + height;
             if (d1 >= entityBoundingBox.minY) {
               inWater = true;
@@ -99,5 +104,13 @@ final class v12FluidResolver extends FluidResolver {
     }
 
     return inWater;
+  }
+
+  private static int levelOfLiquidAt(Material material, int variantIndex) {
+    if (MaterialMagic.isLiquid(material)) {
+      return BlockVariantRegister.variantOf(material, variantIndex).propertyOf("level");
+    } else {
+      return -1;
+    }
   }
 }

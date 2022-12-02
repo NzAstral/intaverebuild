@@ -22,6 +22,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
 
@@ -41,19 +42,14 @@ public final class BlockUpdateTracker extends Module {
       MAP_CHUNK, MAP_CHUNK_BULK
     }
   )
-  public void chunkUpdate(PacketEvent event) {
-    PacketContainer packet = event.getPacket();
-    Player player = event.getPlayer();
-
-    ChunkCoordinateReader coordinates = PacketReaders.readerOf(packet);
+  public void chunkUpdate(
+    Player player, ChunkCoordinateReader coordinates
+  ) {
     int[] xCoordinates = coordinates.xCoordinates();
     int[] zCoordinates = coordinates.zCoordinates();
-    coordinates.release();
-
     if (xCoordinates.length != zCoordinates.length) {
       throw new IllegalStateException();
     }
-
     Modules.feedback().synchronize(
       player, (player1, target) -> {
         for (int k = 0; k < xCoordinates.length; k++) {
@@ -77,12 +73,10 @@ public final class BlockUpdateTracker extends Module {
       BLOCK_DIG, BLOCK_PLACE, USE_ITEM
     }
   )
-  public void checkInteractionTarget(PacketEvent event) {
-    Player player = event.getPlayer();
-    PacketType packetType = event.getPacketType();
-    PacketContainer packet = event.getPacket();
-    BlockPositionReader reader = PacketReaders.readerOf(packet);
-
+  public void checkInteractionTarget(
+    Player player, PacketContainer packet, BlockPositionReader reader, Cancellable cancellable
+  ) {
+    PacketType packetType = packet.getType();
     boolean check = true;
     if (packetType == PacketType.Play.Client.BLOCK_DIG) {
       EnumWrappers.PlayerDigType playerDigType = packet.getPlayerDigTypes().read(0);
@@ -94,7 +88,7 @@ public final class BlockUpdateTracker extends Module {
         return;
       }
       BlockInteractionReader placeInterpreter = (BlockInteractionReader) reader;
-      if (placeInterpreter.enumDirection() == 255 || event.isCancelled()) {
+      if (placeInterpreter.enumDirection() == 255 || cancellable.isCancelled()) {
         check = false;
       }
     }
@@ -110,7 +104,7 @@ public final class BlockUpdateTracker extends Module {
       MovementMetadata movementData = user.meta().movement();
       Vector playerLocation = new Vector(movementData.lastPositionX, movementData.lastPositionY, movementData.lastPositionZ);
       if (playerLocation.distance(targetBlock) > 16) {
-        event.setCancelled(true);
+        cancellable.setCancelled(true);
       }
     }
     reader.release();

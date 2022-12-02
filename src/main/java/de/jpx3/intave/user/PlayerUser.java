@@ -4,7 +4,6 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import com.google.common.collect.Maps;
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;

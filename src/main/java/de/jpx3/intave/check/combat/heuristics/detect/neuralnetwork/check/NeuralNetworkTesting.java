@@ -124,7 +124,7 @@ public class NeuralNetworkTesting extends MetaCheckPart<Heuristics, NeuralNetwor
   @PacketSubscription(
     priority = ListenerPriority.NORMAL,
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
   public void playerSneaking(PacketEvent event) {

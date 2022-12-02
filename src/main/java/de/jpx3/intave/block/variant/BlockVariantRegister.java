@@ -1,11 +1,13 @@
 package de.jpx3.intave.block.variant;
 
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.block.variant.index.VariantIndex;
 import org.bukkit.Material;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 
 public final class BlockVariantRegister {
   private static final Map<Material, Map<Object, Integer>> blockDataIndex = new EnumMap<>(Material.class);
@@ -27,10 +29,21 @@ public final class BlockVariantRegister {
     IntaveLogger.logger().info("Indexed " + count + " variations of " + blockCount + " blocks");
   }
 
+  // Note: Caching all materials can become quite memory-intensive.
+  //       Only pass in materials that are actually used, always filter random materials
   public static BlockVariant variantOf(Material type, int variantIndex) {
-    return blockVariants.computeIfAbsent(type, material ->
-      BlockVariantConverter.translateSettings(material, blockDataRegister.get(material))
-    ).get(variantIndex);
+    return blockVariants.computeIfAbsent(type, BlockVariantRegister::translateFromServer).get(variantIndex);
+  }
+
+  private static Map<Integer, BlockVariant> translateFromServer(Material material) {
+    Map<Integer, BlockVariant> map = BlockVariantConverter.translateSettings(material, blockDataRegister.get(material));
+
+    if (IntaveControl.DEBUG_VARIANT_COMPILATION) {
+      System.out.println("[debug] Compiled " + map.size() + " variants for " + material);
+      System.out.println("[debug] Zero variant: ");
+      map.get(0).dumpStates();
+    }
+    return map;
   }
 
   public static int variantIndexOf(Material type, Object rawBlockData) {
@@ -49,8 +62,8 @@ public final class BlockVariantRegister {
     }
   }
 
-  public static int variantCountOf(Material type) {
-    return blockDataRegister.get(type).size();
+  public static Set<Integer> variantIdsOf(Material type) {
+    return blockDataRegister.get(type).keySet();
   }
 
   static void invalidateShadowedVariantCache() {

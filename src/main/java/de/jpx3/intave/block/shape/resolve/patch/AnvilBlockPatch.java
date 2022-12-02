@@ -2,6 +2,8 @@ package de.jpx3.intave.block.shape.resolve.patch;
 
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.shape.BlockShape;
+import de.jpx3.intave.block.variant.BlockVariant;
+import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.share.Direction;
 import de.jpx3.intave.user.User;
@@ -17,10 +19,10 @@ final class AnvilBlockPatch extends BoundingBoxPatch {
   }
 
   @Override
-  public BlockShape collisionPatch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape shape) {
+  public BlockShape collisionPatch(World world, Player player, int posX, int posY, int posZ, Material type, int blockVariant, BlockShape shape) {
     User user = UserRepository.userOf(player);
     boolean legacy = user.protocolVersion() < ProtocolMetadata.VER_1_13;
-    Direction.Axis axis = axisOf(blockState);
+    Direction.Axis axis = axisOf(blockVariant);
     return legacy ? legacyPatch(axis) : modernPatch(axis);
   }
 
@@ -50,15 +52,20 @@ final class AnvilBlockPatch extends BoundingBoxPatch {
 
   private static final boolean CORRUPTED = MinecraftVersions.VER1_14_0.atOrAbove();
 
-  private Direction.Axis axisOf(int state) {
-    if (CORRUPTED) {
-      switch (state) {
-        case 1:
-          return Direction.Axis.Z_AXIS;
-        case 2:
-          return Direction.Axis.X_AXIS;
-      }
-    }
-    return Direction.getHorizontal(state & 3).axis();
+  private Direction.Axis axisOf(int variantIndex) {
+    BlockVariant variant = BlockVariantRegister.variantOf(Material.ANVIL, variantIndex);
+//    System.out.println("Anvil Index: " + variantIndex);
+//    variant.dumpStates();
+    return variant.enumProperty(Direction.class, "facing").axis();
+//    if (CORRUPTED) {
+//      switch (variantIndex) {
+//        case 1:
+//          return Direction.Axis.Z_AXIS;
+//        case 2:
+//          return Direction.Axis.X_AXIS;
+//      }
+//    }
+//    return Direction.getHorizontal(variantIndex & 3).axis();
+//    return Direction.Axis.X_AXIS;
   }
 }

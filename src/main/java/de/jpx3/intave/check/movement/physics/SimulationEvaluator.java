@@ -6,6 +6,7 @@ import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.math.Hypot;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.share.BoundingBox;
+import de.jpx3.intave.share.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.meta.MovementMetadata;
@@ -13,6 +14,9 @@ import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.user.meta.ViolationMetadata;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @SplitMeUp
 @Relocate
@@ -83,6 +87,20 @@ public final class SimulationEvaluator {
       (Math.abs(receivedMotionY) <= 0.5 || ((movement.positionY % 0.05) < 0.0001 && (Math.abs(receivedMotionY - movement.jumpMotion()) < 0.01 || (receivedMotionY <= 0 && receivedMotionY > -.8)))) // various other restrictions
     ) {
       vecticalLegitimateDeviation = Math.max(vecticalLegitimateDeviation, 1);
+    }
+
+    if (movement.pistonMotionToleranceRemaining > 0) {
+      Set<Motion> toleratedPistonMotions = movement.toleratedPistonMotions;
+
+//      player.sendMessage("tolerated2: " + toleratedPistonMotions);
+      for (Motion toleratedPistonMotion : toleratedPistonMotions) {
+        double toleratedPistonMotionY = toleratedPistonMotion.motionY;
+        double toleratedPistonMotionDistance = Math.abs(toleratedPistonMotionY - receivedMotionY);
+        if (toleratedPistonMotionDistance < 0.02) {
+//          System.out.println("tolerated piston motion: " + toleratedPistonMotion);
+          vecticalLegitimateDeviation = Math.max(vecticalLegitimateDeviation, toleratedPistonMotionY);
+        }
+      }
     }
 
     // spamming sneak under blocks
@@ -275,6 +293,32 @@ public final class SimulationEvaluator {
 
     if (movement.collidedHorizontally && movement.pastVelocity < 20) {
       horizontalLegitimateDeviation = Math.max(horizontalLegitimateDeviation, 0.027);
+    }
+
+    if (movement.pistonMotionToleranceRemaining > 0) {
+      Set<Motion> toleratedPistonMotions = movement.toleratedPistonMotions;
+
+//      Set<Motion> toleratedPistonMotionsWithCrossSections = new HashSet<>();
+//      for (Motion pistonMotion : toleratedPistonMotions) {
+//        toleratedPistonMotionsWithCrossSections.add(pistonMotion);
+//        for (Motion pistonMotion2 : toleratedPistonMotions) {
+//          toleratedPistonMotionsWithCrossSections.add(pistonMotion.copy().add(pistonMotion2));
+//        }
+//      }
+
+//      player.sendMessage("tolerated: " + toleratedPistonMotions);
+      for (Motion toleratedPistonMotion : toleratedPistonMotions) {
+        double toleratedPistonMotionX = toleratedPistonMotion.motionX;
+        double toleratedPistonMotionZ = toleratedPistonMotion.motionZ;
+        double toleratedPistonMotionDistance = MathHelper.resolveHorizontalDistance(
+          toleratedPistonMotionX, toleratedPistonMotionZ,
+          motionX, motionZ
+        );
+        if (toleratedPistonMotionDistance < 0.02) {
+//          System.out.println("tolerated piston motion: " + toleratedPistonMotion);
+          horizontalLegitimateDeviation = Math.max(horizontalLegitimateDeviation, toleratedPistonMotionDistance);
+        }
+      }
     }
 
     if (pushedByWaterFlow) {

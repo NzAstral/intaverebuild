@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntUnaryOperator;
 
 @Relocate
 public final class BukkitEventSubscriptionLinker extends Module {
@@ -96,8 +97,8 @@ public final class BukkitEventSubscriptionLinker extends Module {
           listenerClassPath,
           method.getName(),
           Type.getMethodDescriptor(method),
-          false,
-          false
+          false, false,
+          IntUnaryOperator.identity()
         );
         EventExecutor executor;
         try {

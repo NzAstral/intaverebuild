@@ -349,12 +349,10 @@ public final class Collision {
   }
 
   public static boolean playerInImaginaryBlock(
-    User user, World world, int posX, int posY, int posZ, Material type, int data) {
-    BlockShape boundingBoxes =
-      SHAPE_RESOLVER.collisionShapeOf(world, user.player(), type, data, posX, posY, posZ);
+    User user, World world, int posX, int posY, int posZ, Material type, int variant) {
+    BlockShape boundingBoxes = SHAPE_RESOLVER.collisionShapeOf(world, user.player(), type, variant, posX, posY, posZ);
     if (CollisionModifiers.isModified(type)) {
-      BlockShape customShape =
-        CollisionModifiers.imaginaryBlockShape(type, user, posX, posY, posZ, data);
+      BlockShape customShape = CollisionModifiers.imaginaryBlockShape(type, user, posX, posY, posZ, variant);
       if (customShape != null) {
         boundingBoxes = customShape;
       }

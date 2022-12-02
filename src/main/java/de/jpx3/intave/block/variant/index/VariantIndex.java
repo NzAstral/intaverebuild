@@ -51,7 +51,7 @@ public class VariantIndex {
     registerApply.accept(material, reversed(index));
   }
 
-  public static Map<Object, Integer> index(Material type) {
+  private static Map<Object, Integer> index(Material type) {
     return INDEXER.index(type);
   }
 

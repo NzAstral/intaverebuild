@@ -44,7 +44,7 @@ public final class PacketPlayerActionToggleHeuristic extends MetaCheckPart<Heuri
 
   @PacketSubscription(
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
   public void receiveEntityAction(PacketEvent event) {

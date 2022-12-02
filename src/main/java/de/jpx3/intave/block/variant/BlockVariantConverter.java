@@ -23,11 +23,11 @@ final class BlockVariantConverter {
     } else {
       className = "de.jpx3.intave.block.variant.convert.v8ConversionBridge";
     }
-    Class<Object> bridgeClass = PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, className);
+    Class<ConversionBridge> bridgeClass = PatchyLoadingInjector.loadUnloadedClassPatched(classLoader, className);
     try {
-      conversionBridge = (ConversionBridge) bridgeClass.newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException(e);
+      conversionBridge = bridgeClass.newInstance();
+    } catch (Exception exception) {
+      throw new RuntimeException(exception);
     }
   }
 

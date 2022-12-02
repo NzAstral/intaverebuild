@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
+@Deprecated
 final class DoorBlockPatch extends BoundingBoxPatch {
   private static final ThreadLocal<Boolean> topAcquire = ThreadLocal.withInitial(() -> false);
 

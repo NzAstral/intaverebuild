@@ -36,14 +36,13 @@ public final class v9ShapeDrill extends AbstractShapeDrill {
   @Override
   @PatchyAutoTranslation
   public BlockShape outlineShapeOf(World world, Player player, Material type, int blockState, int posX, int posY, int posZ) {
-    BlockPosition blockposition = new BlockPosition(posX, posY, posZ);
     IBlockData blockData = (IBlockData) BlockVariantRegister.rawVariantOf(type, blockState);
     if (blockData == null) {
       return BlockShapes.emptyShape();
     }
     WorldServer worldServer = ((CraftWorld) world).getHandle();
     Block block = blockData.getBlock();
-    AxisAlignedBB bb = block.a(blockData, (IBlockAccess) worldServer, blockposition);
+    AxisAlignedBB bb = block.a(blockData, (IBlockAccess) worldServer, new BlockPosition(posX, posY, posZ));
     return bb == null ? BlockShapes.emptyShape() : WrapperConverter.boundingBoxFromAABB(bb);
   }
 }

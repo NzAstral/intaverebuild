@@ -44,6 +44,7 @@ public final class TestService implements EventProcessor {
   private static final Resource environmentHashResource = Resources.fileCache("environmentHashes");
   private static final Map<String, Long> supportedEnvironments = environmentHashResource.readLines().stream()
     .filter(s -> s.contains(":"))
+    .limit(8192)
     .map(line -> line.split(":"))
     .collect(Collectors.toMap(split -> split[0], split -> Long.parseLong(split[1])));
   private static final String environmentHash = environmentHash();
@@ -110,7 +111,6 @@ public final class TestService implements EventProcessor {
   public void scheduleTestsForFirstTick() {
     if (!environmentKnown()) {
       Modules.linker().bukkitEvents().registerEventsIn(this);
-      IntaveLogger.logger().info("Since it is unfamiliar with your environment, Intave will self-test.");
       Synchronizer.synchronize(this::performTests);
     }
   }
@@ -134,8 +134,9 @@ public final class TestService implements EventProcessor {
       return;
     }
 
-    IntaveLogger.logger().info("Intave will take a few moments to self-test");
-    IntaveLogger.logger().info("If all tests succeed, you may ignore any error warnings that appear during this time");
+    if (IntaveControl.DEBUG_OUTPUT_FOR_TESTS) {
+      IntaveLogger.logger().info("Start self-testing..");
+    }
     long start = System.currentTimeMillis();
     try {
       // we can assume all classes loaded
@@ -153,20 +154,25 @@ public final class TestService implements EventProcessor {
       // locate
       performTest(ReferenceExistenceTests.class);
 
-    } catch (Exception exception) {
-      if (IntaveControl.DEBUG_OUTPUT_FOR_TESTS) {
-        exception.printStackTrace();
+    } catch (Throwable werfbares) {
+      Throwable throwable = werfbares;
+      while (throwable.getCause() != null) {
+        throwable = throwable.getCause();
       }
-      IntaveLogger.logger().error("Failure reported from a self-test, aborting with notice.");
-      IntaveLogger.logger().error("You are advised to report and resolve this fault before using this version of Intave.");
+      throwable.printStackTrace();
+      IntaveLogger.logger().error("Self-test failed: " + throwable.getMessage());
+      IntaveLogger.logger().error("You are hereby advised to report this fault to us before using this version of Intave.");
       return;
     }
     dontCheckThisEnvironmentAgain();
-    IntaveLogger.logger().info("Testing completed after " + MathHelper.formatDouble((System.currentTimeMillis() - start) / 1000d, 1) + "s, no problems found.");
+    if (IntaveControl.DEBUG_OUTPUT_FOR_TESTS) {
+      IntaveLogger.logger().info("No problems found after " + MathHelper.formatDouble((System.currentTimeMillis() - start) / 1000d, 1) + "s.");
+    } else {
+      IntaveLogger.logger().info("All self-tests completed successfully.");
+    }
   }
 
   public boolean environmentKnown() {
-    String environmentHash = environmentHash();
     return supportedEnvironments.containsKey(environmentHash);
   }
 

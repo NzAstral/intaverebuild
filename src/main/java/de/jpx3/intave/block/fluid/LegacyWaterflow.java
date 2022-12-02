@@ -2,7 +2,9 @@ package de.jpx3.intave.block.fluid;
 
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.physics.MaterialMagic;
+import de.jpx3.intave.block.variant.BlockVariant;
 import de.jpx3.intave.share.*;
+import de.jpx3.intave.share.Direction.Plane;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Material;
@@ -58,7 +60,7 @@ public final class LegacyWaterflow {
   private static NativeVector flowVector(User user, BlockPosition pos) {
     NativeVector vec3 = new NativeVector(0.0D, 0.0D, 0.0D);
     int i = resolveEffectiveFlowDecay(user, pos);
-    for (Direction direction : Direction.Plane.HORIZONTAL) {
+    for (Direction direction : Plane.HORIZONTAL) {
       BlockPosition position = pos.offset(direction);
       int j = resolveEffectiveFlowDecay(user, position);
       if (j < 0) {
@@ -75,9 +77,9 @@ public final class LegacyWaterflow {
       }
     }
     if (resolveLevel(user, pos) >= 8) {
-      for (Direction enumfacing1 : Direction.Plane.HORIZONTAL) {
-        BlockPosition blockpos1 = pos.offset(enumfacing1);
-        if (isBlockSolid(user, blockpos1, enumfacing1) || isBlockSolid(user, blockpos1.up(), enumfacing1)) {
+      for (Direction facing : Plane.HORIZONTAL) {
+        BlockPosition blockpos = pos.offset(facing);
+        if (isBlockSolid(user, blockpos, facing) || isBlockSolid(user, blockpos.up(), facing)) {
           vec3 = vec3.normalize().addVector(0.0D, -6.0D, 0.0D);
           break;
         }
@@ -94,11 +96,12 @@ public final class LegacyWaterflow {
   private static int resolveLevel(User user, BlockPosition pos) {
     World world = user.player().getWorld();
     Material clientSideBlock = VolatileBlockAccess.typeAccess(user, world, pos.xCoord, pos.yCoord, pos.zCoord);
-    return MaterialMagic.isWater(clientSideBlock) ? VolatileBlockAccess.variantIndexAccess(user, world, pos.xCoord, pos.yCoord, pos.zCoord) : -1;
+    BlockVariant variant = VolatileBlockAccess.variantAccess(user, world, pos.xCoord, pos.yCoord, pos.zCoord);
+    return MaterialMagic.isWater(clientSideBlock) ? variant.propertyOf("level") : -1;
   }
 
   private static boolean blocksMovement(User user, BlockPosition position) {
-    Material type = VolatileBlockAccess.typeAccess(user, user.player().getWorld(), position.xCoord, position.yCoord, position.zCoord);//blockAt(world, position).getType();
+    Material type = VolatileBlockAccess.typeAccess(user, user.player().getWorld(), position.xCoord, position.yCoord, position.zCoord);
     return MaterialMagic.blocksMovement(type);
   }
 

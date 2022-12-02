@@ -46,6 +46,10 @@ public class NativeVector {
     }
   }
 
+  public Motion toMotion() {
+    return new Motion(xCoord, yCoord, zCoord);
+  }
+
   public Location toLocation(World world) {
     return new Location(world, xCoord, yCoord, zCoord);
   }

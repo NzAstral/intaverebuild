@@ -21,8 +21,8 @@ public final class v8ShapeDrill extends AbstractShapeDrill {
 
   @Override
   @PatchyAutoTranslation
-  public BlockShape collisionShapeOf(World world, Player player, org.bukkit.Material type, int blockState, int posX, int posY, int posZ) {
-    IBlockData blockData = (IBlockData) BlockVariantRegister.rawVariantOf(type, blockState);
+  public BlockShape collisionShapeOf(World world, Player player, Material type, int variantIndex, int posX, int posY, int posZ) {
+    IBlockData blockData = (IBlockData) BlockVariantRegister.rawVariantOf(type, variantIndex);
     if (blockData == null) {
       return BlockShapes.emptyShape();
     }
@@ -37,9 +37,8 @@ public final class v8ShapeDrill extends AbstractShapeDrill {
 
   @Override
   @PatchyAutoTranslation
-  public BlockShape outlineShapeOf(World world, Player player, Material type, int blockState, int posX, int posY, int posZ) {
-    BlockPosition blockposition = new BlockPosition(posX, posY, posZ);
-    IBlockData blockData = (IBlockData) BlockVariantRegister.rawVariantOf(type, blockState);
+  public BlockShape outlineShapeOf(World world, Player player, Material type, int variantIndex, int posX, int posY, int posZ) {
+    IBlockData blockData = (IBlockData) BlockVariantRegister.rawVariantOf(type, variantIndex);
     if (blockData == null) {
       return BlockShapes.emptyShape();
     }
@@ -48,7 +47,7 @@ public final class v8ShapeDrill extends AbstractShapeDrill {
     if (!block.a(blockData, false)) {
       return BlockShapes.emptyShape();
     }
-    block.updateShape(worldServer, blockposition);
+    block.updateShape(worldServer, new BlockPosition(posX, posY, posZ));
     return BoundingBox.originFrom(
       block.B(), block.D(), block.F(),
       block.C(), block.E(), block.G()

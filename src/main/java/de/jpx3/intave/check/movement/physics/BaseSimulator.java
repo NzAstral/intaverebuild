@@ -11,6 +11,7 @@ import de.jpx3.intave.block.physics.BlockPhysics;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.block.type.MaterialSearch;
+import de.jpx3.intave.block.variant.BlockVariant;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.tracker.entity.EntityShade;
 import de.jpx3.intave.player.Effects;
@@ -58,8 +59,7 @@ class BaseSimulator extends Simulator {
 
     // static movement configuration
     MetadataBundle meta = user.meta();
-    MovementMetadata movementData = meta.movement();
-    ProtocolMetadata clientData = meta.protocol();
+    ProtocolMetadata protocol = meta.protocol();
     Pose pose = environment.pose();
 
     float yawSine = environment.yawSine();
@@ -71,12 +71,12 @@ class BaseSimulator extends Simulator {
     boolean inLava = environment.inLava();
     boolean elytraFlying = pose == Pose.FALL_FLYING;
     boolean swimming = pose == Pose.SWIMMING;
-    boolean waterUpdate = clientData.waterUpdate();
+    boolean waterUpdate = protocol.waterUpdate();
 
     forward = ((int) forward) * 0.98f;
     strafe = ((int) strafe) * 0.98f;
 
-    if ((pose == Pose.CROUCHING) || (!clientData.beeUpdate() && environment.isSneaking())) {
+    if ((pose == Pose.CROUCHING) || (!protocol.beeUpdate() && environment.isSneaking())) {
       double sneakingModifier = clamp_double(0.3 + Enchantments.resolveSwiftSpeedModifier(user.player()) * 0.15f, 0.0f, 1.0f);
       forward = (float) ((double) forward * sneakingModifier);
       strafe = (float) ((double) strafe * sneakingModifier);
@@ -91,17 +91,12 @@ class BaseSimulator extends Simulator {
     }
     if (jumped) {
       boolean allowJumpInWater = false;
-      if (clientData.waterUpdate() && inWater) {
+      if (protocol.waterUpdate() && inWater && environment.onGround()) {
         Position lastPosition = environment.lastPosition();
-        // Geht nicht anders
-        Material material =
-          VolatileBlockAccess.typeAccess(user, user.player().getWorld(), lastPosition);
-        int blockData = VolatileBlockAccess.variantIndexAccess(user, lastPosition);
-        float heightPercentage = LegacyWaterflow.resolveLiquidHeightPercentage(blockData);
-        if (environment.onGround()) {
-          heightPercentage += environment.positionY() % 1;
-          allowJumpInWater = !MaterialMagic.isWater(material) || heightPercentage > 0.5;
-        }
+        Material material = VolatileBlockAccess.typeAccess(user, user.player().getWorld(), lastPosition);
+        float heightPercentage = LegacyWaterflow.resolveLiquidHeightPercentage(levelOfLiquidAt(user, lastPosition));
+        heightPercentage += environment.positionY() % 1;
+        allowJumpInWater = !MaterialMagic.isWater(material) || heightPercentage > 0.5;
       }
       if (inWater && !allowJumpInWater) {
         motion.motionY += 0.04F;
@@ -138,6 +133,16 @@ class BaseSimulator extends Simulator {
     ColliderResult collisionResult = Colliders.collision(user, motion, environment.inWeb(), positionX, positionY, positionZ);
     notePossibleFlyingPacket(user, collisionResult);
     return Simulation.of(user, configuration, collisionResult);
+  }
+
+  private static int levelOfLiquidAt(User user, Position position) {
+    Material material = VolatileBlockAccess.typeAccess(user, user.player().getWorld(), position);
+    if (MaterialMagic.isLiquid(material)) {
+      BlockVariant variant = VolatileBlockAccess.variantAccess(user, position);
+      return variant.propertyOf("level");
+    } else {
+      return -1;
+    }
   }
 
   private void performSimulationInWaterOfState(

@@ -659,7 +659,9 @@ public final class Physics extends Check {
         debug += ChatColor.ITALIC + " slk:" + movementData.shulkerXToleranceRemaining + "," + movementData.shulkerYToleranceRemaining + "," + movementData.shulkerZToleranceRemaining + chatColor;
       }
 //      debug += " web (a: " + shortenBoolean(movementData.inWeb) + ", r: " + shortenBoolean(collidesWeb(user, currentBoundingBox)) + ")";
-//      debug += "cia " + movementData.pastNearbyCollisionInaccuracy;
+      if (movementData.pastNearbyCollisionInaccuracy < 3) {
+        debug += ChatColor.ITALIC + " pci:" + movementData.pastNearbyCollisionInaccuracy + chatColor;
+      }
 //      debug += " ai ?" + movementData.aiMoveSpeed();
 //      debug += " sprint " + shortenBoolean(movementData.sprinting) + "/" + shortenBoolean(movementData.hasSprintSpeed);
 //      debug += " (sneak " + movementData.sneaking + "/"+movementData.actualSneaking()+")";

@@ -22,10 +22,10 @@ final class PointedDripstoneBlockPatch extends BoundingBoxPatch {
   private final BoundingBox DEF_SHAPE = BoundingBox.originFromX16(6.0D, 0.0D, 6.0D, 10.0D, 16.0D, 10.0D);
 
   @Override
-  public BlockShape collisionPatch(World world, Player player, int x, int y, int z, Material type, int variant, BlockShape shape) {
-    BlockVariant blockVariant = BlockVariantRegister.variantOf(type, variant);
-    DripstoneThickness thickness = blockVariant.enumProperty(DripstoneThickness.class, "thickness");
-    Direction verticalDirection = blockVariant.enumProperty(Direction.class, "vertical_direction");
+  public BlockShape collisionPatch(World world, Player player, int x, int y, int z, Material type, int variantIndex, BlockShape shape) {
+    BlockVariant variant = BlockVariantRegister.variantOf(type, variantIndex);
+    DripstoneThickness thickness = variant.enumProperty(DripstoneThickness.class, "thickness");
+    Direction verticalDirection = variant.enumProperty(Direction.class, "vertical_direction");
     BoundingBox selected;
     switch (thickness) {
       case TIP_MERGE:

@@ -96,6 +96,7 @@ public final class InteractionEmulator implements EventProcessor {
         break;
       case START_BREAK:
       case INTERACT:
+      case EMPTY_INTERACT:
         emulationResult = emulateInteraction(player, interaction);
         break;
       case BREAK:
@@ -173,25 +174,24 @@ public final class InteractionEmulator implements EventProcessor {
     int blockY = blockPlacementLocation.getBlockY();
     int blockZ = blockPlacementLocation.getBlockZ();
     int dat = 0;
-    boolean raytraceCollidesWithPosition =
-      Collision.playerInImaginaryBlock(user, world, blockX, blockY, blockZ, itemTypeInHand, dat);
+    boolean raytraceCollidesWithPosition = Collision.playerInImaginaryBlock(
+      user, world,
+      blockX, blockY, blockZ,
+      itemTypeInHand, dat
+    );
     if (raytraceCollidesWithPosition) {
       return EmulationResult.FAILED;
     }
     Material replacementType = interaction.itemTypeInHand();
     int variant = 0;
     EnumWrappers.Hand hand = interaction.hand();
-    boolean access =
-      WorldPermission.blockPlacePermission(
-        player,
-        world,
-        hand == null || hand == EnumWrappers.Hand.MAIN_HAND,
-        blockX,
-        blockY,
-        blockZ,
-        interaction.targetDirection(),
-        replacementType,
-        variant);
+    boolean access = WorldPermission.blockPlacePermission(
+      player, world,
+      hand == null || hand == EnumWrappers.Hand.MAIN_HAND,
+      blockX, blockY, blockZ,
+      interaction.targetDirection(),
+      replacementType, variant
+    );
     if (access) {
       /*
        This hardcode is required
@@ -221,31 +221,40 @@ public final class InteractionEmulator implements EventProcessor {
 
   private EmulationResult emulateInteraction(Player player, Interaction interaction) {
     World world = interaction.world();
-    Location clickedBlockLocation = interaction.targetBlock().toLocation(world);
-    Block clickedBlock = VolatileBlockAccess.blockAccess(clickedBlockLocation);
+    BlockPosition blockPosition = interaction.targetBlock();
+    Location clickedBlockLocation = blockPosition == null ? null : blockPosition.toLocation(world);
+    Block clickedBlock = clickedBlockLocation == null ? null : VolatileBlockAccess.blockAccess(clickedBlockLocation);
     Material itemTypeInHand = interaction.itemTypeInHand();
-    Location placementLocation =
-      clickedBlockLocation
-        .clone()
-        .add(
-          Direction.getFront(interaction.targetDirection())
-            .getDirectionVec()
-            .convertToBukkitVec());
-    emulateInteractWithHandItem(player, clickedBlock, placementLocation, itemTypeInHand);
-    emulatePhysicalInteract(player, clickedBlock);
+    Location placementLocation = clickedBlock == null ? null :
+      clickedBlockLocation.clone().add(Direction.getFront(interaction.targetDirection()).getDirectionVecAsVector());
+    emulateItemInteraction(player, itemTypeInHand);
+    if (clickedBlock != null) {
+      emulateInteractWithHandItem(player, clickedBlock, placementLocation, itemTypeInHand);
+      emulatePhysicalInteract(player, clickedBlock);
+    }
     return EmulationResult.SUCCEEDED;
   }
 
+  private void emulateItemInteraction(
+    Player player, Material itemTypeInHand
+  ) {
+    User user = userOf(player);
+    if (itemTypeInHand != Material.AIR) {
+//      user.meta().movement().awaitClickMovementSkip = true;
+//      player.sendMessage("Awaiting click movement for interact with " + itemTypeInHand);
+    }
+  }
+
   private void emulateInteractWithHandItem(
-    Player player, Block clickedBlock, Location placementLocation, Material itemTypeInHand) {
+    Player player, Block clickedBlock, Location placementLocation, Material itemTypeInHand
+  ) {
     User user = userOf(player);
     ExtendedBlockStateCache blockStateAccess = user.blockStates();
     World world = player.getWorld();
     switch (itemTypeInHand) {
       case BUCKET: {
         Material placementType =
-          VolatileBlockAccess.typeAccess(
-            user, placementLocation); // placementLocation.getBlock().getType();
+          VolatileBlockAccess.typeAccess(user, placementLocation); // placementLocation.getBlock().getType();
         // remove liquid on location if exists
         if (MaterialMagic.isLiquid(placementType)) {
           // emulate
@@ -312,29 +321,29 @@ public final class InteractionEmulator implements EventProcessor {
       case JUNGLE_DOOR:
       case WOOD_DOOR:
       case WOODEN_DOOR: {
-        int upperData = BlockVariantNativeAccess.variantAccess(block);
-        int lowerData;
-
-        boolean isUpper = (upperData & 8) != 0;
-        if (isUpper) {
-          lowerData = BlockVariantNativeAccess.variantAccess(block = block.getRelative(BlockFace.DOWN));
-        } else {
-          lowerData = upperData;
-          upperData = BlockVariantNativeAccess.variantAccess(block.getRelative(BlockFace.UP));
-        }
-
-        // toggle close
-        lowerData = (lowerData & 4) != 0 ? lowerData ^ 4 : lowerData | 4;
-
-        blockStateAccess.override(world, block.getX(), block.getY(), block.getZ(), clickedType, lowerData);
-        blockStateAccess.override(world, block.getX(), block.getY() + 1, block.getZ(), clickedType, upperData);
-
-        Block finalBlock = block;
-        Synchronizer.synchronize(() -> {
-          blockStateAccess.invalidateOverride(finalBlock.getX(), finalBlock.getY() - 1, finalBlock.getZ());
-          blockStateAccess.invalidateOverride(finalBlock.getX(), finalBlock.getY(), finalBlock.getZ());
-          blockStateAccess.invalidateOverride(finalBlock.getX(), finalBlock.getY() + 1, finalBlock.getZ());
-        });
+//        int upperData = BlockVariantNativeAccess.variantAccess(block);
+//        int lowerData;
+//
+//        boolean isUpper = (upperData & 8) != 0;
+//        if (isUpper) {
+//          lowerData = BlockVariantNativeAccess.variantAccess(block = block.getRelative(BlockFace.DOWN));
+//        } else {
+//          lowerData = upperData;
+//          upperData = BlockVariantNativeAccess.variantAccess(block.getRelative(BlockFace.UP));
+//        }
+//
+//        // toggle close
+//        lowerData = (lowerData & 4) != 0 ? lowerData ^ 4 : lowerData | 4;
+//
+//        blockStateAccess.override(world, block.getX(), block.getY(), block.getZ(), clickedType, lowerData);
+//        blockStateAccess.override(world, block.getX(), block.getY() + 1, block.getZ(), clickedType, upperData);
+//
+//        Block finalBlock = block;
+//        Synchronizer.synchronize(() -> {
+//          blockStateAccess.invalidateOverride(finalBlock.getX(), finalBlock.getY() - 1, finalBlock.getZ());
+//          blockStateAccess.invalidateOverride(finalBlock.getX(), finalBlock.getY(), finalBlock.getZ());
+//          blockStateAccess.invalidateOverride(finalBlock.getX(), finalBlock.getY() + 1, finalBlock.getZ());
+//        });
         break;
       }
       case ACACIA_FENCE_GATE:
@@ -348,16 +357,16 @@ public final class InteractionEmulator implements EventProcessor {
       }
       case TRAP_DOOR: {
         // flawed
-        int data = BlockVariantNativeAccess.variantAccess(block);
-        boolean newOpen = (data & 4) != 0;
-        int bitMask = 4;
-        byte newData = (byte) (!newOpen ? (data | bitMask) : (data & ~bitMask));
-        Material material = BlockTypeAccess.typeAccess(block, player);
-        blockStateAccess.override(world, block.getX(), block.getY(), block.getZ(), material, newData);
-        Block finalBlock1 = block;
-        Synchronizer.synchronize(() ->
-          blockStateAccess.invalidateOverride(finalBlock1.getX(), finalBlock1.getY(), finalBlock1.getZ())
-        );
+//        int data = BlockVariantNativeAccess.variantAccess(block);
+//        boolean newOpen = (data & 4) != 0;
+//        int bitMask = 4;
+//        byte newData = (byte) (!newOpen ? (data | bitMask) : (data & ~bitMask));
+//        Material material = BlockTypeAccess.typeAccess(block, player);
+//        blockStateAccess.override(world, block.getX(), block.getY(), block.getZ(), material, newData);
+//        Block finalBlock1 = block;
+//        Synchronizer.synchronize(() ->
+//          blockStateAccess.invalidateOverride(finalBlock1.getX(), finalBlock1.getY(), finalBlock1.getZ())
+//        );
         break;
       }
     }

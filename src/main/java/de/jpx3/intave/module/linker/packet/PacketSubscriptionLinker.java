@@ -3,6 +3,7 @@ package de.jpx3.intave.module.linker.packet;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ConnectionSide;
+import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.injector.packet.PacketRegistry;
 import de.jpx3.intave.IntavePlugin;
@@ -11,6 +12,12 @@ import de.jpx3.intave.klass.create.IRXClassFactory;
 import de.jpx3.intave.lib.asm.Type;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.linker.packet.tinyprotocol.InjectionService;
+import de.jpx3.intave.packet.reader.PacketReader;
+import de.jpx3.intave.packet.reader.PacketReaders;
+import de.jpx3.intave.user.User;
+import de.jpx3.intave.user.UserRepository;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -18,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 
 import static de.jpx3.intave.IntaveControl.IGNORE_CHUNK_PACKETS;
 
@@ -109,8 +117,22 @@ public final class PacketSubscriptionLinker extends Module {
     return method.getAnnotation(PacketSubscription.class) != null;
   }
 
+  private final Set<Class<?>> validParameterTypes = new HashSet<>();
+  {
+    validParameterTypes.add(PacketEvent.class);
+    validParameterTypes.add(Cancellable.class);
+    validParameterTypes.add(User.class);
+    validParameterTypes.add(Player.class);
+    validParameterTypes.add(PacketContainer.class);
+    validParameterTypes.add(PacketReader.class);
+    validParameterTypes.add(PacketType.class);
+  }
+
   private boolean validParameters(Method method) {
-    return method.getParameterCount() == 1 && method.getParameterTypes()[0] == PacketEvent.class;
+    return (method.getParameterCount() == 1 && method.getParameterTypes()[0] == PacketEvent.class) ||
+      Arrays.stream(method.getParameterTypes()).allMatch(type -> {
+        return validParameterTypes.stream().anyMatch(aClass -> aClass.isAssignableFrom(type) /*|| type.isAssignableFrom(aClass)*/);
+      });
   }
 
   private boolean validModifiers(Method method) {
@@ -215,22 +237,89 @@ public final class PacketSubscriptionLinker extends Module {
     Method calledMethod,
     String identifier
   ) {
-    String packetSubscriberSuperClassPath = canonicalRepresentation(className(PacketEventSubscriber.class));
-    String packetSubscriberClassPath = canonicalRepresentation(className(target.getClass()));
-    String packetEventClassPath = canonicalRepresentation(className(PacketEvent.class));
-    Class<PacketSubscriptionMethodExecutor> executorClass = IRXClassFactory.assembleCallerClass(
-      PacketSubscriptionLinker.class.getClassLoader(),
-      PacketSubscriptionMethodExecutor.class,
-      "<generated>",
-      "invoke",
-      "(L" + packetSubscriberSuperClassPath + ";L" + packetEventClassPath + ";)V",
-      "(L" + packetSubscriberClassPath + ";L" + packetEventClassPath + ";)V",
-      packetSubscriberClassPath,
-      calledMethod.getName(),
-      Type.getMethodDescriptor(calledMethod),
-      false, false
-    );
-    return instanceOf(executorClass);
+    if (calledMethod.getParameterCount() == 1 && calledMethod.getParameterTypes()[0] == PacketEvent.class) {
+      // so boring
+      String packetSubscriberSuperClassPath = canonicalRepresentation(className(PacketEventSubscriber.class));
+      String packetSubscriberClassPath = canonicalRepresentation(className(target.getClass()));
+      String packetEventClassPath = canonicalRepresentation(className(PacketEvent.class));
+      Class<PacketSubscriptionMethodExecutor> executorClass = IRXClassFactory.assembleCallerClass(
+        PacketSubscriptionLinker.class.getClassLoader(),
+        PacketSubscriptionMethodExecutor.class,
+        "<generated>",
+        "invoke",
+        "(L" + packetSubscriberSuperClassPath + ";L" + packetEventClassPath + ";)V",
+        "(L" + packetSubscriberClassPath + ";L" + packetEventClassPath + ";)V",
+        packetSubscriberClassPath,
+        calledMethod.getName(),
+        Type.getMethodDescriptor(calledMethod),
+        false, false,
+        IntUnaryOperator.identity()
+      );
+      return instanceOf(executorClass);
+    } else {
+      Class<?>[] parameterTypes = calledMethod.getParameterTypes();
+
+      int playerParameterIndex = findParameterPosition(parameterTypes, Player.class);
+      int userParameterPosition = findParameterPosition(parameterTypes, User.class);
+      int cancelableParameterPosition = findParameterPosition(parameterTypes, Cancellable.class);
+      int packetContainerParameterPosition = findParameterPosition(parameterTypes, PacketContainer.class);
+      int packetReaderParameterPosition = findParameterPosition(parameterTypes, PacketReader.class);
+      int packetEventParameterPosition = findParameterPosition(parameterTypes, PacketEvent.class);
+      int packetTypeParameterPosition = findParameterPosition(parameterTypes, PacketType.class);
+
+      return (subscriber, event) -> {
+        Player player = event.getPlayer();
+        User user = UserRepository.userOf(player);
+
+        Object[] arguments = new Object[parameterTypes.length];
+        if (playerParameterIndex != -1) {
+          arguments[playerParameterIndex] = player;
+        }
+        if (userParameterPosition != -1) {
+          arguments[userParameterPosition] = user;
+        }
+        if (cancelableParameterPosition != -1) {
+          arguments[cancelableParameterPosition] = event;
+        }
+        if (packetContainerParameterPosition != -1) {
+          arguments[packetContainerParameterPosition] = event.getPacket();
+        }
+        PacketReader packetReader = null;
+        if (packetReaderParameterPosition != -1) {
+          packetReader = PacketReaders.readerOf(event.getPacket());
+          arguments[packetReaderParameterPosition] = packetReader;
+        }
+        if (packetEventParameterPosition != -1) {
+          arguments[packetEventParameterPosition] = event;
+        }
+        if (packetTypeParameterPosition != -1) {
+          arguments[packetTypeParameterPosition] = event.getPacketType();
+        }
+
+        try {
+          calledMethod.invoke(subscriber, arguments);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+
+        if (packetReader != null) {
+          packetReader.release();
+        }
+      };
+    }
+  }
+
+  private static int findParameterPosition(Class<?>[] parameterTypes, Class<?> parameterType) {
+    for (int i = 0; i < parameterTypes.length; i++) {
+      if (parameterTypes[i] == parameterType) {
+        return i;
+      }
+      // or is a subclass of the parameter type
+      if (parameterType.isAssignableFrom(parameterTypes[i])) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private <T> T instanceOf(Class<T> clazz) {

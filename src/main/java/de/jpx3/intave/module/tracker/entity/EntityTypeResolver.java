@@ -204,7 +204,6 @@ public final class EntityTypeResolver {
               return isChild < 0;
             }
           } else {
-//          IntaveLogger.logger().info("Failed to read EntityMetaData packet. " + object.getClass());
             return null;
           }
         }
@@ -372,9 +371,9 @@ public final class EntityTypeResolver {
       case 60: // arrows
         return HitboxSize.zero();
     }
-    if (IntaveControl.DISABLE_LICENSE_CHECK) {
-      IntaveLogger.logger().info("Failed to map bounding box of dead entity " + deadEntityType + "/" + nameByDeadEntityType(deadEntityType));
-    }
+//    if (IntaveControl.DISABLE_LICENSE_CHECK) {
+//      IntaveLogger.logger().info("Failed to map bounding box of dead entity " + deadEntityType + "/" + nameByDeadEntityType(deadEntityType));
+//    }
     return HitboxSize.zero();
   }
 }

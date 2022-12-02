@@ -89,7 +89,7 @@ public final class NativeLibrary {
       for (byte mdbyte : mdbytes) {
         jarChecksum.append(Integer.toString((mdbyte & 0xff) + 0x100, 16).substring(1));
       }
-    } catch (NoSuchAlgorithmException | IOException exception) {
+    } catch (Exception exception) {
       throw new IllegalStateException(exception);
     }
     return jarChecksum.toString();

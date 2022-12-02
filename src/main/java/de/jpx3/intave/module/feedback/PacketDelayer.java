@@ -59,9 +59,14 @@ public final class PacketDelayer extends Module {
       return;
     }
 
-
     if (connection.eligibleForTransactionTimeout) {
+      // is lagging
+      boolean delayAttack = false;
 
+      if (delayAttack) {
+        connection.attacksQueued++;
+        event.setCancelled(true);
+      }
     }
   }
 

@@ -443,6 +443,19 @@ public final class IntavePlugin extends JavaPlugin {
           } else {
             VERSION_DETAILS = 0b0001100001;
           }
+          if (properties.containsKey("classloader-update")) {
+            // delete classloader library
+            String operatingSystem = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+            String filePath;
+            String suffix = operatingSystem.contains("win") ? ".dll" : ".so";
+            if (operatingSystem.contains("win")) {
+              filePath = System.getenv("APPDATA") + "/Intave/";
+            } else {
+              filePath = System.getProperty("user.home") + "/.intave/";
+            }
+            File deleteFile = new File(filePath, "classloader." + version + suffix + ".delete");
+            deleteFile.createNewFile();
+          }
           String keyResponse = properties.get("exchange-key");
           // verify the server integrity
           boolean validResponse = false;
@@ -479,9 +492,9 @@ public final class IntavePlugin extends JavaPlugin {
       boolean partner = (VERSION_DETAILS & 0x100) != 0;
       boolean enterprise = (VERSION_DETAILS & 0x200) != 0;
 
-      if (partner || enterprise) {
-        logger.info("Identity confirmed");
-      }
+//      if (partner || enterprise) {
+//        logger.info("Identity confirmed");
+//      }
 
       if (offlineMode) {
         // check last online
@@ -644,6 +657,10 @@ public final class IntavePlugin extends JavaPlugin {
 
       if (IntaveControl.DISABLE_BLOCK_CACHING_ENTIRELY) {
         logger().info("This version does not cache block-accesses");
+      }
+
+      if (IntaveControl.DEBUG_VARIANT_COMPILATION) {
+        logger().info("This version outputs debug information for block-variant compilation");
       }
 
       // stage 9

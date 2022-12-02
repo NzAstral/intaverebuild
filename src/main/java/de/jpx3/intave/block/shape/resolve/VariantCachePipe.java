@@ -37,10 +37,10 @@ final class VariantCachePipe implements ShapeResolverPipeline {
   }
 
   @Override
-  public BlockShape outlineShapeOf(World world, Player player, Material type, int blockState, int posX, int posY, int posZ) {
+  public BlockShape outlineShapeOf(World world, Player player, Material type, int variantIndex, int posX, int posY, int posZ) {
     Map<Integer, BlockShape> variantCache = outlineShapeCache.computeIfAbsent(type, material -> ReferenceMap.soft(new ConcurrentHashMap<>()));
-    return variantCache.computeIfAbsent(blockState, integer ->
-      forward.outlineShapeOf(world, player, type, blockState, posX, posY, posZ).normalized(posX, posY, posZ)
+    return variantCache.computeIfAbsent(variantIndex, integer ->
+      forward.outlineShapeOf(world, player, type, variantIndex, posX, posY, posZ).normalized(posX, posY, posZ)
     ).contextualized(posX, posY, posZ);
   }
 

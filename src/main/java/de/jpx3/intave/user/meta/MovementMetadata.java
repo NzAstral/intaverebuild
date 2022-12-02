@@ -88,7 +88,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   public Vector setbackOverrideVelocity = new Vector(0, 0, 0);
   public Vector lastVelocity = new Vector();
   public boolean canResetMotion;
-  public int pastNearbyCollisionInaccuracy;
+  public int pastNearbyCollisionInaccuracy = 10;
   public float frictionMultiplier;
   public float genericMovementSpeedAttribute;
   public int lastPositionUpdate;
@@ -123,6 +123,8 @@ public final class MovementMetadata implements SimulationEnvironment {
   public int shulkerYToleranceRemaining;
   public int shulkerZToleranceRemaining;
   public int lowestShulkerY = Integer.MAX_VALUE, highestShulkerY = Integer.MIN_VALUE;
+  public Set<Motion> toleratedPistonMotions = new HashSet<>();
+  public int pistonMotionToleranceRemaining;
   public List<BlockPosition> shulkers = new ArrayList<>();
   public Map<BlockPosition, ShulkerBox> shulkerData = new HashMap<>();
   public Map<Integer, ShulkerBox> shulkerDataHashCodeAccess = new HashMap<>();
@@ -154,6 +156,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   public int teleportId;
   public volatile boolean awaitTeleport = false, expectTeleport = false, awaitOutgoingTeleport = false;
   public volatile boolean transactionTeleportAllow = false;
+  public boolean awaitClickMovementSkip;
   public Location teleportLocation = null;
   public Vector teleportOffset = null;
   public int teleportResendCountdown = 10;

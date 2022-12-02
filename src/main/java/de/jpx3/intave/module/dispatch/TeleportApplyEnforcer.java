@@ -68,6 +68,10 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
       }
     }
 
+//    System.out.println("Teleporting " + player.getName() + " to " + positionX + ", " + positionY + ", " + positionZ);
+//    Thread.dumpStack();
+    // dump packet
+
     Location teleportLocation = new Location(player.getWorld(), positionX, positionY, positionZ);
     movementData.teleportLocation = teleportLocation;
     movementData.setVerifiedLocation(teleportLocation.clone(), "Teleportation (new)");

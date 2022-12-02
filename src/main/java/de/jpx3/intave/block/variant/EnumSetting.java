@@ -3,52 +3,42 @@ package de.jpx3.intave.block.variant;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-final class EnumSetting extends NamedSetting<Integer> {
-  private final ImmutableSet<Integer> values;
+final class EnumSetting extends NamedSetting<String> {
+  private final ImmutableSet<String> values;
+  private final List<String> valuesAsList;
   private final Class<?> owner;
-  private final Map<String, Integer> enumNameToIndex = new HashMap<>();
-  private final Map<Integer, String> enumIndexToName = new HashMap<>();
 
-  public EnumSetting(String name, Class<?> owner, Collection<?> values) {
-    super(name, Integer.TYPE);
+  EnumSetting(String name, Class<?> owner, Collection<?> values) {
+    super(name, String.class);
     if (!owner.isEnum()) {
       throw new IllegalStateException("Not an enum");
     }
     this.owner = owner;
-    for (Object value : values) {
-      String key = value.toString().toLowerCase(Locale.ROOT);
-      int ordinal = ((Enum<?>) value).ordinal();
-      enumNameToIndex.put(key, ordinal);
-      enumIndexToName.put(ordinal, key);
-    }
-    ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
-    values.stream().mapToInt(value -> ((Enum<?>) value).ordinal()).forEach(builder::add);
-    this.values = builder.build();
+    this.values = ImmutableSet.copyOf(values.stream().map(value -> ((Enum<?>) value).name()).collect(Collectors.toList()));
+    this.valuesAsList = new ArrayList<>(this.values);
   }
 
-  public <K extends Enum<K>> K enumType(Class<K> enumClass, int index) {
-    String enumName = enumIndexToName.get(index);
-    if (enumName == null) {
-      System.out.println("Unknown enum index " + index + " in " + enumIndexToName + " for " + enumClass + ", owned by " + owner);
-      Thread.dumpStack();
-      return enumClass.getEnumConstants()[0];
-    }
-    return Enum.valueOf(enumClass, enumName.toUpperCase(Locale.ROOT));
+  public <K extends Enum<K>> K enumType(Class<K> enumClass, String name) {
+    return Enum.valueOf(enumClass, name.toUpperCase(Locale.ROOT));
   }
 
   @Override
-  public int indexOf(Integer value) {
-    return value;
+  public int indexOf(String value) {
+    return valuesAsList.indexOf(value);
   }
 
   @Override
-  public Collection<Integer> values() {
+  public Collection<String> values() {
     return values;
   }
 
   @Override
-  public Optional<Integer> findByName(String name) {
-    return Optional.ofNullable(enumNameToIndex.get(name.toLowerCase(Locale.ROOT)));
+  public Optional<String> findByName(String name) {
+    if (values.contains(name)) {
+      return Optional.of(name);
+    }
+    return Optional.empty();
   }
 }

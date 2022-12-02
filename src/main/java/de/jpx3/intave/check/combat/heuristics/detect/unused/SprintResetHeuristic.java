@@ -35,7 +35,7 @@ public final class SprintResetHeuristic extends MetaCheckPart<Heuristics, Sprint
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
     packetsIn = {
-      ENTITY_ACTION
+      ENTITY_ACTION_IN
     }
   )
   public void receiveSprintPacket(PacketEvent event) {

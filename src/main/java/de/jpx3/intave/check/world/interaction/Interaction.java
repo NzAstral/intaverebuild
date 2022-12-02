@@ -73,6 +73,10 @@ public final class Interaction {
     return targetBlock;
   }
 
+  public boolean hasTargetBlock() {
+    return targetBlock != null;
+  }
+
   public int targetDirection() {
     return targetDirection;
   }
