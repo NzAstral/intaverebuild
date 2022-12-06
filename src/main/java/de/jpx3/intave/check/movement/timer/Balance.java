@@ -108,7 +108,7 @@ public final class Balance extends MetaCheckPart<Timer, Balance.BalanceMeta> {
 
     MovementMetadata movementData = user.meta().movement();
     boolean flyingPackets = user.protocolVersion() == 47;
-    boolean moving = Hypot.fast(movementData.motionX(), movementData.motionZ()) + Math.abs(movementData.motionY()) >= 0.0625 && movementData.pastFlyingPacketAccurate() > 6;
+    boolean moving = Hypot.fast(movementData.motionX(), movementData.motionZ()) + Math.abs(movementData.motionY()) >= 0.1 && movementData.pastFlyingPacketAccurate() > 8;
     boolean checkAllowed = moving || flyingPackets;
     if (checkAllowed) {
       safeTimerBalanceHistory.add(Math.min(timerData.timerBalance, timerData.confirmedBalance));
@@ -137,6 +137,7 @@ public final class Balance extends MetaCheckPart<Timer, Balance.BalanceMeta> {
     if (timerData.balanceUnderflowVL > 15 && combatMicroLag && !user.trustFactor().atLeast(TrustFactor.ORANGE)) {
       connection.lastAttackQueueRequest = System.currentTimeMillis();
     }
+    player.sendMessage(timerData.balanceUnderflowVL + "");
 
 //    player.sendMessage("§c" + timerData.timerBalance + "§7 ~§c" + mean + "§7 -> §c" + formatDouble(timerData.balanceUnderflowVL, 2));
 
