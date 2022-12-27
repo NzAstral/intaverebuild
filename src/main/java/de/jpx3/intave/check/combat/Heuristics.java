@@ -90,11 +90,11 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       if (partner) {
         // For enterprise users
 //        if (enterprise) {
-          appendCheckPart(new OldAirClickLimitHeuristic(this));
-          appendCheckPart(new AttackReduceIgnoreHeuristic(this));
-          appendCheckPart(new RotationStandardDeviationHeuristic(this));
-          appendCheckPart(new RotationSnapHeuristic(this));
-          appendCheckPart(new LongTermClickAccuracyHeuristic(this));
+        appendCheckPart(new OldAirClickLimitHeuristic(this));
+        appendCheckPart(new AttackReduceIgnoreHeuristic(this));
+        appendCheckPart(new RotationStandardDeviationHeuristic(this));
+        appendCheckPart(new RotationSnapHeuristic(this));
+        appendCheckPart(new LongTermClickAccuracyHeuristic(this));
 //        }
         // for Gomme
         if (IntaveControl.GOMME_MODE || IntaveControl.DISABLE_LICENSE_CHECK) {
@@ -135,6 +135,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     appendCheckPart(new SprintOnAttackHeuristic(this));
     appendCheckPart(new JumpVelocityHeuristic(this));
     appendCheckPart(new CivbreakHeuristic(this));
+    appendCheckPart(new InvalidFlyingPacketHeuristic(this));
 //    appendCheckPart(new TestHeuristic(this));
   }
 
@@ -143,8 +144,8 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       HeuristicMeta meta = metaOf(player);
       int limit = anomaly.limit();
       int betterFound = (int) meta.anomalies.stream()
-        .filter(anomaly1 -> anomaly1.key().equals(anomaly.key()) && anomaly1.confidence().atLeast(anomaly.confidence()))
-        .count();
+          .filter(anomaly1 -> anomaly1.key().equals(anomaly.key()) && anomaly1.confidence().atLeast(anomaly.confidence()))
+          .count();
       if (limit == 0 || betterFound <= limit) {
         meta.anomalies.add(anomaly);
       }
@@ -247,9 +248,9 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       // perform mining strategies
       if (attackData.activeMiningStrategy == null) {
         MiningStrategy strategy = findSuitableMiningStrategy(
-          allAnomalies,
-          overallAllConfidence,
-          attackData.lastMiningStrategy
+            allAnomalies,
+            overallAllConfidence,
+            attackData.lastMiningStrategy
         );
         if (strategy != null) {
           performMiningStrategy(user, strategy);
@@ -283,13 +284,13 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       String typeName = type.typeName();
       String details = typeName + ": " + confidence + " / " + identifier;
       Violation violation = Violation.builderFor(Heuristics.class)
-        .forPlayer(player).withMessage(message).withDetails(details)
-        .withCustomThreshold(threshold).withVL(25)
-        .withPlaceholder("confidence", confidence)
-        .withPlaceholder("confidence-name", confidenceName)
-        .withPlaceholder("confidence-symbol", confidenceSymbol)
-        .withPlaceholder("identifier", identifier)
-        .build();
+          .forPlayer(player).withMessage(message).withDetails(details)
+          .withCustomThreshold(threshold).withVL(25)
+          .withPlaceholder("confidence", confidence)
+          .withPlaceholder("confidence-name", confidenceName)
+          .withPlaceholder("confidence-symbol", confidenceSymbol)
+          .withPlaceholder("identifier", identifier)
+          .build();
       Modules.violationProcessor().processViolation(violation);
     }
   }
@@ -343,20 +344,20 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   private Anomaly.Type findDominantTypeIn(List<Anomaly> anomalies) {
     return anomalies.stream()
-      .collect(Collectors.groupingBy(Anomaly::type, Collectors.counting()))
-      .entrySet()
-      .stream()
-      .max(Comparator.comparingLong(Map.Entry::getValue))
-      .orElseThrow(IllegalStateException::new)
-      .getKey();
+        .collect(Collectors.groupingBy(Anomaly::type, Collectors.counting()))
+        .entrySet()
+        .stream()
+        .max(Comparator.comparingLong(Map.Entry::getValue))
+        .orElseThrow(IllegalStateException::new)
+        .getKey();
   }
 
   @Nullable
   @Deprecated
   private MiningStrategy findSuitableMiningStrategy(
-    List<Anomaly> anomalies,
-    Confidence overallConfidence,
-    MiningStrategy lastMiningStrategy
+      List<Anomaly> anomalies,
+      Confidence overallConfidence,
+      MiningStrategy lastMiningStrategy
   ) {
     boolean miningSuggested = anomalies.stream().anyMatch(Anomaly::miningSuggested);
     if (!miningSuggested) {
@@ -400,9 +401,9 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
   // events
 
   @PacketSubscription(
-    packetsIn = {
-      USE_ENTITY
-    }
+      packetsIn = {
+          USE_ENTITY
+      }
   )
   public void receiveUseEntity(PacketEvent event) {
     Player player = event.getPlayer();
@@ -437,7 +438,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   @Deprecated
   private void tryRemoveMiningStrategy(
-    MiningStrategyContainer miningStrategyContainer
+      MiningStrategyContainer miningStrategyContainer
   ) {
     MiningStrategyExecutor executor = miningStrategyContainer.executor();
     boolean expired = executor.expired();
@@ -447,9 +448,9 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
   }
 
   @PacketSubscription(
-    packetsIn = {
-      POSITION, POSITION_LOOK, LOOK, FLYING, VEHICLE_MOVE
-    }
+      packetsIn = {
+          POSITION, POSITION_LOOK, LOOK, FLYING, VEHICLE_MOVE
+      }
   )
   @Deprecated
   public void receiveMovement(PacketEvent event) {
