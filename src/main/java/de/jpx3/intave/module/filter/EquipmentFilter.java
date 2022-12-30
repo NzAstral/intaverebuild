@@ -87,7 +87,9 @@ public final class EquipmentFilter extends Filter {
       //
 
       meta.setDisplayName("");
-      meta.setLore(Collections.emptyList());
+      if (meta.getLore() != null) {
+        meta.setLore(Collections.emptyList());
+      }
       meta.removeItemFlags(meta.getItemFlags().toArray(new ItemFlag[0]));
     }
     return itemStack;
@@ -95,6 +97,6 @@ public final class EquipmentFilter extends Filter {
 
   @Override
   protected boolean enabled() {
-    return !IntaveControl.GOMME_MODE;
+    return !IntaveControl.GOMME_MODE && super.enabled();
   }
 }

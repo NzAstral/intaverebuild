@@ -32,8 +32,6 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.*;
 import de.jpx3.intave.world.raytrace.Raytrace;
 import de.jpx3.intave.world.raytrace.Raytracing;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -359,7 +357,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
         message = "attacked " + resolveArticle(entityName) + " " + entityName.toLowerCase() + " out of sight";
         details = "";
         thresholdKey = "applicable-thresholds.hitbox";
-        special = player.getName() + " missed hit on " + entityName.toLowerCase();
+        special = player.getName() + "/" + user.protocolVersion() + " missed hit on " + entityName.toLowerCase();
         reach = -1;
         break;
       }
@@ -368,7 +366,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
         message = "attacked " + resolveArticle(entityName) + " " + entityName.toLowerCase() + " from too far away";
         details = displayReach + " blocks";
         thresholdKey = "applicable-thresholds.reach";
-        special = player.getName() + " attacked " + entityName.toLowerCase() + " from " + displayReach;
+        special = player.getName() + "/" + user.protocolVersion() + " attacked " + entityName.toLowerCase() + " from " + displayReach;
         reach = raytrace.reach();
         break;
       }

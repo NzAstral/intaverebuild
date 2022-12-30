@@ -4,6 +4,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.annotate.Reserved;
 import de.jpx3.intave.check.MetaCheckPart;
 import de.jpx3.intave.check.world.PlacementAnalysis;
 import de.jpx3.intave.cleanup.GarbageCollector;
@@ -30,6 +31,7 @@ import static de.jpx3.intave.check.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.BLOCK_PLACE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.USE_ITEM;
 
+@Reserved
 public final class Speed extends MetaCheckPart<PlacementAnalysis, Speed.PlacementSpeedMeta> {
   private static final int CHECK_LENGTH = 8;
   private static final int DIRECTION_EVAL_LENGTH = 5;
@@ -92,19 +94,39 @@ public final class Speed extends MetaCheckPart<PlacementAnalysis, Speed.Placemen
         double average = placementSpeedHistory.stream().mapToDouble(value -> value).average().orElse(500);
         boolean inOneLine = isOneLine(meta.placementHistory);
 
-        boolean noHardFault = System.currentTimeMillis() - meta.lastHardFaultClick > 8000;
+        boolean noHardFault = System.currentTimeMillis() - meta.lastHardFaultClick > 6000;
         boolean noSneaking = System.currentTimeMillis() - movementData.lastSneakingTimestamps > 8000;
         boolean recentJump = System.currentTimeMillis() - movementData.lastJump < 750;
-        double minAverage = (inOneLine ? ((recentJump ? 450 : noHardFault ? (noSneaking ? 500 : 300) : (noSneaking ? 350 : 200))) : 150);
+        float distToNextNinety = Math.abs(user.meta().movement().rotationYaw()) % 90;
+        boolean ninetyDegreeAngle = distToNextNinety < 10 || distToNextNinety > 80;
+
+        double minAverage;
+
+        if (inOneLine) {
+          if (recentJump) {
+            minAverage = 450;
+          } else if (ninetyDegreeAngle) {
+            minAverage = noSneaking ? 500 : 350;
+          } else {
+            if (noHardFault) {
+              minAverage = noSneaking ? 500 : 300;
+            } else {
+              minAverage = noSneaking ? 350 : 200;
+            }
+          }
+        } else {
+          minAverage = ninetyDegreeAngle ? 400 : 150;
+        }
 
         int speedAmplifier = potionData.potionEffectSpeedAmplifier();
         minAverage /= 0.15 * speedAmplifier * speedAmplifier + 1;
 
+//        player.sendMessage(average + "/" + minAverage + " " + noHardFault + "hf " + ninetyDegreeAngle + "90 " + noSneaking + "ns " + recentJump + "rj " + inOneLine + "il");
         if (average < minAverage) {
           Violation violation = Violation.builderFor(PlacementAnalysis.class)
             .forPlayer(player).withDefaultThreshold()
             .withMessage(COMMON_FLAG_MESSAGE)
-            .withDetails(((int) average) + "ms/block, limit at " + ((int) minAverage) + "ms/block")
+            .withDetails(((int) average / 50) + "ticks/block, limit at " + ((int) minAverage / 50) + "ticks/block")
             .withDefaultThreshold().withVL(average > 400 ? 3 : average < 300 ? 5 : 4).build();
 
           ViolationContext violationContext = Modules.violationProcessor().processViolation(violation);
@@ -147,10 +169,14 @@ public final class Speed extends MetaCheckPart<PlacementAnalysis, Speed.Placemen
     boolean lockedOnX = false,
       lockedOnZ = false;
     boolean first = true;
+
+    int yTolerance = 2;
     for (Location block : blocks) {
       if (!first) {
         if (lastBlockY != block.getY()) {
-          return false;
+          if (yTolerance-- <= 0) {
+            return false;
+          }
         }
         if (lastBlockX == block.getX()) {
           lockedOnX = true;

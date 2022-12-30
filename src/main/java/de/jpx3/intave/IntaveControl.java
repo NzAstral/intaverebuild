@@ -10,6 +10,7 @@ public final class IntaveControl {
   public static final boolean DEBUG_MOVEMENT_IGNORE = false;
   public static final boolean DEBUG_MOUNTING = false;
   public static final boolean DEBUG_ELYTRA = false;
+  public static final boolean DEBUG_PLAYER_ACTIONS = false;
   public static final boolean DEBUG_TELEPORT_LOCKS = false;
   public static final boolean DEBUG_TELEPORT_CAUSE_AND_CAUSER = false;
   public static final boolean DEBUG_TELEPORT_PACKET_STACKTRACE = false;
@@ -27,8 +28,8 @@ public final class IntaveControl {
   public static final boolean USE_TIMINGS = true;
   public static final boolean DUMP_BLOCK_HITBOX_ON_RIGHT_CLICK = false;
   public static final boolean SETBACK_WITH_PRESSED_KEYS = false;
-  public static final boolean USE_SUPERPOSITIONS = false;
   public static final boolean CLICKPATTERNS_OUTPUT = false;
+  public static final boolean DEBUG_GRAYLIST = false;
   public static final boolean USE_DEBUG_LOCATE_RESOURCE = false;
   public static final boolean DEBUG_OUTPUT_FOR_TESTS = false;
   public static final boolean DEBUG_VARIANT_COMPILATION = false;

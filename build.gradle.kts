@@ -13,7 +13,7 @@ plugins {
 
 val simpleName = "Intave"
 group = "de.jpx3"
-version = "14.5.6"
+version = "14.5.7"
 description = "Cheat detection software, providing fair play"
 
 /*
@@ -73,6 +73,7 @@ bukkit {
     register("intave.command.notify") { default = OP }
     register("intave.command.verbose") { default = OP }
     register("intave.command.history") { default = OP }
+    register("intave.command.cps") { default = OP }
     register("intave.command.proxy") { default = FALSE }
     register("intave.command.diagnostics") {
       default = OP

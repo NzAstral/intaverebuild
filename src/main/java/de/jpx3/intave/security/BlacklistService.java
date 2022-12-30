@@ -1,5 +1,6 @@
 package de.jpx3.intave.security;
 
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.HighOrderService;
 import de.jpx3.intave.annotate.Native;
@@ -16,16 +17,17 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+
+import static de.jpx3.intave.IntaveControl.DEBUG_GRAYLIST;
 
 @HighOrderService
 public final class BlacklistService implements BukkitEventSubscriber {
@@ -56,17 +58,20 @@ public final class BlacklistService implements BukkitEventSubscriber {
   public String encryptedKnowledgeData() {
     String input = graylistKnowledgeResource.readAsString();
     try {
-      // encrypt via AES ECB with key "ffKuAyXJ57BgXskQjW1WrR4YRJgpy43x"
-      Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
       byte[] data = input.getBytes(StandardCharsets.UTF_8);
-      KeySpec spec = new PBEKeySpec("ffKuAyXJ57BgXskQjW1WrR4YRJgpy43x".toCharArray()); // AES-128
-      SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-      byte[] key = secretKeyFactory.generateSecret(spec).getEncoded();
-      SecretKey secretKey = new SecretKeySpec(key, "AES");
-      cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-      String output = Base64.getEncoder().encodeToString(cipher.doFinal(data));
+      byte[] salt = new byte[16];
+      ThreadLocalRandom.current().nextBytes(salt);
+      SecretKey secretKey = new SecretKeySpec("ffKuAyXJ57BgXskQjW1WrR4YRJgpy43x".getBytes(StandardCharsets.UTF_8), "AES");
+      cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(salt));
+      String saltString = Base64.getUrlEncoder().encodeToString(salt);
+      String output = Base64.getUrlEncoder().encodeToString(cipher.doFinal(data));
       graylistKnowledgeResource.delete();
-      return output;
+      String finalString = saltString + output;
+      if (finalString.contains("X5X5X5X5")) {
+        finalString = finalString.replace("X5X5X5X5", "A5A5A5A5A5A5A5A5A5A5A5");
+      }
+      return finalString.replace("==", "X5X5X5X5").replace("=", "Y5Y5Y5Y5");
     } catch (Exception exception) {
       return "";
     }
@@ -85,6 +90,7 @@ public final class BlacklistService implements BukkitEventSubscriber {
         strings.add(id);
       }
     }
+    graylistKnowledge.clear();
     graylistKnowledgeResource.write(strings);
   }
 
@@ -117,6 +123,7 @@ public final class BlacklistService implements BukkitEventSubscriber {
     }
     if (graylisted(player)) {
       graylistEvent(player);
+      saveKnowledgeToResource();
     }
   }
 
@@ -124,6 +131,9 @@ public final class BlacklistService implements BukkitEventSubscriber {
   private void graylistEvent(Player player) {
     if (graylistKnowledge.contains(player.getUniqueId().toString())) {
       return;
+    }
+    if (DEBUG_GRAYLIST) {
+      player.sendMessage(ChatColor.RED + "You are graylisted, login request has been recorded.");
     }
     graylistKnowledge.add(player.getUniqueId().toString());
   }

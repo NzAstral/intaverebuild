@@ -34,7 +34,7 @@ public final class SimulationEvaluator {
   ) {
     Player player = user.player();
     MetadataBundle meta = user.meta();
-    ProtocolMetadata clientData = meta.protocol();
+    ProtocolMetadata protocol = meta.protocol();
     MovementMetadata movement = meta.movement();
     double distanceMoved = MathHelper.resolveHorizontalDistance(
       movement.positionX, movement.positionZ,
@@ -104,7 +104,7 @@ public final class SimulationEvaluator {
 
     // spamming sneak under blocks
     // not a good solution, but it works
-    if (clientData.applyModernCollider()) {
+    if (protocol.applyModernCollider()) {
       double crouchingHeightGap = 1 - user.sizeOf(Pose.CROUCHING).height() % 1;
       double standingHeightGap = 1 - user.sizeOf(Pose.STANDING).height() % 1;
       boolean scuffed = false;
@@ -179,7 +179,7 @@ public final class SimulationEvaluator {
     // Jump out of water
     if (movement.pastWaterMovement <= 3) {
       double liquidPositionY;
-      if (clientData.waterUpdate()) {
+      if (protocol.waterUpdate()) {
         liquidPositionY = receivedMotionY + 0.6f - movement.positionY + movement.verifiedPositionY;
       } else {
         liquidPositionY = receivedMotionY + 0.3f;
@@ -251,6 +251,7 @@ public final class SimulationEvaluator {
     MetadataBundle meta = user.meta();
     ViolationMetadata violationLevelData = meta.violationLevel();
     MovementMetadata movement = meta.movement();
+    ProtocolMetadata protocol = meta.protocol();
 
     double motionX = movement.motionX();
     double motionZ = movement.motionZ();
@@ -383,9 +384,12 @@ public final class SimulationEvaluator {
     }
 
     if (movement.sneaking || movement.lastSneaking) {
-      if ((Math.abs(movement.motionX()) < 0.08 || Math.abs(movement.motionZ()) < 0.08)) {
+      if ((Math.abs(movement.motionX()) < 0.08 || Math.abs(movement.motionZ()) < 0.08) || (movement.sprinting && protocol.cavesAndCliffsUpdate())) {
         boolean smallMovement = Math.abs(movement.motionX()) < 0.08 && Math.abs(movement.motionZ()) < 0.08 && movement.onGround();
-        double limit = movement.pastEdgeSneak == 1 ? 0.12 : (smallMovement ? 0.099 : (movement.pastEdgeSneak < 10 ? 0.05 : 0.035));
+        double limit = movement.pastEdgeSneak <= 1 ? 0.12 : (smallMovement ? 0.099 : (movement.pastEdgeSneak < 10 ? 0.05 : 0.035));
+        if (movement.motionY() >= 0.1 && protocol.cavesAndCliffsUpdate() && movement.pastEdgeSneak <= 1 && movement.sprinting && distanceMoved <= 0.5) {
+          limit = 0.3;
+        }
         horizontalLegitimateDeviation = Math.max(horizontalLegitimateDeviation, limit);
       }
     }

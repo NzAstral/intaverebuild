@@ -4,9 +4,9 @@ import de.jpx3.intave.block.variant.Setting;
 import de.jpx3.intave.block.variant.Settings;
 import de.jpx3.intave.klass.rewrite.PatchyAutoTranslation;
 import net.minecraft.server.v1_13_R2.IBlockState;
-import net.minecraft.server.v1_14_R1.BlockStateBoolean;
-import net.minecraft.server.v1_14_R1.BlockStateEnum;
-import net.minecraft.server.v1_14_R1.BlockStateInteger;
+import net.minecraft.server.v1_13_R2.BlockStateBoolean;
+import net.minecraft.server.v1_13_R2.BlockStateEnum;
+import net.minecraft.server.v1_13_R2.BlockStateInteger;
 
 import java.util.*;
 
@@ -33,7 +33,7 @@ public final class v13ConversionBridge implements ConversionBridge {
     String name = state.a();
     if (state instanceof BlockStateInteger) {
       BlockStateInteger blockStateInteger = (BlockStateInteger) state;
-      Collection<Integer> values = blockStateInteger.getValues();
+      Collection<Integer> values = blockStateInteger.d();
       IntSummaryStatistics statistics = values.stream().mapToInt(value -> value).summaryStatistics();
       return Settings.integerSetting(name, statistics.getMin(), statistics.getMax());
     } else if (state instanceof BlockStateBoolean) {

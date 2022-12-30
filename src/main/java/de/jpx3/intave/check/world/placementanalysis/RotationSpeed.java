@@ -62,6 +62,12 @@ public final class RotationSpeed extends MetaCheckPart<PlacementAnalysis, Rotati
     User user = userOf(player);
     RotationSpeedMeta meta = metaOf(user);
     meta.lastBlockPlacement = System.currentTimeMillis();
+
+    if (System.currentTimeMillis() - meta.denyPlacementRequest < 1000) {
+      place.setCancelled(true);
+      return;
+    }
+
 //    Block belowPlaced = place.getBlockPlaced().getRelative(BlockFace.DOWN);
     if (place.getBlock().getY() < player.getLocation().getBlockY() /*&& belowPlaced.getType() == Material.AIR*/ && blockAgainstWasPlaced(user, place.getBlockAgainst())) {
       List<Float> rotationHistory = meta.rotationHistory;
@@ -86,8 +92,9 @@ public final class RotationSpeed extends MetaCheckPart<PlacementAnalysis, Rotati
           .forPlayer(player).withDefaultThreshold()
           .withMessage(COMMON_FLAG_MESSAGE)
           .withDetails("high rotation activity while placing blocks") // + " (" + ((int) rotationSum) + " degrees)
-          .withDefaultThreshold().withVL(0).build();
+          .withDefaultThreshold().withVL(10).build();
         Modules.violationProcessor().processViolation(violation);
+        meta.denyPlacementRequest = System.currentTimeMillis();
         place.setCancelled(true);
       }
     }
@@ -133,5 +140,6 @@ public final class RotationSpeed extends MetaCheckPart<PlacementAnalysis, Rotati
     private final List<Float> rotationHistory = new CopyOnWriteArrayList<>();
     private final List<Vector> lastBlocksPlaced = new CopyOnWriteArrayList<>();
     private long lastBlockPlacement;
+    private long denyPlacementRequest;
   }
 }

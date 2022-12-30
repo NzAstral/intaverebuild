@@ -8,6 +8,7 @@ import de.jpx3.intave.block.state.ExtendedBlockStateCache;
 import de.jpx3.intave.check.movement.physics.Pose;
 import de.jpx3.intave.connect.customclient.CustomClientSupportConfig;
 import de.jpx3.intave.entity.size.HitboxSize;
+import de.jpx3.intave.module.actionbar.DisplayType;
 import de.jpx3.intave.module.feedback.FeedbackCallback;
 import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.violation.placeholder.PlayerContext;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Relocate
 final class FallbackUser implements User {
@@ -283,7 +285,62 @@ final class FallbackUser implements User {
   }
 
   @Override
-  public void noteHardTransactionResponse() {
+  public String actionDisplayOf(DisplayType type) {
+    return null;
+  }
+
+  @Override
+  public String currentActionDisplay() {
+    return "";
+  }
+
+  @Override
+  public void setCurrentActionDisplay(String currentActionDisplay) {
+
+  }
+
+  @Override
+  public String overrideActionDisplay() {
+    return "null";
+  }
+
+  @Override
+  public void setOverrideActionDisplay(String overrideActionDisplay) {
+
+  }
+
+  @Override
+  public void pushActionDisplayToSubscribers(DisplayType type, String message) {
+
+  }
+
+  @Override
+  public UUID actionTarget() {
+    return null;
+  }
+
+  @Override
+  public void setActionTarget(UUID target) {
+
+  }
+
+  @Override
+  public boolean anyActionSubscriptions() {
+    return false;
+  }
+
+  @Override
+  public void addActionReceiver(UUID subscriber, DisplayType type) {
+
+  }
+
+  @Override
+  public void removeActionSubscription(UUID id) {
+
+  }
+
+  @Override
+  public void noteFeedbackFault() {
   }
 
   @Override
@@ -304,7 +361,8 @@ final class FallbackUser implements User {
   }
 
   @Override
-  public void refreshSprintState() {
+  public void refreshSprintState(Consumer<Void> callback) {
+
   }
 
   @Override

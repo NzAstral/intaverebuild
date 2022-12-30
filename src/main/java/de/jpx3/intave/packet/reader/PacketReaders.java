@@ -52,6 +52,8 @@ public final class PacketReaders {
     setup(NAMED_ENTITY_SPAWN, EntityReader::new);
     setup(OPEN_WINDOW, OpenWindowReader::new);
     setup(OPEN_WINDOW_HORSE, OpenWindowReader::new);
+    setup(PLAYER_INFO, PlayerInfoReader::new);
+    setup(PLAYER_INFO_REMOVE, PlayerInfoRemoveReader::new);
     setup(REMOVE_ENTITY_EFFECT, EntityReader::new);
     setup(REL_ENTITY_MOVE, EntityReader::new);
     setup(REL_ENTITY_MOVE_LOOK, EntityReader::new);
@@ -118,5 +120,9 @@ public final class PacketReaders {
     }
     //noinspection unchecked
     return (T) interpreter;
+  }
+
+  public static boolean hasReader(PacketType type) {
+    return readerLocals.containsKey(type);
   }
 }

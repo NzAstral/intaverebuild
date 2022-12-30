@@ -1,5 +1,6 @@
 package de.jpx3.intave.check.world;
 
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.check.Check;
@@ -24,13 +25,18 @@ public final class PlacementAnalysis extends Check {
 
     boolean enterprise = (ProtocolMetadata.VERSION_DETAILS & 0x200) != 0;
     boolean partner = (ProtocolMetadata.VERSION_DETAILS & 0x100) != 0;
-    if (enterprise || partner) {
-      if (useTimings) {
-        appendCheckPart(new Speed(this));
-        appendCheckPart(new Sneak(this));
+    try {
+      if (enterprise || partner || IntaveControl.DISABLE_LICENSE_CHECK) {
+        if (useTimings) {
+          appendCheckPart(new Speed(this));
+          appendCheckPart(new Sneak(this));
+        }
+        appendCheckPart(new SharpRotation(this));
+        appendCheckPart(new BlockRotation(this));
+        appendCheckPart(new SneakAndPlace(this));
       }
-      appendCheckPart(new SharpRotation(this));
-      appendCheckPart(new BlockRotation(this));
+    } catch (Exception | Error e) {
+      // classes might be missing
     }
     appendCheckPart(new RotationSpeed(this));
     appendCheckPart(new PacketOrder(this));

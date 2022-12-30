@@ -367,6 +367,10 @@ public final class Physics extends Check {
       }
     }
 
+    if (movementData.elytraFlying) {
+      velocityDetected = false;
+    }
+
     // TODO: 05/28/22 check if this worked, and deal with adjustments
     // trustfactor limit is just temporary
     boolean suspectSafeWalk = !user.trustFactor().atLeast(TrustFactor.YELLOW);
@@ -648,9 +652,13 @@ public final class Physics extends Check {
             break;
           case CROUCHING:
             poseName = "C";
+            if (movementData.sprinting) {
+              poseName += "R";
+            }
             break;
           case STANDING:
             poseName = "R";
+
             break;
         }
         debug += ChatColor.BOLD + poseName + chatColor;

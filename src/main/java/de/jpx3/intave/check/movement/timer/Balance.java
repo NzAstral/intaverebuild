@@ -1,12 +1,15 @@
 package de.jpx3.intave.check.movement.timer;
 
 import com.comphenix.protocol.events.PacketEvent;
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.annotate.DispatchTarget;
 import de.jpx3.intave.check.CheckStatistics;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
 import de.jpx3.intave.check.MetaCheckPart;
 import de.jpx3.intave.check.movement.Timer;
+import de.jpx3.intave.executor.Synchronizer;
+import de.jpx3.intave.math.Hypot;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
@@ -96,12 +99,21 @@ public final class Balance extends MetaCheckPart<Timer, Balance.BalanceMeta> {
       timerData.confirmedBalance = timerData.nextConfirmedBalance;
       timerData.nextConfirmedBalance = -1;
     }
-    if (timerData.timerBalance < -250 && System.currentTimeMillis() - timerData.lastLagSpike > 500) {
-      timerData.timerBalance += timerData.timerBalance < -400 ? 45 : 15;
-    }
+    // transactions!
+//    if (timerData.timerBalance < -250 && System.currentTimeMillis() - timerData.lastLagSpike > 500) {
+//      timerData.timerBalance += timerData.timerBalance < -400 ? 45 : 15;
+//    }
     statisticApply(user, CheckStatistics::increaseTotal);
-    boolean suspicious = parentCheck().lowToleranceMode() &&/*violationLevelOf(user) > 10 && */!user.trustFactor().atLeast(TrustFactor.ORANGE) /*&& System.currentTimeMillis() - timerData.lastTimerFlag < 2000*/;
-    int overflowLimit = highToleranceMode ? 750 : (suspicious ? 25 : 250);
+    boolean lowToleranceMode = parentCheck().lowToleranceMode() &&/*violationLevelOf(user) > 10 && */!user.trustFactor().atLeast(TrustFactor.YELLOW) /*&& System.currentTimeMillis() - timerData.lastTimerFlag < 2000*/;
+    int overflowLimit;
+    if (highToleranceMode) {
+      overflowLimit = 400;
+    } else if (lowToleranceMode) {
+      overflowLimit = 40;
+    } else {
+      overflowLimit = 200;
+    }
+
 //    List<Double> safeTimerBalanceHistory = timerData.safeTimerBalanceHistory;
 //    List<Double> timerBalanceHistory = timerData.timerBalanceHistory;
 
@@ -127,13 +139,14 @@ public final class Balance extends MetaCheckPart<Timer, Balance.BalanceMeta> {
 //    double safeDiff = safeAbsoluteMean - absoluteBalance;
 //    double diff = absoluteMean - absoluteBalance;
 //    boolean safeVl = checkAllowed && safeDiff < -50;
-//    double vl = checkAllowed ? (diff < -20 ? diff < -50 ? 5 : 3 : -0.5) : -0.5;
-//    boolean combatMicroLag = parentCheck().combatMicroLag();
+//    double vl = checkAllowed ? ((diff < -20) ? ((diff < -50) ? 5 : 3) : -0.5) : -0.5;
+//    boolean combatMicroLag = parentCheck().lowToleranceMode();
 //    if (safeVl || vl < 0) {
 //      timerData.balanceUnderflowVL += vl;
 //    }
 //    timerData.balanceUnderflowVL = MathHelper.minmax(-50, timerData.balanceUnderflowVL, 30);
-//    if (timerData.balanceUnderflowVL > 15 && combatMicroLag && !user.trustFactor().atLeast(TrustFactor.ORANGE)) {
+//    boolean hasRedTrustfactor = !user.trustFactor().atLeast(TrustFactor.ORANGE);
+//    if (timerData.balanceUnderflowVL > 15 && combatMicroLag && IntaveControl.GOMME_MODE && hasRedTrustfactor) {
 //      connection.lastAttackQueueRequest = System.currentTimeMillis();
 //    }
 

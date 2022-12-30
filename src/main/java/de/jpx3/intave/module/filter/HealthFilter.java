@@ -87,7 +87,6 @@ public final class HealthFilter extends Filter {
   @Override
   protected boolean enabled() {
 //    return false;
-    return !IntaveControl.GOMME_MODE;
-//    return super.enabled();
+    return !IntaveControl.GOMME_MODE && super.enabled();
   }
 }

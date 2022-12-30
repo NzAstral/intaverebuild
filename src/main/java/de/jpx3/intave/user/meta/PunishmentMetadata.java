@@ -7,6 +7,7 @@ import de.jpx3.intave.module.mitigate.HurttimeModifier;
 import de.jpx3.intave.player.DamageModify;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -96,11 +97,11 @@ public final class PunishmentMetadata {
         int ticks = -ThreadLocalRandom.current().nextInt(0, 1);
         HurttimeModifier.applyHurtTimeChangeTo(player, (int) (DAMAGE_CANCEL_LIGHT_DURATION / 50), ticks);
       }),
-      new AttackNerfer(AttackNerfStrategy.BURN_LONGER, Long.MAX_VALUE, event -> {}),
+      new AttackNerfer(AttackNerfStrategy.BURN_LONGER, BURN_LONGER_DURATION, event -> {}),
       new AttackNerfer(AttackNerfStrategy.BLOCKING, BLOCKING_DAMAGE_CANCEL_DURATION, event -> {
         DamageModify.withNewDamageApplier(event, BLOCKING, current -> -0d);
       }, true),
-      new AttackNerfer(AttackNerfStrategy.DMG_ARMOR, Long.MAX_VALUE, event -> {
+      new AttackNerfer(AttackNerfStrategy.DMG_ARMOR, DAMAGE_CANCEL_LIGHT_DURATION, event -> {
         DamageModify.modifyDamageApplier(event, ARMOR, (damage, armor) -> {
           if (armor < -2) {
             double actualDamage = damage + armor; // armor is negative

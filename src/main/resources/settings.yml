@@ -160,11 +160,14 @@ clientwarning:
 
 filter:
   health: true
-  equipmentdata: true
-  entityids: true
+  vanish: true
+  equipmentdata: false
 
 command:
   hide: true
+  reroute:
+    "/alerts": "/intave verbose"
+    "/cps": "/intave cps"
 
 rejoin:
   # Don't forget to reset this value when you deactivate it
@@ -182,6 +185,7 @@ fault-kicks:
   ignoring-feedback: true
   ignoring-keep-alive: true
   invalid-key-input: true
+  invalid-player-action: true
 
 logging:
   console-log: false

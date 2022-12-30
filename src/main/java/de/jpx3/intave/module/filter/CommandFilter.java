@@ -6,10 +6,13 @@ import com.google.common.collect.Lists;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.user.permission.BukkitPermissionCheck;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.CHAT_IN;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.TAB_COMPLETE_IN;
@@ -17,10 +20,16 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Server.TAB_COMPLETE_O
 
 public final class CommandFilter extends Filter {
   private final boolean separateEnable;
+  private final Map<String, String> redirects = new HashMap<>();
 
   public CommandFilter(IntavePlugin plugin) {
     super("command");
     separateEnable = plugin.settings().getBoolean("command.hide", true);
+
+    ConfigurationSection reroute = plugin.settings().getConfigurationSection("command.reroute");
+    if (reroute != null) {
+      reroute.getKeys(false).forEach(key -> redirects.put(key, plugin.settings().getString("command.reroute." + key)));
+    }
   }
 
   @PacketSubscription(
@@ -31,7 +40,22 @@ public final class CommandFilter extends Filter {
   public void receiveChatPacket(PacketEvent event) {
     Player player = event.getPlayer();
     String message = event.getPacket().getStrings().getValues().get(0);
+
     String trimmedMessage = message.trim().toLowerCase();
+
+    for (Map.Entry<String, String> stringStringEntry : redirects.entrySet()) {
+      if (trimmedMessage.startsWith(stringStringEntry.getKey())) {
+        // remove the command and replace it with the redirect without regex
+        String redirect = stringStringEntry.getValue();
+        if (redirect.toLowerCase().contains("root")) {
+          continue;
+        }
+        trimmedMessage = redirect + trimmedMessage.substring(stringStringEntry.getKey().length());
+        event.getPacket().getStrings().writeSafely(0, trimmedMessage);
+        trimmedMessage = trimmedMessage.trim().toLowerCase();
+      }
+    }
+
     boolean permitted = BukkitPermissionCheck.permissionCheck(player, "intave.command");
     if ((trimmedMessage.startsWith("/iac") || trimmedMessage.startsWith("/intave")) && !permitted) {
       event.getPacket().getStrings().writeSafely(0, "/intavecommandforward");

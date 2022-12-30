@@ -10,6 +10,7 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import de.jpx3.intave.IntaveControl;
+import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.annotate.Relocate;
@@ -380,8 +381,20 @@ public final class MovementDispatcher extends Module {
 
     if (hasMovement || movementData.isInVehicle()) {
       movementData.lastPositionUpdate = 0;
-    } else if (++movementData.lastPositionUpdate > 20 && FaultKicks.MISSING_POSITION_UPDATE) {
+    } else if (++movementData.lastPositionUpdate > 20 && FaultKicks.MISSING_POSITION_UPDATE && !user.trustFactor().atLeast(TrustFactor.BYPASS)) {
       user.kick("Missing position update");
+    }
+
+    // fix only works for 1.8
+    if (movementData.sprinting && movementData.isSneaking() && movementData.lastSneaking && !protocol.combatUpdate() && movementData.acceptSneakFaults && FaultKicks.INVALID_PLAYER_ACTION && !user.trustFactor().atLeast(TrustFactor.BYPASS)) {
+      movementData.acceptSneakFaults = false;
+      user.refreshSprintState(unused -> {
+        movementData.sprintSneakFaults++;
+        movementData.acceptSneakFaults = true;
+      });
+      if (movementData.sprintSneakFaults > 1) {
+        user.kick("Repeated player action faults");
+      }
     }
 
     // garbage fix for sending POSITION_LOOK packets on newer client versions when rightclicking
@@ -1064,10 +1077,16 @@ public final class MovementDispatcher extends Module {
       case START_SPRINTING:
         if (allowSprinting(user)) {
           movementData.setSprinting(true);
+          if (IntaveControl.DEBUG_PLAYER_ACTIONS) {
+            user.player().sendMessage(ChatColor.WHITE + "Start sprinting");
+          }
         }
         break;
       case STOP_SPRINTING:
         movementData.setSprinting(false);
+        if (IntaveControl.DEBUG_PLAYER_ACTIONS) {
+          user.player().sendMessage(ChatColor.BLACK + "Stop sprinting");
+        }
         break;
       case PRESS_SHIFT_KEY:
       case START_SNEAKING:
@@ -1080,12 +1099,18 @@ public final class MovementDispatcher extends Module {
         } else {
           movementData.sneaking = true;
         }
+        if (IntaveControl.DEBUG_PLAYER_ACTIONS) {
+          user.player().sendMessage(ChatColor.GREEN + "Start sneaking " + movementData.sneaking);
+        }
 //        player.sendMessage("Sneaking: " + movementData.isSneaking());
 //        movementData.setPose(movementData.isSneaking() ? Pose.CROUCHING : Pose.STANDING);
         break;
       case RELEASE_SHIFT_KEY:
       case STOP_SNEAKING:
         movementData.sneaking = false;
+        if (IntaveControl.DEBUG_PLAYER_ACTIONS) {
+          user.player().sendMessage(ChatColor.RED + "Stop sneaking");
+        }
 //        player.sendMessage("Sneaking: " + movementData.isSneaking());
 //        movementData.setPose(Pose.STANDING);
         break;

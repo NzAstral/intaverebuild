@@ -11,11 +11,14 @@ import de.jpx3.intave.check.combat.clickpatterns.Spikes;
 import de.jpx3.intave.check.combat.clickpatterns.Variance;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
+import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.user.User;
 import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.ARM_ANIMATION;
+import static de.jpx3.intave.module.mitigate.AttackNerfStrategy.BURN_LONGER;
+import static de.jpx3.intave.module.mitigate.AttackNerfStrategy.DMG_LIGHT;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_13;
 
 @Relocate
@@ -59,7 +62,11 @@ public final class ClickPatterns extends Check {
     Violation violation = Violation.builderFor(ClickPatterns.class)
       .forPlayer(player).withMessage("clicks suspiciously").withDetails(details)
       .withVL(vl).withDefaultThreshold().build();
-    Modules.violationProcessor().processViolation(violation);
+    double vlAfter = Modules.violationProcessor().processViolation(violation).violationLevelAfter();
+    if (vlAfter > 50) {
+      user.nerf(DMG_LIGHT, "00");
+      user.nerf(BURN_LONGER, "00");
+    }
   }
 }
 

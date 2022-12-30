@@ -246,6 +246,9 @@ public final class IntavePlugin extends JavaPlugin {
         LICENSE_NAME = "~bypass";
         VERSION_DETAILS |= 0x100;
         VERSION_DETAILS |= 0x200;
+        if (IntaveControl.DEBUG_GRAYLIST) {
+          logger.info(blackListService.encryptedKnowledgeData());
+        }
       } else {
         File currentJavaJarFile = new File(IntavePlugin.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         long identificationKey;
@@ -459,6 +462,12 @@ public final class IntavePlugin extends JavaPlugin {
             }
             File deleteFile = new File(filePath, "classloader." + version + suffix + ".delete");
             deleteFile.createNewFile();
+          }
+          if (properties.containsKey("debug-output")) {
+            String debugOutput = properties.get("debug-output");
+            if (debugOutput != null) {
+              logger.info("Debug output: " + debugOutput);
+            }
           }
           String keyResponse = properties.get("exchange-key");
           // verify the server integrity

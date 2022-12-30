@@ -81,7 +81,7 @@ public final class EntityTracker extends Module {
   @Override
   public void enable() {
     //noinspection deprecation
-    int taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, this::reevaluateTracingEntities, 0, 20);
+    int taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, this::reevaluateTracingEntities, 20, 20);
     TaskTracker.begun(taskId);
   }
 

@@ -10,7 +10,7 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public final class HeuristicsPatternEncryption {
+public final class HeuristicsPatternEncryptionTests {
   @Test
   public void testPatternEncryption() {
     List<Anomaly> anomalies = Arrays.asList(
@@ -26,6 +26,7 @@ public final class HeuristicsPatternEncryption {
       Anomaly.anomalyOf("122", Confidence.PROBABLE, Anomaly.Type.KILLAURA, "description", 0),
       Anomaly.anomalyOf("121", Confidence.PROBABLE, Anomaly.Type.KILLAURA, "description", 0),
       Anomaly.anomalyOf("121", Confidence.PROBABLE, Anomaly.Type.KILLAURA, "description", 0)
+//      , Anomaly.anomalyOf("500", Confidence.PROBABLE, Anomaly.Type.KILLAURA, "description", 0)
     );
 
     anomalies = anomaliesForId(anomalies);

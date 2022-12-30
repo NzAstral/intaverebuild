@@ -13,10 +13,12 @@ import de.jpx3.intave.block.state.BlockStateCaches;
 import de.jpx3.intave.block.state.ExtendedBlockStateCache;
 import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.check.movement.physics.Pose;
+import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.connect.customclient.CustomClientSupportConfig;
 import de.jpx3.intave.entity.size.HitboxSize;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.Modules;
+import de.jpx3.intave.module.actionbar.DisplayType;
 import de.jpx3.intave.module.feedback.FeedbackCallback;
 import de.jpx3.intave.module.feedback.FeedbackSender;
 import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
@@ -41,6 +43,7 @@ import de.jpx3.intave.user.storage.PlayerStorage;
 import de.jpx3.intave.user.storage.Storage;
 import de.jpx3.intave.user.storage.Storages;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -60,7 +63,6 @@ import static de.jpx3.intave.module.feedback.FeedbackOptions.SELF_SYNCHRONIZATIO
 @Relocate
 final class PlayerUser implements User {
   private final Map<Class<? extends CheckCustomMetadata>, CheckCustomMetadata> metadataPool = new ConcurrentHashMap<>();
-
   private final Reference<Player> player;
   private final Reference<Object> playerHandle;
   private final Reference<Object> playerConnection;
@@ -77,6 +79,11 @@ final class PlayerUser implements User {
   private boolean ignoreNextOutboundPacket;
   private CustomClientSupportConfig customClientConfig = CustomClientSupportConfig.createDefault();
   private final long birth = System.currentTimeMillis();
+
+  private String currentActionDisplay = "", overrideActionDisplay = "";
+  private final Map<UUID, DisplayType> actionSubscriptions = GarbageCollector.watch(Maps.newConcurrentMap());
+  private final Map<DisplayType, String> actionDisplay = Maps.newConcurrentMap();
+  private UUID actionTarget = null;
 
   private final UserContext playerPlaceholderContext = UserContext.createFor(this);
   private final PlayerContext playerContext;
@@ -425,9 +432,62 @@ final class PlayerUser implements User {
     return typeTranslations.get(source);
   }
 
+  public String actionDisplayOf(DisplayType type) {
+    return actionDisplay.get(type);
+  }
+
+  public String currentActionDisplay() {
+    return currentActionDisplay;
+  }
+
+  public void setCurrentActionDisplay(String currentActionDisplay) {
+    this.currentActionDisplay = currentActionDisplay;
+  }
+
+  public String overrideActionDisplay() {
+    return overrideActionDisplay;
+  }
+
+  public void setOverrideActionDisplay(String overrideActionDisplay) {
+    this.overrideActionDisplay = overrideActionDisplay;
+  }
+
+  public void pushActionDisplayToSubscribers(DisplayType type, String message) {
+    if (message == null) {
+      return;
+    }
+    this.actionDisplay.put(type, message);
+  }
+
+  public UUID actionTarget() {
+    return actionTarget;
+  }
+
+  public void setActionTarget(UUID target) {
+    this.actionTarget = target;
+  }
+
+  public boolean anyActionSubscriptions() {
+    return !actionSubscriptions.isEmpty();
+  }
+
+  public void addActionReceiver(UUID subscriber, DisplayType type) {
+    actionSubscriptions.put(subscriber, type);
+  }
+
+  public void removeActionSubscription(UUID id) {
+    actionSubscriptions.remove(id);
+  }
+
   @Override
-  public void noteHardTransactionResponse() {
+  public void noteFeedbackFault() {
     ConnectionMetadata connectionData = metadata.connection();
+    if (plugin().sibylIntegrationService().isAuthenticated(player())) {
+      Synchronizer.synchronize(() -> {
+        player().sendMessage(ChatColor.RED + "Feedback fault");
+      });
+    }
+
     // why is the limit at 100? I don't know!
     if (connectionData.hardTransactionResponse++ > 100 && FaultKicks.FEEDBACK_FAULTS) {
       IntaveLogger.logger().info(player().getName() + " has been removed for repeated feedback faults");
@@ -470,7 +530,7 @@ final class PlayerUser implements User {
   }
 
   @Override
-  public void refreshSprintState() {
+  public void refreshSprintState(Consumer<Void> callback) {
     Player player = player();
     FeedbackSender feedbackSender = Modules.feedback();
     feedbackSender.synchronize(player, UserRepository.userOf(player), (player1, user) -> {
@@ -478,6 +538,11 @@ final class PlayerUser implements User {
       feedbackSender.synchronize(player, null, (player2, target1) -> {
         feedbackSender.synchronize(player, null, (player3, target2) -> {
           sendStatsUpdate(player, player.getFoodLevel(), player.getSaturation());
+          feedbackSender.synchronize(player, null, (player4, target3) -> {
+            if (callback != null) {
+              callback.accept(null);
+            }
+          }, SELF_SYNCHRONIZATION);
         }, SELF_SYNCHRONIZATION);
       }, SELF_SYNCHRONIZATION);
     }, SELF_SYNCHRONIZATION);

@@ -135,7 +135,7 @@ public final class FeedbackReceiver extends Module {
         transactionShortKeyMap.remove(request.key());
         receiveRequest(user, request);
       }
-      user.noteHardTransactionResponse();
+      user.noteFeedbackFault();
     }
     transactionShortKeyMap.remove(transactionIdentifier);
     transactionGlobalKeyMap.remove(transactionResponse.num());

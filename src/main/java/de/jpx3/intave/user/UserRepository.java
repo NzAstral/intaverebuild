@@ -53,6 +53,14 @@ public final class UserRepository {
     return user != null ? user : fallbackUser;
   }
 
+  public static @NotNull User userOf(@Nullable UUID uuid) {
+    if (uuid == null) {
+      return fallbackUser;
+    }
+    User user = repository.get(uuid);
+    return user != null ? user : fallbackUser;
+  }
+
   public static void die() {
     closed = true;
     unregisterAll();

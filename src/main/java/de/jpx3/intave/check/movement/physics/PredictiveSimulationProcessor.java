@@ -219,7 +219,11 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
     if (sprinting && configuration.forward() != 1) {
       configuration = configuration.withoutKeypress();
     } else if (sprinting) {
-      configuration = configuration.withSprinting();
+      if (movementData.isSneaking() && !configuration.isJumping()) {
+        configuration = configuration.withoutSprinting();
+      } else {
+        configuration = configuration.withSprinting();
+      }
     }
     // block inventory move
     if (inventoryOpen) {
@@ -323,7 +327,11 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
     if (sprinting && keyForward != 1) {
       configuration = configuration.withoutKeypress();
     } else if (sprinting) {
-      configuration = configuration.withSprinting();
+      if (movementData.isSneaking() && !configuration.isJumping()) {
+        configuration = configuration.withoutSprinting();
+      } else {
+        configuration = configuration.withSprinting();
+      }
     }
     // block inventory move
     if (inventoryData.inventoryOpen()) {
@@ -399,6 +407,9 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
                 if (jumped && movementData.denyJump()) {
                   continue;
                 }
+                if (sprinting && movementData.isSneaking() && !jumped) {
+                  continue;
+                }
                 IterativeStudy.JUMP_ITERATOR.run();
                 boolean hasKeyEstimate = nearestKeyDistance < 1;
                 for (int i = (hasKeyEstimate ? -1 : 0); i < 9; i++) {
@@ -418,7 +429,7 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
                   if (sprinting && keyForward != 1) {
                     continue;
                   }
-                  iterativeRuns++;
+                   iterativeRuns++;
                   MovementConfiguration movementConfiguration = MovementConfiguration.select(
                     keyForward, keyStrafe, attackReduce, sprinting, jumped, useItemState
                   );

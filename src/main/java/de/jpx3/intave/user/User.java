@@ -12,6 +12,7 @@ import de.jpx3.intave.check.MetaCheckPart;
 import de.jpx3.intave.check.movement.physics.Pose;
 import de.jpx3.intave.connect.customclient.CustomClientSupportConfig;
 import de.jpx3.intave.entity.size.HitboxSize;
+import de.jpx3.intave.module.actionbar.DisplayType;
 import de.jpx3.intave.module.feedback.FeedbackCallback;
 import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.violation.placeholder.Placeholders;
@@ -334,6 +335,7 @@ public interface User {
   /**
    * Retrieve a player's protocol version.
    * See <a href="https://wiki.vg/Protocol_version_numbers">protocol versions</a> for more information.
+   *
    * @return a player's protocol version
    */
   int protocolVersion();
@@ -369,10 +371,32 @@ public interface User {
    */
   Material typeTranslationOf(Material source);
 
+  String actionDisplayOf(DisplayType type);
+
+  String currentActionDisplay();
+
+  void setCurrentActionDisplay(String currentActionDisplay);
+
+  String overrideActionDisplay();
+
+  void setOverrideActionDisplay(String overrideActionDisplay);
+
+  void pushActionDisplayToSubscribers(DisplayType type, String message);
+
+  UUID actionTarget();
+
+  void setActionTarget(UUID target);
+
+  boolean anyActionSubscriptions();
+
+  void addActionReceiver(UUID subscriber, DisplayType type);
+
+  void removeActionSubscription(UUID id);
+
   /**
    * Note a hard transaction response
    */
-  void noteHardTransactionResponse();
+  void noteFeedbackFault();
 
   /**
    * Disconnect a player
@@ -397,7 +421,11 @@ public interface User {
   /**
    * Resets a players sprint variant synchronously
    */
-  void refreshSprintState();
+  void refreshSprintState(Consumer<Void> callback);
+
+  default void refreshSprintState() {
+    refreshSprintState(null);
+  }
 
   void tickFeedback(FeedbackCallback<Void> callback);
 

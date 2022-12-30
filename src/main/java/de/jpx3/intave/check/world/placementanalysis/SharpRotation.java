@@ -2,6 +2,7 @@ package de.jpx3.intave.check.world.placementanalysis;
 
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.annotate.Reserved;
 import de.jpx3.intave.check.MetaCheckPart;
 import de.jpx3.intave.check.world.PlacementAnalysis;
 import de.jpx3.intave.math.MathHelper;
@@ -25,6 +26,7 @@ import static de.jpx3.intave.check.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 
+@Reserved
 public final class SharpRotation extends MetaCheckPart<PlacementAnalysis, SharpRotation.SharpRotationMeta> {
   private final IntavePlugin plugin;
 

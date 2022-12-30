@@ -78,6 +78,8 @@ public final class MovementMetadata implements SimulationEnvironment {
   public double lastPositionX, lastPositionY, lastPositionZ;
   public double positionX, positionY, positionZ;
   public boolean sprinting, lastSprinting, hasSprintSpeed, sneaking, lastSneaking;
+  public int sprintSneakFaults;
+  public boolean acceptSneakFaults = true;
   public int sneakingTicks;
   public float rotationYaw, rotationPitch;
   public float lastRotationYaw, lastRotationPitch;
@@ -401,25 +403,6 @@ public final class MovementMetadata implements SimulationEnvironment {
     float f4 = cos(f);
     float f5 = sin(f);
     return new Vector(f3 * f4, -f5, (double) (f2 * f4));
-  }
-
-  private void updateElytra() {
-    if (elytraFlying && !this.onGround /*&& !this.inWater*/ && !Effects.levitationEffectActive(player)) {
-      elytraFlying = hasElytraEquipped();
-      if (IntaveControl.DEBUG_ELYTRA) {
-        if (elytraFlying) {
-          player.sendMessage("§aActivated elytra flying (context)");
-        } else {
-          player.sendMessage("§cActivated elytra flying (context)");
-        }
-      }
-    } else if (elytraFlying) {
-      if (IntaveControl.DEBUG_ELYTRA) {
-        player.sendMessage(ChatColor.RED + "Deactivated elytra flying (context)");
-      }
-      elytraFlying = false;
-      updatePose();
-    }
   }
 
   public boolean hasElytraEquipped() {

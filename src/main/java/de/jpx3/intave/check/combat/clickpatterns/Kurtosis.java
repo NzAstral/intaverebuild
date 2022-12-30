@@ -96,7 +96,7 @@ public final class Kurtosis extends MetaCheckPart<ClickPatterns, Kurtosis.Kurtos
   }
 
   public static class KurtosisMeta extends CheckCustomMetadata {
-    private final Deque<Long> attacks = new ArrayDeque<>();
+    public final Deque<Long> attacks = new ArrayDeque<>();
     private double vl = 0;
     private long lastSwing = 0;
   }

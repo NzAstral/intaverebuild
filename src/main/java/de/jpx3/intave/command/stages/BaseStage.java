@@ -8,6 +8,8 @@ import de.jpx3.intave.command.Forward;
 import de.jpx3.intave.command.Optional;
 import de.jpx3.intave.command.SubCommand;
 import de.jpx3.intave.module.Modules;
+import de.jpx3.intave.module.actionbar.ActionBarDisplayer;
+import de.jpx3.intave.module.actionbar.DisplayType;
 import de.jpx3.intave.player.ProfileLookup;
 import de.jpx3.intave.security.LicenseAccess;
 import de.jpx3.intave.user.MessageChannel;
@@ -33,10 +35,7 @@ import org.bukkit.entity.Player;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class BaseStage extends CommandStage {
@@ -94,6 +93,34 @@ public final class BaseStage extends CommandStage {
     } else {
       return defaultColor + String.join(defaultColor + ", ", elements.subList(0, size - 1)) + defaultColor + " and " + elements.get(size - 1);
     }
+  }
+
+  @SubCommand(
+    selectors = {"cps", "clicks"},
+    permission = "intave.command.cps",
+    usage = "[<player...>]",
+    description = "Toggle CPS messages"
+  )
+  public void cpsCommand(User user, @Optional Player selectedPlayer) {
+    Player player = user.player();
+
+    if (selectedPlayer == null) {
+      selectedPlayer = player;
+    }
+
+    ActionBarDisplayer actionBar = Modules.actionBar();
+
+    if (actionBar.inSubscription(user)) {
+//      boolean isSameActionTarget = Objects.equals(user.actionTarget(), selectedPlayer.getUniqueId());
+//      if (isSameActionTarget) {
+//      }
+      actionBar.unsubscribe(user);
+      player.sendMessage(IntavePlugin.prefix() + "Unsubscribed from " + ChatColor.RED + selectedPlayer.getName() + IntavePlugin.defaultColor() + "'s CPS");
+      return;
+    }
+
+    actionBar.subscribe(user, UserRepository.userOf(selectedPlayer), DisplayType.CLICKS);
+    player.sendMessage(IntavePlugin.prefix() + "Subscribed to " + ChatColor.RED + selectedPlayer.getName() + IntavePlugin.defaultColor() + "'s CPS");
   }
 
   @SubCommand(
