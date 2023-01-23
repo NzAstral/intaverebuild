@@ -27,6 +27,9 @@ import de.jpx3.intave.check.combat.heuristics.detect.other.*;
 import de.jpx3.intave.check.combat.heuristics.detect.testing.TestingHeuristic;
 import de.jpx3.intave.check.combat.heuristics.mine.MiningStrategyContainer;
 import de.jpx3.intave.check.combat.heuristics.mine.MiningStrategyExecutor;
+import de.jpx3.intave.diagnostic.message.DebugBroadcast;
+import de.jpx3.intave.diagnostic.message.MessageCategory;
+import de.jpx3.intave.diagnostic.message.MessageSeverity;
 import de.jpx3.intave.diagnostic.natives.NativeCheck;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.executor.TaskTracker;
@@ -184,11 +187,12 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     if (IntaveControl.GOMME_MODE) {
       IntaveLogger.logger().printLine(message);
     }
-    for (Player authenticatedPlayer : MessageChannelSubscriptions.sibylReceivers()/*Bukkit.getOnlinePlayers()*/) {
-      if (plugin.sibyl().isAuthenticated(authenticatedPlayer)) {
-        authenticatedPlayer.sendMessage(message);
-      }
-    }
+//    for (Player authenticatedPlayer : MessageChannelSubscriptions.sibylReceiver()/*Bukkit.getOnlinePlayers()*/) {
+//      if (plugin.sibyl().isAuthenticated(authenticatedPlayer)) {
+//        authenticatedPlayer.sendMessage(message);
+//      }
+//    }
+    DebugBroadcast.broadcast(player, MessageCategory.HERAN, MessageSeverity.HIGH, message, message);
   }
 
   private void evaluateAll() {
