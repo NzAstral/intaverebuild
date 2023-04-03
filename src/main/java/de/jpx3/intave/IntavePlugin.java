@@ -664,7 +664,7 @@ public final class IntavePlugin extends JavaPlugin {
       prefix = ChatColor.translateAlternateColorCodes('&', prefix);
       defaultColor = ChatColor.getLastColors(prefix);
       FaultKicks.applyFrom(configurationService.configuration().getConfigurationSection("fault-kicks"));
-      ConsoleOutput.applyFrom(configurationService.configuration().getConfigurationSection("debugs"));
+      ConsoleOutput.applyFrom(configurationService.configuration().getConfigurationSection("logging"));
 
       // stage 8
       Modules.proceedBoot(BootSegment.STAGE_8);

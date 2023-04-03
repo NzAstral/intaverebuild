@@ -195,7 +195,7 @@ public final class EntityTracker extends Module {
           );
         } else {
           if (IntaveControl.DISABLE_LICENSE_CHECK) {
-            IntaveLogger.logger().error("mounted On Entity could not be found");
+            IntaveLogger.logger().error(String.format("mounted On Entity with id %d could not be found", vehicleEntityID));
           }
         }
       }
