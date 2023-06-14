@@ -1,6 +1,7 @@
 package de.jpx3.intave.module.violation;
 
 import de.jpx3.intave.IntaveControl;
+import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.access.check.event.IntaveCommandExecutionEvent;
 import de.jpx3.intave.access.check.event.IntaveViolationEvent;
 import de.jpx3.intave.access.player.trust.TrustFactor;
@@ -34,6 +35,20 @@ import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.module.violation.Violation.ViolationFlags.DONT_PROCESS_VIOSTAT;
 
 public final class ViolationProcessor extends Module {
+  private ViolationVerboseMode verboseMode;
+
+  @Override
+  public void enable() {
+    String verboseMode = plugin.settings().getString("logging.verbose-mode", ViolationVerboseMode.MITIGATED.name());
+    try {
+      this.verboseMode = ViolationVerboseMode.valueOf(verboseMode);
+      IntaveLogger.logger().info("Displaying " + verboseMode.toLowerCase() + " violations.");
+    } catch (Exception exception) {
+      IntaveLogger.logger().warn("Invalid verbose mode '" + verboseMode + "' in settings. Using default value '" + this.verboseMode.name() + "'");
+      this.verboseMode = ViolationVerboseMode.MITIGATED;
+    }
+  }
+
   public ViolationContext processViolation(Violation violation) {
     ViolationContext violationContext = ViolationContext.of(violation);
     Optional<Player> playerSearch = violation.findPlayer();
@@ -172,7 +187,23 @@ public final class ViolationProcessor extends Module {
     User user = UserRepository.userOf(player);
     String checkName = violation.check().name().toLowerCase(Locale.ROOT);
     // default verbose
-    broadcastVerbose(player, violationContext);
+
+//    boolean doVerbose = false;
+
+//    switch (verboseMode) {
+//      case ALL:
+//        doVerbose = true;
+//        break;
+//      case MITIGATED:
+//        doVerbose = violationContext.violationLevelPassedPreventionActivation();
+//        break;
+//      case SELECTED:
+//        doVerbose = violationContext.violationLevelPassedPreventionActivation() && SELECTED_CHECKS.contains(checkName);
+//        break;
+//    }
+    if (verboseMode.doVerbose(violationContext)) {
+      broadcastVerbose(player, violationContext);
+    }
     // console output
     String trustFactor = user.trustFactor().name().toLowerCase().replace("_", "");
     String vlAdded = formatDouble((violationContext.violationLevelAfter() - violationContext.violationLevelBefore()), 2);
@@ -348,5 +379,9 @@ public final class ViolationProcessor extends Module {
 
   private double resolvePreventionActivationThreshold(String checkName, Player player) {
     return plugin.trustFactorService().trustFactorSetting(checkName + ".prevention-activation", player);
+  }
+
+  public ViolationVerboseMode verboseMode() {
+    return verboseMode;
   }
 }

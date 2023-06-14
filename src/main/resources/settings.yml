@@ -198,6 +198,8 @@ logging:
   command-execution: true
   # Show fault kicks in the console?
   fault-kicks: true
+  # Verbose mode (ALL, MITIGATED, SELECTED)
+  verbose-mode: MITIGATED
 
 analytics:
   errorReporting: true

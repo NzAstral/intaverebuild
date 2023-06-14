@@ -11,6 +11,7 @@ import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.actionbar.ActionBarDisplayer;
 import de.jpx3.intave.module.actionbar.DisplayType;
 import de.jpx3.intave.module.nayoro.Nayoro;
+import de.jpx3.intave.module.violation.ViolationVerboseMode;
 import de.jpx3.intave.player.ProfileLookup;
 import de.jpx3.intave.security.LicenseAccess;
 import de.jpx3.intave.user.MessageChannel;
@@ -51,7 +52,7 @@ public final class BaseStage extends CommandStage {
 
   @SubCommand(
     selectors = "verbose",
-    usage = "[<player...>]",
+    usage = "<player...>",
     description = "Toggle verbose messages",
     permission = "intave.command.verbose"
   )
@@ -59,30 +60,36 @@ public final class BaseStage extends CommandStage {
     Player player = user.player();
     boolean receivesVerbose = user.receives(MessageChannel.VERBOSE);
 
+    ViolationVerboseMode mode = Modules.violationProcessor().verboseMode();
+    String modeName = mode.name().toLowerCase();
+
     if (user.receives(MessageChannel.VERBOSE)) {
       if (selectedPlayers != null && !user.hasChannelConstraint(MessageChannel.VERBOSE)) {
         List<UUID> uniqueIds = Arrays.stream(selectedPlayers).map(Entity::getUniqueId).distinct().collect(Collectors.toList());
         user.setChannelConstraint(MessageChannel.VERBOSE, player1 -> uniqueIds.contains(player1.getUniqueId()));
         String names = ChatColor.RED + describePlayerList(Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> ChatColor.RED + s).collect(Collectors.toList()));
-        player.sendMessage(IntavePlugin.prefix() + "You have specified verbose output to " + names);
+        player.sendMessage(IntavePlugin.prefix() + "You have specified " + modeName + " verbose output to " + names);
         return;
       }
-    }
+    } /*else if (selectedPlayers == null && !IntavePlugin.singletonInstance().sibyl().isAuthenticated(player)) {
+      player.sendMessage(IntavePlugin.prefix() + "/intave verbose <player...>");
+      return;
+    }*/
 
     user.toggleReceive(MessageChannel.VERBOSE);
     user.removeChannelConstraint(MessageChannel.VERBOSE);
 
     if (receivesVerbose) {
-      player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.RED + "no longer " + IntavePlugin.defaultColor() + "receiving verbose output");
+      player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.RED + "no longer " + IntavePlugin.defaultColor() + "receiving " + modeName + " verbose output");
     } else {
       if (selectedPlayers == null) {
         String target = ChatColor.RED + "everyone";
-        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving verbose output for " + target);
+        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now " + IntavePlugin.defaultColor() + "receiving " + modeName + " verbose output for " + target);
       } else {
         List<UUID> uniqueIds = Arrays.stream(selectedPlayers).map(Entity::getUniqueId).distinct().collect(Collectors.toList());
         user.setChannelConstraint(MessageChannel.VERBOSE, player1 -> uniqueIds.contains(player1.getUniqueId()));
         String names = ChatColor.RED + describePlayerList(Arrays.stream(selectedPlayers).map(Entity::getName).map(s -> ChatColor.RED + s).collect(Collectors.toList()));
-        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now" + IntavePlugin.defaultColor() + " receiving verbose output for " + names);
+        player.sendMessage(IntavePlugin.prefix() + "You are " + ChatColor.GREEN + "now" + IntavePlugin.defaultColor() + " receiving " + modeName + " verbose output for " + names);
       }
     }
   }
