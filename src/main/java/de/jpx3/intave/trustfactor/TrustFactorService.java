@@ -82,6 +82,28 @@ public final class TrustFactorService implements BukkitEventSubscriber {
   }
 
   private void trustfactorApply(Player player, TrustFactor trustFactor, String source) {
+    User user = UserRepository.userOf(player);
+
+    if (user.trustFactor().atLeast(TrustFactor.BYPASS)) {
+      String playerName = player.getName();
+      String message = source + " tried to assign trust factor " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() + " to " + ChatColor.RED + playerName + IntavePlugin.defaultColor() + " but BYPASS is active.";
+      String shortMessage = playerName + " now " + trustFactor.coloredBaseName();
+      DebugBroadcast.broadcast(
+        player,
+        MessageCategory.TRUSTSET,
+        MessageSeverity.LOW,
+        message,
+        shortMessage
+      );
+      if (ConsoleOutput.TRUSTFACTOR_DEBUG) {
+        String message2 = ChatColor.RED + player.getName() + IntavePlugin.defaultColor() + " was assigned a " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() + " trustfactor by " + source + " but BYPASS is active and kept.";
+        IntaveLogger.logger().info(message2);
+      }
+      return;
+    }
+
+    user.setTrustFactor(trustFactor);
+
     String playerName = player.getName();
     String message = source + " assigned trust factor " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() + " to " + ChatColor.RED + playerName;
     String shortMessage = playerName + " now " + trustFactor.coloredBaseName();
@@ -92,8 +114,6 @@ public final class TrustFactorService implements BukkitEventSubscriber {
       message,
       shortMessage
     );
-    User user = UserRepository.userOf(player);
-    user.setTrustFactor(trustFactor);
 
     if (ConsoleOutput.TRUSTFACTOR_DEBUG) {
       String message2 = ChatColor.RED + player.getName() + IntavePlugin.defaultColor() + " was assigned a " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() + " trustfactor by " + source;
