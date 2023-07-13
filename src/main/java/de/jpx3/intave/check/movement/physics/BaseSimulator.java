@@ -704,7 +704,7 @@ class BaseSimulator extends Simulator {
   private void simulateWaterAfter(
     User user,
     SimulationEnvironment environment,
-    Motion motionVector,
+    Motion motion,
     double gravity
   ) {
     Player player = user.player();
