@@ -193,7 +193,6 @@ fun registerTestTask(serverVersion: String, javaVersion: Int) {
         languageVersion.set(JavaLanguageVersion.of(javaVersion))
       }
     )
-    println(args)
   }
 }
 
