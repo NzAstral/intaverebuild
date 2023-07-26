@@ -151,7 +151,6 @@ public final class PunishmentMetadata {
     for (AttackNerfer attackNerfer : attackNerfers) {
       this.attackNerfersMap.put(attackNerfer.type, attackNerfer);
     }
-
     if (isRedlistedPlayer(player)) {
       nerferOfType(AttackNerfStrategy.BURN_LONGER).activatePermanently();
       nerferOfType(AttackNerfStrategy.CRITICALS).activatePermanently();
@@ -177,13 +176,7 @@ public final class PunishmentMetadata {
           return true;
         }
       }
-      if (IntaveControl.GOMME_MODE && (
-        JUSTIN_PATTERN.matcher(playerName).find()) ||
-        SCHNUPPI_PATTERN.matcher(playerName).find()
-      ) {
-        return true;
-      }
-      return false;
+      return IntaveControl.GOMME_MODE && (JUSTIN_PATTERN.matcher(playerName).find() || SCHNUPPI_PATTERN.matcher(playerName).find());
     }
   }
 
