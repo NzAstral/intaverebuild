@@ -6,6 +6,8 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftVersion;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.Native;
@@ -19,6 +21,7 @@ import de.jpx3.intave.command.SubCommand;
 import de.jpx3.intave.diagnostic.PacketSynchronizations;
 import de.jpx3.intave.diagnostic.timings.Timing;
 import de.jpx3.intave.diagnostic.timings.Timings;
+import de.jpx3.intave.executor.BackgroundExecutor;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.ResourceRegistry;
@@ -29,7 +32,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -262,7 +270,8 @@ public final class DiagnosticsStage extends CommandStage {
 
     UUID userId = target.getUniqueId();
     if (packetLoggers.containsKey(sender.getName())) {
-      sender.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Packetlogging stopped for " + packetLoggers.get(sender.getName()).toString());
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Packetlogging stopped");
+      sender.sendMessage(IntavePlugin.prefix() + "Type /intave diagnostics packetlogupload to upload the log");
       PacketAdapter remove1 = adapterMap.remove(userId);
       ProtocolLibrary.getProtocolManager().removePacketListener(remove1);
       packetLoggers.remove(sender.getName());
@@ -323,6 +332,11 @@ public final class DiagnosticsStage extends CommandStage {
   }
 
   private static String packetContent(PacketContainer packet) {
+    if (packet == null) return "null";
+    if (packet.getType().name().contains("CHAT") || packet.getType().name().contains("TAB_COMPLETE")) {
+      return "REDACTED";
+    }
+
     String contents = packet.getModifier()
       .getValues().stream()
       .map(o -> o == null ? "null" : o.toString())
@@ -339,6 +353,82 @@ public final class DiagnosticsStage extends CommandStage {
 
   private static String packetLogFileName(String playername) {
     return "intave-packetlog-" + playername + "-" + LocalDateTime.now().format(FILE_MESSAGE_DATE_FORMATTER).toLowerCase(Locale.ROOT) + ".txt";
+  }
+
+  @SubCommand(
+    selectors = "packetlogupload",
+    usage = "",
+    permission = "intave.command.diagnostics.statistics",
+    description = "Upload packet logs"
+  )
+  public void uploadPacketLog(CommandSender sender) {
+    sender.sendMessage(IntavePlugin.prefix() + "Uploading packet logs...");
+    File logsFolder = new File(plugin.dataFolder(), "packetlogs");
+    File[] files = logsFolder.listFiles();
+    if (files == null) {
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "No packet logs found");
+      return;
+    }
+    // get newest file
+    Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+    File packetLogFile = files[files.length - 1];
+    BackgroundExecutor.execute(() -> {
+      upload(packetLogFile, sender);
+    });
+  }
+
+  private void upload(File file, CommandSender sender) {
+    try {
+      // upload to anonfile
+      URL url = new URL("https://api.anonfiles.com/upload");
+
+      String boundary = Long.toHexString(System.currentTimeMillis());
+      URLConnection connection = url.openConnection();
+      connection.setDoOutput(true);
+      connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+      try (
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8))
+      ) {
+        writer.println("--" + boundary);
+        writer.println("Content-Disposition: form-data; name=file; filename=\"" + file.getName() + "\"");
+        writer.println("Content-Type: text/plain; charset=UTF-8");
+        writer.println();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8))) {
+          for (String line; (line = reader.readLine()) != null; ) {
+            writer.println(line);
+          }
+        }
+        writer.println("--" + boundary + "--");
+      }
+
+      connection.connect();
+
+      HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
+      int responseCode = httpsURLConnection.getResponseCode();
+
+      if (responseCode != 200) {
+        sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Failed to upload");
+        return;
+      }
+
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(httpsURLConnection.getInputStream()))) {
+        String str = reader.lines().collect(Collectors.joining("\n"));
+        try {
+          JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
+          String url1 = jsonObject.getAsJsonObject("data").getAsJsonObject("file").getAsJsonObject("url").get("short").getAsString();
+          sender.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Uploaded to " + url1);
+        } catch (Exception exception) {
+          exception.printStackTrace();
+          sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Failed to upload");
+          System.out.println(str);
+        }
+//        System.out.println(str);
+      }
+
+    } catch (IOException exception) {
+      exception.printStackTrace();
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Failed to upload");
+    }
   }
 
   @SubCommand(
