@@ -129,9 +129,10 @@ final class PlayerUser implements User {
     applyNewProtocolVersion();
     outputVersionJoinInfo();
 
-    if (IntaveControl.GOMME_MODE && trustFactor().atOrBelow(TrustFactor.RED)) {
-      MiningStrategy.EMULATION_LIGHT.apply(this);
-    }
+    // requires too many resources
+//    if (IntaveControl.GOMME_MODE && trustFactor().atOrBelow(TrustFactor.RED)) {
+//      MiningStrategy.EMULATION_LIGHT.apply(this);
+//    }
   }
 
   @Override
