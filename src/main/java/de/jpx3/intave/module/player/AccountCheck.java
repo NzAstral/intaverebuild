@@ -7,7 +7,7 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.connect.sibyl.SibylBroadcast;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
@@ -230,7 +230,7 @@ public final class AccountCheck extends Module {
   }
 
   private void jsonRestRequest(URL url, Consumer<? super JsonElement> callback) {
-    BackgroundExecutor.execute(() -> {
+    BackgroundExecutors.executeWhenever(() -> {
       try {
         URLConnection urlConnection = url.openConnection();
         urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0");

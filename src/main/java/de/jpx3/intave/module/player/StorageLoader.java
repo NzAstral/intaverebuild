@@ -6,7 +6,7 @@ import com.comphenix.protocol.events.PacketContainer;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.storage.EmptyStorageGateway;
 import de.jpx3.intave.access.player.storage.StorageGateway;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.executor.TaskTracker;
 import de.jpx3.intave.module.Module;
@@ -62,7 +62,7 @@ public final class StorageLoader extends Module {
   }
 
   public void nullableManualStorageRequest(UUID id, Consumer<? super PlayerStorage> storage) {
-    BackgroundExecutor.execute(() ->
+    BackgroundExecutors.execute(() ->
       storageGateway.requestStorage(id, byteBuffer -> {
         if (byteBuffer.array().length == 0) {
           storage.accept(null);
@@ -79,7 +79,7 @@ public final class StorageLoader extends Module {
     User user = UserRepository.userOf(player);
     Storage storage = user.mainStorage();
     UUID id = player.getUniqueId();
-    BackgroundExecutor.execute(() ->
+    BackgroundExecutors.execute(() ->
       storageGateway.requestStorage(id, buffer -> {
         StorageIOProcessor.inputTo(storage, buffer);
         checkDebugTag(player, storage);
@@ -121,7 +121,7 @@ public final class StorageLoader extends Module {
     Storage storage = UserRepository.userOf(player).mainStorage();
     UUID id = player.getUniqueId();
     ByteBuffer buffer = StorageIOProcessor.outputFrom(storage);
-    BackgroundExecutor.execute(() ->
+    BackgroundExecutors.execute(() ->
       storageGateway.saveStorage(id, buffer));
   }
 

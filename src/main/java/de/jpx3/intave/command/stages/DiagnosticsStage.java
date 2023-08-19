@@ -2,9 +2,7 @@ package de.jpx3.intave.command.stages;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -21,7 +19,7 @@ import de.jpx3.intave.command.SubCommand;
 import de.jpx3.intave.diagnostic.PacketSynchronizations;
 import de.jpx3.intave.diagnostic.timings.Timing;
 import de.jpx3.intave.diagnostic.timings.Timings;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.ResourceRegistry;
@@ -29,9 +27,7 @@ import de.jpx3.intave.security.HashAccess;
 import de.jpx3.intave.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -382,13 +378,15 @@ public final class DiagnosticsStage extends CommandStage {
 
       PacketAdapter adapter = new PacketAdapter(
         IntavePlugin.singletonInstance(),
-        PacketType.values()
+        ListenerPriority.LOWEST,
+        PacketType.values(),
+        ListenerOptions.SKIP_PLUGIN_VERIFIER
       ) {
         @Override
         public void onPacketSending(PacketEvent event) {
           if (event.getPlayer().getUniqueId().equals(userId)) {
             synchronized (printStream) {
-              printStream.println((System.currentTimeMillis() % 1000) + " --> " + event.getPacketType().name() + " " + packetContent(event.getPacket()));
+              printStream.println((System.currentTimeMillis() % 1000) + " --> " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket()));
             }
           }
         }
@@ -397,7 +395,7 @@ public final class DiagnosticsStage extends CommandStage {
         public void onPacketReceiving(PacketEvent event) {
           if (event.getPlayer().getUniqueId().equals(userId)) {
             synchronized (printStream) {
-              printStream.println((System.currentTimeMillis() % 1000) + " <-- " + event.getPacketType().name() + " " + packetContent(event.getPacket()));
+              printStream.println((System.currentTimeMillis() % 1000) + " <-- " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket()));
             }
           }
         }
@@ -456,7 +454,7 @@ public final class DiagnosticsStage extends CommandStage {
     // get newest file
     Arrays.sort(files, Comparator.comparingLong(File::lastModified));
     File packetLogFile = files[files.length - 1];
-    BackgroundExecutor.execute(() -> {
+    BackgroundExecutors.executeWhenever(() -> {
       upload(packetLogFile, sender);
     });
   }

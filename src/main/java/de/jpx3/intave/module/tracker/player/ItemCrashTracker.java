@@ -62,6 +62,10 @@ public class ItemCrashTracker extends Module {
   }
 
   private String ownerFromSkull(ItemStack skull) {
+    String name = skull.getType().name();
+    if (name.contains("SKULL") || name.contains("HEAD")) {
+      return null;
+    }
     ItemMeta meta = skull.getItemMeta();
     if (meta instanceof SkullMeta) {
       return ownerFromSkullMeta((SkullMeta) meta);

@@ -1,7 +1,7 @@
 package de.jpx3.intave.diagnostic;
 
 import de.jpx3.intave.agent.AgentAccessor;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -21,7 +21,7 @@ public final class MemoryWatchdog {
     if (!supported()) {
       return;
     }
-    BackgroundExecutor.execute(() -> {
+    BackgroundExecutors.execute(() -> {
       Map<String, Long> memoryUsage = new HashMap<>();
       Set<Object> identifiedObjects = new HashSet<>();
       watchedObjects.forEach((key, value) -> memoryUsage.put(key, memoryUsageOf(value, identifiedObjects)));

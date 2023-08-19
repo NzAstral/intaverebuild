@@ -147,10 +147,10 @@ public final class SimulationEvaluator {
         && !movement.inWater
         && !movement.inLava()
         && movement.positionY % 1 > 0.1
-        && movement.pastExternalVelocity != 0;
+        && movement.pastExternalVelocity > 5;
 
     if (movement.inWeb) {
-      verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, /*criticalWeb ? 0.000001 : */0.13);
+      verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, criticalWeb ? 0.000001 : 0.13);
     }
 
     if (movement.pastInWeb < 10 && !movement.inWeb && differenceY < 0.1) {

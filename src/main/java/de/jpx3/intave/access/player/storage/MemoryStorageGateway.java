@@ -1,6 +1,6 @@
 package de.jpx3.intave.access.player.storage;
 
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -14,7 +14,7 @@ public final class MemoryStorageGateway implements StorageGateway {
   @Override
   public synchronized void requestStorage(UUID id, Consumer<ByteBuffer> lazyReturn) {
     ByteBuffer buffer = memory.get(id);
-    BackgroundExecutor.execute(() -> lazyReturn.accept(buffer));
+    BackgroundExecutors.execute(() -> lazyReturn.accept(buffer));
   }
 
   @Override

@@ -2,7 +2,7 @@ package de.jpx3.intave.player;
 
 import com.google.common.collect.Maps;
 import de.jpx3.intave.cleanup.GarbageCollector;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.resource.Resources;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -25,7 +25,7 @@ public final class ProfileLookup {
       lazyReturn.accept(requestCache.get(name));
       return;
     }
-    BackgroundExecutor.execute(() ->
+    BackgroundExecutors.execute(() ->
       lazyReturn.accept(requestCache.computeIfAbsent(name, ProfileLookup::loadIfFromName))
     );
   }

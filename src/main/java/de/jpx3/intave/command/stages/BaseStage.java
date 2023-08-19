@@ -109,6 +109,7 @@ public final class BaseStage extends CommandStage {
   @SubCommand(
     selectors = "record",
     usage = "",
+    permission = "intave.command",
     description = "Record timings"
   )
   @Native
@@ -421,6 +422,16 @@ public final class BaseStage extends CommandStage {
   }
 
   @SubCommand(
+    selectors = "ui",
+    usage = "",
+    permission = "intave.command",
+    description = "Open the Intave UI"
+  )
+  public void openUICommand(CommandSender commandSender) {
+
+  }
+
+  @SubCommand(
     selectors = "proxy",
     usage = "",
     description = "Access proxy related features",
@@ -448,13 +459,25 @@ public final class BaseStage extends CommandStage {
   @SubCommand(
     selectors = "diagnostics",
     usage = "",
-    description = "Runtime and performance data output",
+    description = "Runtime information and diagnostics tools",
     permission = "intave.command.diagnostics.*"
   )
   @Forward(
     target = DiagnosticsStage.class
   )
   public void diagnosticsCommand(CommandSender commandSender) {
+  }
+
+  @SubCommand(
+    selectors = {"performance", "timings"},
+    usage = "",
+    description = "Performance data output"
+  )
+  @Forward(
+    target = PerformanceStage.class
+  )
+  public void performanceTools(CommandSender commandSender) {
+
   }
 
   @SubCommand(

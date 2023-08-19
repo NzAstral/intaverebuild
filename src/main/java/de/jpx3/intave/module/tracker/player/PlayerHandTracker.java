@@ -7,7 +7,6 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.adapter.MinecraftVersions;
-import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
@@ -93,12 +92,16 @@ public class PlayerHandTracker extends Module {
       return;
     }
 
-    if (IntaveControl.DEBUG_ITEM_USAGE) {
-      Synchronizer.synchronize(() -> {
-        player.sendMessage("Slot changed to " + slot);
-        System.out.println("Slot changed to " + slot);
-      });
-    }
+//    if (IntaveControl.DEBUG_ITEM_USAGE) {
+//      ItemStack item = player.getInventory().getItem(slot);
+//      String typeName = item == null ? "AIR" : item.getType().name();
+////      Synchronizer.synchronize(() -> {
+//        player.sendMessage("(async) Slot changed to " + slot + ", type: " + typeName);
+////      });
+//    }
+
+    // apparently required?
+    inventoryData.setHeldItemSlot(slot);
 
     ItemStack item = player.getInventory().getItem(slot);
     inventoryData.pastSlotSwitch = 0;
