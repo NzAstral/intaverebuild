@@ -197,7 +197,7 @@ public final class FeedbackReceiver extends Module {
       connection.movementPassedForNFS = false;
     }
 
-    connection.lastSynchronization = feedbackRequest.requested();
+    connection.lastSynchronization = feedbackRequest.requestedAsNanos();
     connection.lastReceivedTransactionNum = feedbackRequest.num();
     Map<Long, Queue<FeedbackRequest<?>>> appendMap = connection.transactionAppendMap();
     Queue<FeedbackRequest<?>> appendedRequests = appendMap.get(feedbackRequest.num());

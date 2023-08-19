@@ -4,7 +4,7 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.connect.IntaveDomains;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.security.ContextSecrets;
 import de.jpx3.intave.security.HWIDVerification;
 import de.jpx3.intave.security.LicenseAccess;
@@ -41,7 +41,7 @@ public final class ScheduledUploadService {
   }
 
   private void mergeFiles() {
-    BackgroundExecutor.execute(this::uploadSessionFiles);
+    BackgroundExecutors.executeWhenever(this::uploadSessionFiles);
     // start timer for edge of next day
     Bukkit.getScheduler().scheduleSyncDelayedTask(IntavePlugin.singletonInstance(), this::mergeFiles, millisUntilNextDay() / 50);
   }

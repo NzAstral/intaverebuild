@@ -36,7 +36,8 @@ public class Timings {
   public static final Timing SERVICE_RAYTRACER_ENTITY = Timing.of("Service/Raytracer/Entity", "Exe/Netty");
   public static final Timing SERVICE_RAYTRACER_BLOCK = Timing.of("Service/Raytracer/Block", "Exe/Netty");
 
-  public static final Timing EXE_BACKGROUND = Timing.of("Exe/Background");
+  public static final Timing EXE_BACKGROUND_PRIMARY = Timing.of("Exe/Background/Primary");
+  public static final Timing EXE_BACKGROUND_SECONDARY = Timing.of("Exe/Background/Secondary");
   public static final Timing EXE_SERVER = Timing.of("Exe/Server");
   public static final Timing EXE_NETTY = Timing.of("Exe/Netty");
 

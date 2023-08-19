@@ -8,6 +8,7 @@ import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.MovingObjectPositionBlock;
 import com.comphenix.protocol.wrappers.WrappedBlockData;
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
@@ -28,7 +29,6 @@ import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
-import de.jpx3.intave.module.linker.packet.PacketId;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.tracker.player.AbilityTracker;
 import de.jpx3.intave.module.violation.Violation;
@@ -44,10 +44,7 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.*;
 import de.jpx3.intave.world.raytrace.Raytracing;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -59,6 +56,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.*;
 import static de.jpx3.intave.check.world.interaction.InteractionEmulator.EmulationResult.FAILED;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
+import static de.jpx3.intave.module.linker.packet.PacketId.Server.BLOCK_BREAK_ANIMATION;
 
 @Relocate
 public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.InteractionMeta> {
@@ -114,11 +112,11 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
 
       Material clickedType = blockPosition == null ? Material.AIR : VolatileBlockAccess.typeAccess(user, blockPosition.toLocation(player.getWorld()));
       boolean clickedIsInteractable = BlockInteractionAccess.isClickable(clickedType);
-      ItemStack heldItem = user.meta().inventory().heldItem();
 
       EnumWrappers.Hand handSlot = packet.getHands().readSafely(0);
       handSlot = handSlot == null ? EnumWrappers.Hand.MAIN_HAND : handSlot;
 
+      ItemStack heldItem = user.meta().inventory().heldItem();
       Material heldItemType = heldItem == null ? Material.AIR : heldItem.getType();
       Material offHandItemType = user.meta().inventory().offhandItemType();
       Material typeUsedInHand = handSlot == EnumWrappers.Hand.MAIN_HAND ? heldItemType : offHandItemType;
@@ -131,10 +129,12 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
         && !clickedIsInteractable
         && !abilityMetadata.inGameMode(GameMode.ADVENTURE);
 
-      boolean interactionIsBlank =
-        enumDirection == 255 && blockPosition == null;
+      InteractionType type = interactionIsPlacement ? InteractionType.PLACE : InteractionType.INTERACT;
 
-      InteractionType type = interactionIsBlank ? InteractionType.EMPTY_INTERACT : (interactionIsPlacement ? InteractionType.PLACE : InteractionType.INTERACT);
+      if (IntaveControl.DEBUG_INTERACTION) {
+        player.sendMessage(type + " " + typeUsedInHand + " " + enumDirection);
+      }
+
       Interaction interaction =
         new Interaction(
           packet.shallowClone(),
@@ -210,6 +210,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
 
     ItemStack heldItemStack = inventoryData.heldItem();
+    Material heldItemType = inventoryData.heldItemType();
     if (ItemProperties.isSwordItem(heldItemStack) && player.getGameMode() == GameMode.CREATIVE) {
       event.setCancelled(true);
       return;
@@ -235,10 +236,15 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       return;
     }
 
+    InteractionType type = breakBlock ? InteractionType.BREAK : InteractionType.START_BREAK;
+    if (IntaveControl.DEBUG_INTERACTION) {
+      player.sendMessage(type + " " + heldItemType + " " + playerDigType);
+    }
+
     Interaction interaction = new Interaction(
       packet.shallowClone(), player.getWorld(), player, blockPosition, enumDirection,
-      breakBlock ? InteractionType.BREAK : InteractionType.START_BREAK,
-      inventoryData.heldItemType(), heldItemStack, EnumWrappers.Hand.MAIN_HAND, playerDigType,
+      type,
+      heldItemType, heldItemStack, EnumWrappers.Hand.MAIN_HAND, playerDigType,
       Float.NaN,  Float.NaN,  Float.NaN
     );
 
@@ -353,7 +359,17 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
           }
         }
       }
+      if (IntaveControl.DEBUG_INTERACTION) {
+        if (raytraceFailed) {
+          player.sendMessage(ChatColor.GRAY + "Preprocess failed");
+        } else {
+          player.sendMessage(ChatColor.GREEN + "Preprocess succeeded");
+        }
+      }
       return !raytraceFailed;
+    }
+    if (IntaveControl.DEBUG_INTERACTION) {
+      player.sendMessage(ChatColor.GREEN + "No target block, preprocess succeeded");
     }
     return true;
   }
@@ -454,6 +470,8 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
 
     if (failedFacingCheck) {
+//      System.out.println("Failed facing check");
+//      System.out.println("Real " + interaction.facingX() + " " + interaction.facingY() + " " + interaction.facingZ());
       violationMetadata.facingFailedCounter++;
     } else {
       violationMetadata.facingFailedCounter = 0;
@@ -484,6 +502,10 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
     if (!usable || interaction.type() != InteractionType.INTERACT) {
       forwardInteractionToServer(interaction, raycastResult, targetLocation, raycastLocation, hitMiss, flag, mustCancelPacket);
+    } else if (flag) {
+      if (IntaveControl.DEBUG_INTERACTION) {
+        player.sendMessage("Failed interaction with usable item, but not forwarding");
+      }
     }
   }
 
@@ -681,11 +703,9 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
   }
 
   @PacketSubscription(
-    packetsOut = PacketId.Server.BLOCK_BREAK_ANIMATION
+    packetsOut = BLOCK_BREAK_ANIMATION
   )
   public void clearInvalidBreakingUpdates(PacketEvent event) {
-//    Player player = event.getPlayer();
-//    User user = userOf(player);
     PacketContainer packet = event.getPacket();
     EntityReader entityReader = PacketReaders.readerOf(packet);
     Entity entity = entityReader.entityBy(event);

@@ -59,7 +59,7 @@ public class FeedbackRequest<T> {
     return key;
   }
 
-  public long requested() {
+  public long requestedAsNanos() {
     return created;
   }
 

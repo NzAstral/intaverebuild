@@ -10,6 +10,7 @@ public final class IntaveControl {
   public static final boolean DEBUG_MOVEMENT_IGNORE = false;
   public static final boolean DEBUG_MOUNTING = false;
   public static final boolean DEBUG_ELYTRA = false;
+  public static final boolean DEBUG_INTERACTION = false;
   public static final boolean DEBUG_PLAYER_ACTIONS = false;
   public static final boolean DEBUG_TELEPORT_LOCKS = false;
   public static final boolean DEBUG_TELEPORT_CAUSE_AND_CAUSER = false;

@@ -16,7 +16,7 @@ import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.connect.IntaveDomains;
 import de.jpx3.intave.connect.sibyl.LabyModChannelHelper;
 import de.jpx3.intave.connect.sibyl.LabymodClientListener;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.module.Modules;
@@ -136,7 +136,7 @@ public final class SibylAuthentication implements BukkitEventSubscriber {
   @Native
   private void verifyAuthKey(String authKey, Consumer<? super Boolean> callback) {
     String url_path = "https://" + IntaveDomains.primaryServiceDomain() + "/sibyl/verify";
-    BackgroundExecutor.execute(new Runnable() {
+    BackgroundExecutors.execute(new Runnable() {
       @Override
       @Native
       public void run() {

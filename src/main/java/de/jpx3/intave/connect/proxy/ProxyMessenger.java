@@ -11,7 +11,7 @@ import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.connect.proxy.protocol.IntavePacket;
 import de.jpx3.intave.connect.proxy.protocol.IntavePacketSerializer;
 import de.jpx3.intave.connect.proxy.protocol.PacketRegister;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -100,7 +100,7 @@ public final class ProxyMessenger {
     if (!isChannelOpen() || !packetOutputAllowed) {
       return;
     }
-    BackgroundExecutor.execute(() -> {
+    BackgroundExecutors.execute(() -> {
       ByteArrayDataOutput byteOutput = ByteStreams.newDataOutput();
       byteOutput.writeUTF("IPC_BEGIN");
       byteOutput.writeInt(PROTOCOL_VERSION);

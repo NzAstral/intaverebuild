@@ -16,7 +16,6 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.ConnectionMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Deque;
@@ -249,6 +248,6 @@ public final class PacketDelayer extends Module {
   private long oldestPendingTransaction(User user) {
     ConnectionMetadata connection = user.meta().connection();
     FeedbackRequest<?> peek = connection.feedbackQueue().peek();
-    return peek == null ? 0 : System.currentTimeMillis() - peek.requested();
+    return peek == null ? 0 : peek.passedTime();
   }
 }

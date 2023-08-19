@@ -86,7 +86,7 @@ public final class ConnectionMetadata {
   public int latencyJitter;
   public long transactionNumCounter = 0;
   public long lastReceivedTransactionNum = -1;
-  public long lastSynchronization = System.currentTimeMillis();
+  public long lastSynchronization = System.nanoTime();
   public long transactionPacketCounter;
   public long transactionPacketCounterReset;
 

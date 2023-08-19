@@ -17,8 +17,6 @@ import de.jpx3.intave.user.meta.ProtocolMetadata;
 
 import java.util.List;
 
-import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_8;
-
 @Relocate
 public final class PredictiveSimulationProcessor implements SimulationProcessor {
 
@@ -440,7 +438,7 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
               if (attackReduce && (movementData.pastPlayerAttackPhysics >= 1 || AttackDispatcher.REDUCING_DISABLED)) {
                 continue;
               }
-//              if (attackReduce && !sprinting) {
+//              if (attackReduce && sprinting && movementData.lastSprinting) {
 //                continue;
 //              }
               IterativeStudy.ATTACK_REDUCE_ITERATOR.run();

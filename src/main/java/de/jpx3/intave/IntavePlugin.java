@@ -1,6 +1,5 @@
 package de.jpx3.intave;
 
-import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.access.IntaveAccess;
 import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.accessbackend.IntaveAccessService;
@@ -40,7 +39,7 @@ import de.jpx3.intave.diagnostic.natives.NativeCheck;
 import de.jpx3.intave.entity.EntityLookup;
 import de.jpx3.intave.entity.size.HitboxSizeAccess;
 import de.jpx3.intave.entity.type.EntityTypeDataAccessor;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.executor.TaskTracker;
 import de.jpx3.intave.klass.locate.Locate;
@@ -52,7 +51,6 @@ import de.jpx3.intave.metric.ServerHealth;
 import de.jpx3.intave.module.BootSegment;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriptionLinker;
-import de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.packet.reader.PacketReaders;
 import de.jpx3.intave.player.FaultKicks;
@@ -82,14 +80,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bytedeco.javacpp.Loader;
-import org.bytedeco.openblas.global.openblas;
-import org.bytedeco.openblas.global.openblas_nolapack;
-import smile.base.mlp.*;
-import smile.data.DataFrame;
-import smile.regression.MLP;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
@@ -263,7 +258,7 @@ public final class IntavePlugin extends JavaPlugin {
       Modules.proceedBoot(BootSegment.STAGE_6);
 
       // we need to put this here
-      BackgroundExecutor.start();
+      BackgroundExecutors.start();
 
       // stage 7
 
@@ -752,8 +747,9 @@ public final class IntavePlugin extends JavaPlugin {
     ViaVersionAdapter.patchConfiguration();
 
     GarbageCollector.setup();
-    BackgroundExecutor.execute(this::clearIntegrityGarbage);
-    BackgroundExecutor.execute(this::clearSaveFolderGarbage);
+    BackgroundExecutors.executeWhenever(this::clearIntegrityGarbage);
+    BackgroundExecutors.executeWhenever(this::clearSaveFolderGarbage);
+    BackgroundExecutors.executeWhenever(this::clearUnusedSamples);
     logger.performCompression();
 
     ViolationStorage.setup();
@@ -804,51 +800,8 @@ public final class IntavePlugin extends JavaPlugin {
       StartupTasks.runAll();
 
       // perform a complete native self-check
-      BackgroundExecutor.execute(NativeCheck::run);
-//      testMLLibrary();
+      BackgroundExecutors.execute(NativeCheck::run);
     });
-  }
-
-  private void testMLLibrary() {
-    /*
-    try {
-      // load
-      Class<DataFrame> dataFrameClass = DataFrame.class;
-
-      logger.info("Beginning MLP test");
-
-      MLP mlp = new MLP(
-        InputLayer.input(80),
-        HiddenLayer.leaky(32),
-        HiddenLayer.leaky(16),
-        HiddenLayer.leaky(8),
-        new OutputLayerBuilder(1, OutputFunction.LINEAR, Cost.MEAN_SQUARED_ERROR)
-      );
-
-//      try {
-//        System.out.println(Loader.getCacheDir().getAbsolutePath());
-//      } catch (IOException e) {
-//        throw new RuntimeException(e);
-//      }
-
-      Class<openblas> openblasClass = openblas.class;
-      int cblasLeft = openblas_nolapack.CblasLeft;
-
-      System.out.println(cblasLeft);
-
-      double[] a = new double[80];
-      mlp.update(a, 1);
-
-      System.out.println(System.getProperty("java.version"));
-
-      System.out.println(mlp.predict(a));
-
-      logger.info("MLP test successful");
-    } catch (Throwable exception) {
-      logger.error("MLP test failed");
-      exception.printStackTrace();
-    }
-    */
   }
 
   private void preventIncorrectStates() {
@@ -963,6 +916,61 @@ public final class IntavePlugin extends JavaPlugin {
           }
         });
     } catch (Exception ignored) {
+    }
+  }
+
+  @Native
+  public void clearUnusedSamples() {
+    String operatingSystem = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    File workDirectory;
+    String filePath;
+    if (operatingSystem.contains("win")) {
+      filePath = System.getenv("APPDATA") + "/Intave/Samples";
+    } else {
+      if (GOMME_MODE) {
+        filePath = ContextSecrets.secret("cache-directory") + "/samples";
+      } else {
+        filePath = System.getProperty("user.home") + "/.intave/samples";
+      }
+    }
+    workDirectory = new File(filePath);
+    if (!workDirectory.exists()) {
+      return;
+    }
+    try {
+      // clear unused files
+      Files.walk(workDirectory.toPath())
+        .filter(Files::isRegularFile)
+        .map(Path::toFile)
+        .filter(File::canWrite)
+        .filter(File::canRead)
+        .filter(file -> (System.currentTimeMillis() - file.lastModified()) > 3 * 24 * 60 * 60)
+        .forEach(file -> {
+          try {
+            file.delete();
+          } catch (Exception exception) {
+            exception.printStackTrace();
+          }
+        });
+      // clear empty directories
+      Files.walk(workDirectory.toPath())
+        .filter(Files::isDirectory)
+        .map(Path::toFile)
+        .filter(File::canWrite)
+        .filter(File::canRead)
+        .filter(file -> file.listFiles() == null)
+        .filter(file -> (System.currentTimeMillis() - file.lastModified()) > 3 * 24 * 60 * 60)
+        .forEach(file -> {
+          try {
+            file.delete();
+          } catch (Exception exception) {
+            exception.printStackTrace();
+          }
+        });
+    } catch (NoSuchFileException ignored) {
+      // ignore
+    } catch (Exception | Error throwable) {
+      throwable.printStackTrace();
     }
   }
 
@@ -1088,7 +1096,7 @@ public final class IntavePlugin extends JavaPlugin {
     logger.info("Stopping Intave");
     Bukkit.getScheduler().cancelTasks(this);
     ShutdownTasks.runAll();
-    BackgroundExecutor.stopBlocking();
+    BackgroundExecutors.stopAllBlocking();
     deleteIntegrityCache();
     if (successfullyBooted) {
       logger.info(randomExitMessage());
