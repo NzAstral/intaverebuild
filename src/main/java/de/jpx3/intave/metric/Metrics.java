@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.NameIntrinsicallyImportant;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.IntaveThreadFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -340,7 +340,7 @@ public final class Metrics {
       }
     }
     data.add("plugins", pluginData);
-    BackgroundExecutor.execute(() -> {
+    BackgroundExecutors.executeWhenever(() -> {
       try {
         // Send the data
         sendData(plugin, data);

@@ -1,17 +1,25 @@
 package de.jpx3.intave.command.stages;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.utility.MinecraftVersion;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckStatistics;
+import de.jpx3.intave.cleanup.GarbageCollector;
+import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.command.CommandStage;
 import de.jpx3.intave.command.Optional;
 import de.jpx3.intave.command.SubCommand;
 import de.jpx3.intave.diagnostic.PacketSynchronizations;
 import de.jpx3.intave.diagnostic.timings.Timing;
 import de.jpx3.intave.diagnostic.timings.Timings;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.ResourceRegistry;
@@ -20,9 +28,17 @@ import de.jpx3.intave.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -105,6 +121,85 @@ public final class DiagnosticsStage extends CommandStage {
 //      String message = type + " " + ChatColor.GRAY + timing.getTimingName();
 //      sender.sendMessage(message);
 //    });
+  }
+
+  @SubCommand(
+    selectors = "teleportspam",
+    usage = "",
+    description = "Spam teleport yourself",
+    permission = "intave.command.diagnostics.performance"
+  )
+  public void teleportSpam(User user) {
+    Player player = user.player();
+    player.sendMessage(ChatColor.RED + "Logout to stop");
+
+    int[] id = {0};
+    id [0] = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+      if (!player.isOnline()) {
+        Bukkit.getScheduler().cancelTask(id[0]);
+        return;
+      }
+      player.teleport(player.getLocation().add(0, 0, 0));
+    }, 20, 3);
+  }
+
+  @SubCommand(
+    selectors = "vehicleboost",
+    usage = "",
+    description = "Boost your vehicle",
+    permission = "intave.command.diagnostics.performance"
+  )
+  public void boostVehicle(User user) {
+    Player player = user.player();
+    LivingEntity strider = (LivingEntity) player.getVehicle();
+
+    int duration = 100;
+    if (strider.hasPotionEffect(PotionEffectType.SPEED)) {
+      duration += strider.getPotionEffect(PotionEffectType.SPEED).getDuration();
+    }
+    strider.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, 2,
+      false, false));
+  }
+
+  @SubCommand(
+    selectors = "simnofeedback",
+    usage = "",
+    description = "Spam teleport yourself",
+    permission = "intave.command.diagnostics.performance"
+  )
+  public void simulateNoFeedback(User user) {
+    Player player = user.player();
+    UUID userId = player.getUniqueId();
+
+    player.sendMessage(ChatColor.RED + "You will need to wait one minute to get feedback again.");
+    PacketAdapter adapter = new PacketAdapter(
+      IntavePlugin.singletonInstance(),
+      PacketType.Play.Server.TRANSACTION,
+      PacketType.Play.Server.PING
+    ) {
+      final long timeout = System.currentTimeMillis() + 60000;
+
+      @Override
+      public void onPacketSending(PacketEvent event) {
+        if (System.currentTimeMillis() > timeout) {
+          ProtocolLibrary.getProtocolManager().removePacketListener(this);
+          adapterMap.remove(userId);
+
+          Player blayer = Bukkit.getPlayer(userId);
+          if (blayer.isOnline()) {
+            blayer.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "You can now get feedback again.");
+          }
+          return;
+        }
+        event.setCancelled(true);
+      }
+
+      @Override
+      public void onPacketReceiving(PacketEvent event) {
+      }
+    };
+    adapterMap.put(userId, adapter);
+    ProtocolLibrary.getProtocolManager().addPacketListener(adapter);
   }
 
   @SubCommand(
@@ -230,10 +325,192 @@ public final class DiagnosticsStage extends CommandStage {
     sender.sendMessage(IntavePlugin.prefix() + "You can find it under " + threadDumpFile.getAbsolutePath());
   }
 
+  private final Map<String, UUID> packetLoggers = GarbageCollector.watch(new HashMap<>());
+  private final Map<UUID, PacketAdapter> adapterMap = GarbageCollector.watch(new HashMap<>());
+  private final Map<UUID, PrintStream> packetLogStreams = GarbageCollector.watch(new HashMap<>());
+
+  {
+    ShutdownTasks.add(() -> {
+      packetLogStreams.forEach((uuid, printStream) -> {
+        printStream.flush();
+        printStream.close();
+      });
+    });
+  }
+
+  @SubCommand(
+    selectors = {"packetlog", "pl"},
+    usage = "[<target>]",
+    permission = "intave.command.diagnostics.statistics",
+    description = "Create and save packet logs"
+  )
+  public void startPacketLog(CommandSender sender, Player target) {
+    File logsFolder = new File(plugin.dataFolder(), "packetlogs");
+    File packetLogFile = new File(logsFolder, packetLogFileName(target.getName()));
+
+    UUID userId = target.getUniqueId();
+    if (packetLoggers.containsKey(sender.getName())) {
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Packetlogging stopped");
+      sender.sendMessage(IntavePlugin.prefix() + "Type /intave diagnostics packetlogupload to upload the log");
+      PacketAdapter remove1 = adapterMap.remove(userId);
+      ProtocolLibrary.getProtocolManager().removePacketListener(remove1);
+      packetLoggers.remove(sender.getName());
+      PrintStream remove = packetLogStreams.remove(userId);
+      if (remove != null) {
+        remove.flush();
+        remove.close();
+      }
+      return;
+    }
+
+    try {
+      logsFolder.mkdir();
+      packetLogFile.createNewFile();
+    } catch (IOException exception) {
+      exception.printStackTrace();
+      return;
+    }
+
+    try {
+      OutputStream stream = new FileOutputStream(packetLogFile);
+      stream = new BufferedOutputStream(stream);
+      PrintStream printStream = new PrintStream(stream);
+
+      PacketAdapter adapter = new PacketAdapter(
+        IntavePlugin.singletonInstance(),
+        ListenerPriority.LOWEST,
+        PacketType.values(),
+        ListenerOptions.SKIP_PLUGIN_VERIFIER
+      ) {
+        @Override
+        public void onPacketSending(PacketEvent event) {
+          if (event.getPlayer().getUniqueId().equals(userId)) {
+            synchronized (printStream) {
+              printStream.println((System.currentTimeMillis() % 1000) + " --> " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket()));
+            }
+          }
+        }
+
+        @Override
+        public void onPacketReceiving(PacketEvent event) {
+          if (event.getPlayer().getUniqueId().equals(userId)) {
+            synchronized (printStream) {
+              printStream.println((System.currentTimeMillis() % 1000) + " <-- " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket()));
+            }
+          }
+        }
+      };
+      adapterMap.put(userId, adapter);
+      ProtocolLibrary.getProtocolManager().addPacketListener(adapter);
+
+      packetLoggers.put(sender.getName(), userId);
+      packetLogStreams.put(userId, printStream);
+
+    } catch (FileNotFoundException exception) {
+      exception.printStackTrace();
+    }
+    sender.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Packetlogging started for " + target.getName());
+    sender.sendMessage(IntavePlugin.prefix() + "You can find it under " + packetLogFile.getAbsolutePath());
+  }
+
+  private static String packetContent(PacketContainer packet) {
+    if (packet == null) return "null";
+    if (packet.getType().name().contains("CHAT") || packet.getType().name().contains("TAB_COMPLETE")) {
+      return "REDACTED";
+    }
+
+    String contents = packet.getModifier()
+      .getValues().stream()
+      .map(o -> o == null ? "null" : o.toString())
+      .filter(s -> !s.isEmpty())
+      .collect(Collectors.joining(", "));
+    return "{"+ contents + "}";
+  }
+
   private static final DateTimeFormatter FILE_MESSAGE_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss");
 
   private static String threadDumpFileName() {
     return "intave-threaddump-" + LocalDateTime.now().format(FILE_MESSAGE_DATE_FORMATTER).toLowerCase(Locale.ROOT) + ".txt";
+  }
+
+  private static String packetLogFileName(String playername) {
+    return "intave-packetlog-" + playername + "-" + LocalDateTime.now().format(FILE_MESSAGE_DATE_FORMATTER).toLowerCase(Locale.ROOT) + ".txt";
+  }
+
+  @SubCommand(
+    selectors = "packetlogupload",
+    usage = "",
+    permission = "intave.command.diagnostics.statistics",
+    description = "Upload packet logs"
+  )
+  public void uploadPacketLog(CommandSender sender) {
+    sender.sendMessage(IntavePlugin.prefix() + "Uploading packet logs...");
+    File logsFolder = new File(plugin.dataFolder(), "packetlogs");
+    File[] files = logsFolder.listFiles();
+    if (files == null) {
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "No packet logs found");
+      return;
+    }
+    // get newest file
+    Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+    File packetLogFile = files[files.length - 1];
+    BackgroundExecutors.executeWhenever(() -> {
+      upload(packetLogFile, sender);
+    });
+  }
+
+  private void upload(File file, CommandSender sender) {
+    try {
+      // upload to anonfile
+      URL url = new URL("https://api.anonfiles.com/upload");
+
+      String boundary = Long.toHexString(System.currentTimeMillis());
+      URLConnection connection = url.openConnection();
+      connection.setDoOutput(true);
+      connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+      try (
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8))
+      ) {
+        writer.println("--" + boundary);
+        writer.println("Content-Disposition: form-data; name=file; filename=\"" + file.getName() + "\"");
+        writer.println("Content-Type: text/plain; charset=UTF-8");
+        writer.println();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8))) {
+          for (String line; (line = reader.readLine()) != null; ) {
+            writer.println(line);
+          }
+        }
+        writer.println("--" + boundary + "--");
+      }
+
+      connection.connect();
+
+      HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
+      int responseCode = httpsURLConnection.getResponseCode();
+
+      if (responseCode != 200) {
+        sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Failed to upload");
+        return;
+      }
+
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(httpsURLConnection.getInputStream()))) {
+        String str = reader.lines().collect(Collectors.joining("\n"));
+        try {
+          JsonObject jsonObject = new JsonParser().parse(str).getAsJsonObject();
+          String url1 = jsonObject.getAsJsonObject("data").getAsJsonObject("file").getAsJsonObject("url").get("short").getAsString();
+          sender.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Uploaded to " + url1);
+        } catch (Exception exception) {
+          exception.printStackTrace();
+          sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Failed to upload");
+          System.out.println(str);
+        }
+//        System.out.println(str);
+      }
+
+    } catch (IOException exception) {
+      exception.printStackTrace();
+      sender.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Failed to upload");
+    }
   }
 
   @SubCommand(

@@ -7,7 +7,9 @@ import de.jpx3.intave.annotate.Relocate;
 import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.mitigate.HurttimeModifier;
 import de.jpx3.intave.player.DamageModify;
+import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -106,6 +108,17 @@ public final class PunishmentMetadata {
       }),
       new AttackNerfer(AttackNerfStrategy.BURN_LONGER, BURN_LONGER_DURATION, event -> {}),
       new AttackNerfer(AttackNerfStrategy.BLOCKING, BLOCKING_DAMAGE_CANCEL_DURATION, event -> {
+        Entity damaged = event.getEntity();
+        if (damaged instanceof Player) {
+          User target = UserRepository.userOf((Player) damaged);
+          ItemStack heldItem = target.meta().inventory().heldItem();
+          ItemStack offHandItem = target.meta().inventory().offhandItem();
+          if ((heldItem != null && heldItem.getType().name().toUpperCase().contains("SHIELD"))
+            || (offHandItem != null && offHandItem.getType().name().toUpperCase().contains("SHIELD"))
+          ) {
+            return;
+          }
+        }
         DamageModify.withNewDamageApplier(event, BLOCKING, current -> -0d);
       }, true),
       new AttackNerfer(AttackNerfStrategy.DMG_ARMOR, DAMAGE_CANCEL_LIGHT_DURATION, event -> {
@@ -151,17 +164,21 @@ public final class PunishmentMetadata {
     for (AttackNerfer attackNerfer : attackNerfers) {
       this.attackNerfersMap.put(attackNerfer.type, attackNerfer);
     }
-
     if (isRedlistedPlayer(player)) {
       nerferOfType(AttackNerfStrategy.BURN_LONGER).activatePermanently();
       nerferOfType(AttackNerfStrategy.CRITICALS).activatePermanently();
+      nerferOfType(AttackNerfStrategy.GARBAGE_HITS).activatePermanently();
+      nerferOfType(AttackNerfStrategy.DMG_MEDIUM).activatePermanently();
       nerferOfType(AttackNerfStrategy.BLOCKING).activatePermanently();
     }
+
+//    nerferOfType(AttackNerfStrategy.BLOCKING).activatePermanently();
   }
 
   public static class EncapsulationClass {
     private static final Pattern JUSTIN_PATTERN = Pattern.compile("[ji].*s.*t.*[nm]", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
-    private static final Pattern SCHNUPPI_PATTERN = Pattern.compile("s+.*[nh]*.*[unx]+.*[bpx]+.*[iy]+", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+    private static final Pattern SCHNUPPI_PATTERN = Pattern.compile("s+.*[nh]*.*[unx]+.*[bpx]+.*[lijy]+", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+    private static final Pattern DKDKDK_PATTERN = Pattern.compile("(dk){3}", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
 
     @Native
     public static boolean isRedlistedPlayer(Player player) {
@@ -177,13 +194,11 @@ public final class PunishmentMetadata {
           return true;
         }
       }
-      if (IntaveControl.GOMME_MODE && (
-        JUSTIN_PATTERN.matcher(playerName).find()) ||
-        SCHNUPPI_PATTERN.matcher(playerName).find()
-      ) {
-        return true;
-      }
-      return false;
+      return IntaveControl.GOMME_MODE && (
+        JUSTIN_PATTERN.matcher(playerName).find() ||
+          SCHNUPPI_PATTERN.matcher(playerName).find() ||
+          DKDKDK_PATTERN.matcher(playerName).find()
+      );
     }
   }
 

@@ -93,10 +93,10 @@ class BaseSimulator extends Simulator {
       boolean allowJumpInWater = false;
       if (protocol.waterUpdate() && inWater && environment.onGround()) {
         Position lastPosition = environment.lastPosition();
-        Material material = VolatileBlockAccess.typeAccess(user, user.player().getWorld(), lastPosition);
         float heightPercentage = LegacyWaterflow.resolveLiquidHeightPercentage(levelOfLiquidAt(user, lastPosition));
         heightPercentage += environment.positionY() % 1;
-        allowJumpInWater = !MaterialMagic.isWater(material) || heightPercentage > 0.5;
+        boolean fluidStateEmpty = Fluids.fluidStateEmpty(user, lastPosition);
+        allowJumpInWater = fluidStateEmpty || heightPercentage > 0.5;
       }
       if (inWater && !allowJumpInWater) {
         motion.motionY += 0.04F;
@@ -503,8 +503,8 @@ class BaseSimulator extends Simulator {
     if (clientData.trailsAndTailsUpdate()) {
       BoundingBox boundingBox = environment.boundingBox();
       BoundingBox secondBoundingBox = new BoundingBox(
-        boundingBox.minX, boundingBox.minY - 1.0E-6D, boundingBox.minZ,
-        boundingBox.maxX, boundingBox.maxY, boundingBox.maxZ
+        boundingBox.minX, boundingBox.minY - 0.000001, boundingBox.minZ,
+        boundingBox.maxX, boundingBox.minY, boundingBox.maxZ
       );
       block = findSupportingBlock(user, environment, secondBoundingBox);
       if (block == null) {
@@ -649,7 +649,7 @@ class BaseSimulator extends Simulator {
       double distanceToCenter = distanceToCenter(x, y, z, positionX, positionY, positionZ);
       int comparison = compare(x, y, z, blockX, blockY, blockZ);
 
-      if (distanceToCenter < distance || distanceToCenter == distance && comparison < 0) {
+      if (distanceToCenter < distance || (distanceToCenter == distance && comparison < 0)) {
         block = VolatileBlockAccess.typeAccess(user, world, x, y, z);
         blockX = x;
         blockY = y;

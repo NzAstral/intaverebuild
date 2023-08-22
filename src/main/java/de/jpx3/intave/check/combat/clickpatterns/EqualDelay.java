@@ -42,7 +42,7 @@ public final class EqualDelay extends TickAlignedHistoryBlueprint<EqualDelay.Equ
     for (Integer integer : delay) {
       if (integer == lastDelay) {
         streak++;
-        int streakLimit = 7;
+        int streakLimit = 10;
         if (lastDelay > 1) {
           streakLimit += 2;
         }
@@ -53,7 +53,7 @@ public final class EqualDelay extends TickAlignedHistoryBlueprint<EqualDelay.Equ
           streakLimit += 2;
         }
         if (streak > streakLimit) {
-          flag(user, "exhibits repetitive delay between clicks");
+          flag(user, "exhibits repetitive delay between clicks", 0);
           break;
         }
       } else {

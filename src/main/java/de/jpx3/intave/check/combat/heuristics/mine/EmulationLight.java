@@ -1,7 +1,7 @@
 package de.jpx3.intave.check.combat.heuristics.mine;
 
 import de.jpx3.intave.check.combat.heuristics.MiningStrategy;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.player.fake.FakePlayer;
 import de.jpx3.intave.player.fake.movement.PositionRotationLookup;
 import de.jpx3.intave.user.User;
@@ -24,7 +24,7 @@ public final class EmulationLight extends MiningStrategyExecutor {
     if (attackData.fakePlayer() != null) {
       return;
     }
-    BackgroundExecutor.execute(() -> {
+    BackgroundExecutors.execute(() -> {
       FakePlayer fakePlayer = FakePlayer
         .builderFor(user().player())
         .floating()

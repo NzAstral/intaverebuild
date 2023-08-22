@@ -25,7 +25,7 @@ public final class EntityMetadataReader extends EntityReader {
     return list;
   }
 
-  public List<WrappedDataValue> metadataValues() {
+  private List<WrappedDataValue> metadataValues() {
     return packet().getDataValueCollectionModifier().read(0);
   }
 

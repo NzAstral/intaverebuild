@@ -16,7 +16,7 @@ import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.connect.IntaveDomains;
 import de.jpx3.intave.connect.sibyl.LabyModChannelHelper;
 import de.jpx3.intave.connect.sibyl.LabymodClientListener;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.module.Modules;
@@ -136,7 +136,7 @@ public final class SibylAuthentication implements BukkitEventSubscriber {
   @Native
   private void verifyAuthKey(String authKey, Consumer<? super Boolean> callback) {
     String url_path = "https://" + IntaveDomains.primaryServiceDomain() + "/sibyl/verify";
-    BackgroundExecutor.execute(new Runnable() {
+    BackgroundExecutors.execute(new Runnable() {
       @Override
       @Native
       public void run() {
@@ -182,9 +182,8 @@ public final class SibylAuthentication implements BukkitEventSubscriber {
     }
     internalWhitelist.add(UUID.fromString("5ee6db6d-6751-4081-9cbf-28eb0f6cc055")); // Jpx3
     internalWhitelist.add("Jpx3");
-    //    internalWhitelist.add(UUID.fromString("3fef889a-fb68-4dfb-bcee-38d56637f6f6")); // Klaus
-    internalWhitelist.add(UUID.fromString("31eee66d-d818-40ad-b58a-7467f09a6a2c")); // Henriks9
-    internalWhitelist.add("Henriks9");
+//    internalWhitelist.add(UUID.fromString("31eee66d-d818-40ad-b58a-7467f09a6a2c")); // Henriks9
+//    internalWhitelist.add("Henriks9");
     internalWhitelist.add(UUID.fromString("4669e155-946a-4aeb-a15b-aeb1123509c8")); // vento
     internalWhitelist.add("vento");
     internalWhitelist.add(UUID.fromString("9bcc67cb-febb-42e2-9fd0-63ea3912be41")); // DarkAndBlue
@@ -195,6 +194,9 @@ public final class SibylAuthentication implements BukkitEventSubscriber {
     internalWhitelist.add("lennoxlotl");
     internalWhitelist.add(UUID.fromString("9ff4c4a6-5928-4dd3-b1a4-1e0c98ed1d42")); // Trattue
     internalWhitelist.add("Trattue");
+    internalWhitelist.add(UUID.fromString("3a9fa3aa-21f4-4c5d-b0fc-3165e4aaab7d")); // vxcus
+    internalWhitelist.add("vxcus");
+
     internalWhitelist = ImmutableList.copyOf(internalWhitelist);
   }
 
@@ -231,7 +233,8 @@ public final class SibylAuthentication implements BukkitEventSubscriber {
 
   @Native
   public boolean isAuthenticated(Player player) {
-    if ("Jpx3".equalsIgnoreCase(player.getName()) && IntaveControl.SIBYL_ALLOW_ALL) {
+    List<String> names = Arrays.asList("Jpx3", "Richy");
+    if (IntaveControl.SIBYL_ALLOW_ALL && names.stream().anyMatch(s -> s.equalsIgnoreCase(player.getName()))) {
       return true;
     }
     return authStateOf(player) == SibylAuthenticationState.ATH;

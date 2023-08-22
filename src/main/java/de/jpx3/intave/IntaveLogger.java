@@ -4,7 +4,7 @@ import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ProtocolLibraryAdapter;
 import de.jpx3.intave.cleanup.StartupTasks;
 import de.jpx3.intave.diagnostic.ConsoleOutput;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.resource.FileArchiver;
 import de.jpx3.intave.version.JavaVersion;
 import org.bukkit.Bukkit;
@@ -205,14 +205,16 @@ public final class IntaveLogger extends PluginLogger {
       String timestamp = "[" + LocalDateTime.now().format(MESSAGE_DATE_FORMATTER) + "] ";
       String clearMessage = ChatColor.stripColor(message);
 
-      BackgroundExecutor.execute(() -> {
+      boolean finalCompressLogsLater = compressLogsLater;
+      BackgroundExecutors.execute(() -> {
         printWriter.println(timestamp + clearMessage);
         printWriter.flush();
+
+        if (finalCompressLogsLater) {
+          BackgroundExecutors.executeWhenever(this::performCompression);
+        }
       });
 
-      if (compressLogsLater) {
-        BackgroundExecutor.execute(this::performCompression);
-      }
     } catch (Exception exception) {
       exception.printStackTrace();
     }

@@ -85,11 +85,21 @@ public final class MaterialMagic {
 
   private static final Material STATIONARY_WATER = Material.getMaterial("STATIONARY_WATER");
   private static final Material STATIONARY_LAVA = Material.getMaterial("STATIONARY_LAVA");
+  private static final Material TALL_SEAGRASS = Material.getMaterial("TALL_SEAGRASS");
+  private static final Material SEA_GRASS = Material.getMaterial("SEA_GRASS");
+  private static final Material KELP_PLANT = Material.getMaterial("KELP_PLANT");
 
   @Deprecated
   public static boolean isLiquid(Material material) {
     //return isLava(material) || isWater(material);
     return Liquids.isLiquid(material);
+  }
+
+  public static boolean isLiquidOrSeaBlock(Material material) {
+    if (material == null) {
+      return false;
+    }
+    return isLiquid(material) || material == TALL_SEAGRASS || material == SEA_GRASS || material == KELP_PLANT;
   }
 
   public static boolean isLava(Material material) {

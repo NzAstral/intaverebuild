@@ -26,9 +26,6 @@ import static com.comphenix.protocol.PacketType.Play.Server.TRANSACTION;
 import static de.jpx3.intave.module.feedback.FeedbackOptions.*;
 
 public final class FeedbackSender extends Module {
-
-  private boolean dumpFeedback;
-
   public static final short MIN_USER_KEY = 0;
   public static final short MAX_USER_KEY = 24000;
   public static final int PING_MASK = 0xf5550000;
@@ -37,6 +34,7 @@ public final class FeedbackSender extends Module {
   private static final long OPTIONAL_SENT_LIMIT = 200;
 
   private final ProtocolManager protocol = ProtocolLibrary.getProtocolManager();
+  private boolean dumpFeedback;
 
   @Override
   public void enable() {
@@ -207,7 +205,7 @@ public final class FeedbackSender extends Module {
     }
     short userKey = findUserKey(player);
     long transactionNumCounter = connection.transactionNumCounter++;
-    FeedbackRequest<T> feedbackEntry = new FeedbackRequest<>(callback, tracker, obj, userKey, transactionNumCounter);
+    FeedbackRequest<T> feedbackEntry = new FeedbackRequest<T>(callback, tracker, obj, userKey, transactionNumCounter);
     connection.feedbackQueue().add(feedbackEntry);
     return feedbackEntry;
   }

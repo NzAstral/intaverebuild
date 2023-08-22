@@ -1,8 +1,10 @@
 package de.jpx3.intave.module.patcher;
 
+import de.jpx3.intave.annotate.DoNotFlowObfuscate;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-final class SynchronizedDSILongHashSet extends LongOpenHashSet {
+@DoNotFlowObfuscate
+public final class SynchronizedDSILongHashSet extends LongOpenHashSet {
   public SynchronizedDSILongHashSet() {
     super();
   }

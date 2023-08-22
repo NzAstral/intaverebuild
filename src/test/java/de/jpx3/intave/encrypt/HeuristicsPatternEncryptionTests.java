@@ -2,13 +2,14 @@ package de.jpx3.intave.encrypt;
 
 import de.jpx3.intave.check.combat.heuristics.Anomaly;
 import de.jpx3.intave.check.combat.heuristics.Confidence;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class HeuristicsPatternEncryptionTests {
   @Test
@@ -38,7 +39,7 @@ public final class HeuristicsPatternEncryptionTests {
     System.out.println("decrypted:" + decryptPatterns);
 
     String expectedResult = anomalies.stream().map(Anomaly::key).distinct().map(x -> "p[" + x + "]").collect(Collectors.joining(" "));
-    Assertions.assertEquals(expectedResult, decryptPatterns);
+    assertEquals(expectedResult, decryptPatterns);
   }
 
   @Test

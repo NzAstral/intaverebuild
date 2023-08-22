@@ -27,6 +27,7 @@ public final class CommandForwarder implements CommandExecutor, TabCompleter {
     DiagnosticsStage.singletonInstance();
     ProxyStage.singletonInstance();
     DebugStage.singletonInstance();
+    PerformanceStage.singletonInstance();
   }
 
   @Override

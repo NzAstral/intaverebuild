@@ -153,7 +153,11 @@ public final class PacketDelayer extends Module {
     }
     connection.lastBlinkState = requestBuffer;
 
-    boolean activatePacketBuffer = !tooManyPackets && !player.isDead() && System.currentTimeMillis() - connection.lastRespawn > 3000 && (requestBuffer || (System.currentTimeMillis() - connection.blinkDeactivated < 750));
+    long afterBlink = enqueuedPackets.size() > 500 ? 750 : 250;
+    long sinceLastRespawn = System.currentTimeMillis() - connection.lastRespawn;
+
+    boolean activatePacketBuffer = !player.isDead() && !tooManyPackets && sinceLastRespawn > 3000
+      && (requestBuffer || (System.currentTimeMillis() - connection.blinkDeactivated < afterBlink));
 
     if (activatePacketBuffer && reverseBlink) {
       // put all delayed packets into the enqueuedPacket queue
@@ -163,6 +167,9 @@ public final class PacketDelayer extends Module {
         for (DelayedPacket delayedPacket : delayedObjectsArray) {
           enqueuedPackets.offerLast(delayedPacket.packet());
         }
+      }
+      if (enqueuedPackets.isEmpty()) {
+        connection.firstEnqueue = System.currentTimeMillis();
       }
       enqueuedPackets.offerLast(packetContainer.getHandle());
       connection.lastBufferEnqueue = System.currentTimeMillis();
@@ -191,7 +198,8 @@ public final class PacketDelayer extends Module {
       }
       if (connection.lastBufferNotification + 30000 < System.currentTimeMillis()) {
         connection.lastBufferNotification = System.currentTimeMillis();
-        String message = player.getName() + " got " + enqueuedPacketAmount + " packets buffered.";
+        long delay = System.currentTimeMillis() - connection.firstEnqueue;
+        String message = player.getName() + " got " + enqueuedPacketAmount + " packets buffered ("+delay+"ms).";
         String shortMessage = player.getName() + " " + enqueuedPacketAmount + " packets halted";
         MessageSeverity severity = enqueuedPacketAmount > 1000 ? MessageSeverity.MEDIUM : MessageSeverity.LOW;
         DebugBroadcast.broadcast(player, MessageCategory.PKBF, severity, message, shortMessage);
@@ -199,8 +207,10 @@ public final class PacketDelayer extends Module {
 //        if (IntaveControl.GOMME_MODE) {
 //          System.out.println(message);
 //        }
+//        Bukkit.broadcastMessage(message);
       }
       connection.lastBufferEnqueue = System.currentTimeMillis();
+      connection.timestampRequiredForAttack = System.currentTimeMillis() + 250;
     } else if (!delayedPackets.isEmpty()) {
       DelayedPacket obj;
       while ((obj = delayedPackets.poll()) != null) {
@@ -238,6 +248,6 @@ public final class PacketDelayer extends Module {
   private long oldestPendingTransaction(User user) {
     ConnectionMetadata connection = user.meta().connection();
     FeedbackRequest<?> peek = connection.feedbackQueue().peek();
-    return peek == null ? 0 : System.currentTimeMillis() - peek.requested();
+    return peek == null ? 0 : peek.passedTime();
   }
 }

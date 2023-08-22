@@ -5,12 +5,11 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.cleanup.StartupTasks;
-import de.jpx3.intave.executor.BackgroundExecutor;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.executor.TaskTracker;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
-import de.jpx3.intave.module.dispatch.AttackDispatcher;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.nayoro.event.sink.EventSink;
 import de.jpx3.intave.module.nayoro.event.sink.ForwardEventSink;
@@ -41,7 +40,7 @@ import static de.jpx3.intave.module.dispatch.AttackDispatcher.COMBAT_SAMPLING;
 
 public final class Nayoro extends Module {
   private static final Resource SAMPLE_UPLOAD_STATUS = Resources.localServiceCacheResource("samples/status", "sample-status", TimeUnit.DAYS.toMillis(1));
-  private static final boolean PUBLISH_SAMPLES = "accept".equalsIgnoreCase(SAMPLE_UPLOAD_STATUS.readAsString().trim()) && !IntaveControl.GOMME_MODE;
+  private static final boolean PUBLISH_SAMPLES = COMBAT_SAMPLING &= "accept".equalsIgnoreCase(SAMPLE_UPLOAD_STATUS.readAsString().trim()) && !IntaveControl.GOMME_MODE;
   private static final long GLOBAL_SCHEDULE_INTERVAL = TimeUnit.MINUTES.toSeconds(5);
 
   private final UserLocal<Set<EventSink>> eventSinks = UserLocal.withInitial(this::defaultSinksFor, this::disableRecordingFor);
@@ -116,7 +115,7 @@ public final class Nayoro extends Module {
       AtomicLong length = new AtomicLong();
       AtomicInteger count = new AtomicInteger();
       for (Sample sample : completedSamples) {
-        BackgroundExecutor.execute(() -> {
+        BackgroundExecutors.executeWhenever(() -> {
           try {
             count.incrementAndGet();
             length.addAndGet(sample.uploadAndDelete());
@@ -126,10 +125,19 @@ public final class Nayoro extends Module {
           }
         });
       }
-      BackgroundExecutor.execute(() -> {
+      BackgroundExecutors.executeWhenever(() -> {
         IntaveLogger.logger().info(count.get() + " samples were uploaded (" + asReadableBytes(length.get()) + ")");
         completedSamples.clear();
       });
+    } else if (!completedSamples.isEmpty()) {
+      long deletions = 0;
+      for (Sample completedSample : completedSamples) {
+        completedSample.delete();
+        deletions++;
+      }
+      if (deletions > 0) {
+        IntaveLogger.logger().info("Deleted " + deletions + " samples");
+      }
     }
   }
 

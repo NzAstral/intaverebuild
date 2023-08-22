@@ -4,7 +4,9 @@ import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import org.bukkit.entity.Player;
 
-public final class FeedbackRequest<T> {
+import java.util.concurrent.TimeUnit;
+
+public class FeedbackRequest<T> {
   private final FeedbackCallback<T> callback;
   private final FeedbackObserver observer;
   private final T obj;
@@ -18,7 +20,7 @@ public final class FeedbackRequest<T> {
     this.obj = obj;
     this.userKey = userKey;
     this.key = key;
-    this.created = System.currentTimeMillis();
+    this.created = System.nanoTime();
   }
 
   void sent() {
@@ -57,11 +59,15 @@ public final class FeedbackRequest<T> {
     return key;
   }
 
-  public long requested() {
+  public long requestedAsNanos() {
     return created;
   }
 
   public long passedTime() {
-    return System.currentTimeMillis() - this.created;
+    return passedTimeAs(TimeUnit.MILLISECONDS);
+  }
+
+  public long passedTimeAs(TimeUnit unit) {
+    return unit.convert(System.nanoTime() - created, TimeUnit.NANOSECONDS);
   }
 }
