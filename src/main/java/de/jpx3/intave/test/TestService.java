@@ -18,6 +18,7 @@ import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.locate.ReferenceExistenceTests;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
+import de.jpx3.intave.module.feedback.FeedbackTests;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.player.StorageTests;
 import de.jpx3.intave.packet.reader.ReaderTests;
@@ -165,6 +166,7 @@ public final class TestService implements EventProcessor {
       performTest(BlockShapeTests.class);
       performTest(EntitySizeTests.class);
       performTest(StorageTests.class);
+      performTest(FeedbackTests.class);
       performTest(ReaderTests.class);
 
       // checks
