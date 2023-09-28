@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public class Identity implements JsonSerializable {
   @Nullable
-  private UUID id;
+  private UUID uuid;
   @Nullable
   private String name;
 
@@ -23,16 +23,16 @@ public class Identity implements JsonSerializable {
   }
 
   public Identity(UUID id) {
-    this.id = id;
+    this.uuid = id;
   }
 
   public Identity(UUID id, String name) {
-    this.id = id;
+    this.uuid = id;
     this.name = name;
   }
 
   public UUID id() {
-    return id;
+    return uuid;
   }
 
   public String name() {
@@ -43,8 +43,8 @@ public class Identity implements JsonSerializable {
   public void serialize(JsonWriter writer) {
     try {
       writer.beginObject();
-      if (id != null) {
-        writer.name("uuid").value(id.toString());
+      if (uuid != null) {
+        writer.name("uuid").value(uuid.toString());
       }
       if (name != null) {
         writer.name("name").value(name);
@@ -61,8 +61,8 @@ public class Identity implements JsonSerializable {
       reader.beginObject();
       while (reader.hasNext()) {
         switch (reader.nextName()) {
-          case "id":
-            id = UUID.fromString(reader.nextString());
+          case "uuid":
+            uuid = UUID.fromString(reader.nextString());
             break;
           case "name":
             name = reader.nextString();
@@ -78,10 +78,10 @@ public class Identity implements JsonSerializable {
   @Override
   public void serialize(DataOutput buffer) {
     try {
-      buffer.writeBoolean(id != null);
-      if (id != null) {
-        buffer.writeLong(id.getMostSignificantBits());
-        buffer.writeLong(id.getLeastSignificantBits());
+      buffer.writeBoolean(uuid != null);
+      if (uuid != null) {
+        buffer.writeLong(uuid.getMostSignificantBits());
+        buffer.writeLong(uuid.getLeastSignificantBits());
       }
       buffer.writeBoolean(name != null);
       if (name != null) {
@@ -96,12 +96,12 @@ public class Identity implements JsonSerializable {
   public void deserialize(DataInput buffer) {
     try {
       if (buffer.readBoolean()) {
-        id = new UUID(buffer.readLong(), buffer.readLong());
+        uuid = new UUID(buffer.readLong(), buffer.readLong());
       }
       if (buffer.readBoolean()) {
         name = buffer.readUTF();
       }
-      if (id == null && name == null) {
+      if (uuid == null && name == null) {
         throw new IOException("Identity is empty");
       }
     } catch (IOException e) {

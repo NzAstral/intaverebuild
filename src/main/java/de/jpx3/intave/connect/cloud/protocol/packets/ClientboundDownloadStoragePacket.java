@@ -38,11 +38,11 @@ public final class ClientboundDownloadStoragePacket extends BinaryPacket<Clientb
     try {
       id.serialize(buffer);
       byte[] array = data.array();
-      buffer.write(array.length);
+      buffer.writeInt(array.length);
       buffer.write(array);
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       digest.update(array);
-      buffer.write(digest.digest());
+      buffer.write(digest.digest(), 0, 32);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -54,10 +54,10 @@ public final class ClientboundDownloadStoragePacket extends BinaryPacket<Clientb
       id = Identity.from(input);
       int size = input.readInt();
       byte[] array = new byte[size];
-      input.readFully(array);
+      input.readFully(array, 0, size);
       data = ByteBuffer.wrap(array);
       byte[] hash = new byte[32];
-      input.readFully(hash);
+      input.readFully(hash, 0, 32);
       if (!MessageDigest.isEqual(hash, digest.get().digest(array))) {
         throw new RuntimeException("Hash mismatch");
       }

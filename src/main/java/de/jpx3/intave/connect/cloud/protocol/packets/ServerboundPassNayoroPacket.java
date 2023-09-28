@@ -29,7 +29,7 @@ public final class ServerboundPassNayoroPacket extends BinaryPacket<Serverbound>
     try {
       id.serialize(buffer);
       byte[] array = data.array();
-      buffer.write(array.length);
+      buffer.writeInt(array.length);
       buffer.write(array);
     } catch (Exception e) {
       e.printStackTrace();

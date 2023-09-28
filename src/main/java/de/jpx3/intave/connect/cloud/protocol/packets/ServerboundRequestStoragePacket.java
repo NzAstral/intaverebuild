@@ -33,17 +33,17 @@ public final class ServerboundRequestStoragePacket extends JsonPacket<Serverboun
   }
 
   @Override
-  public void deserialize(JsonReader reader) {
+  public void deserialize(JsonReader jsonReader) {
     try {
-      reader.beginObject();
-      while (reader.hasNext()) {
-        switch (reader.nextName()) {
+      jsonReader.beginObject();
+      while (jsonReader.hasNext()) {
+        switch (jsonReader.nextName()) {
           case "id":
-            id = Identity.from(reader);
+            id = Identity.from(jsonReader);
             break;
         }
       }
-      reader.endObject();
+      jsonReader.endObject();
     } catch (Exception e) {
       e.printStackTrace();
     }

@@ -5,15 +5,14 @@ import de.jpx3.intave.connect.cloud.protocol.*;
 import de.jpx3.intave.connect.cloud.protocol.listener.Clientbound;
 import de.jpx3.intave.connect.cloud.protocol.listener.Serverbound;
 import de.jpx3.intave.connect.cloud.protocol.packets.ServerboundKeepAlivePacket;
-import de.jpx3.intave.connect.cloud.protocol.pipeline.Decryption;
-import de.jpx3.intave.connect.cloud.protocol.pipeline.Encryption;
-import de.jpx3.intave.connect.cloud.protocol.pipeline.HandshakeReceiver;
-import de.jpx3.intave.connect.cloud.protocol.pipeline.PacketCodec;
+import de.jpx3.intave.connect.cloud.protocol.pipeline.*;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import javax.crypto.Cipher;
@@ -61,6 +60,7 @@ public final class Session {
         protected void initChannel(SocketChannel ch) throws Exception {
           ch.pipeline()
             .addLast("timeout", new ReadTimeoutHandler(120))
+            .addLast("logger", new LoggingHandler(LogLevel.INFO))
 //            .addLast("decompression", new Decompression(256))
 //            .addLast("compression", new Compression(256))
             .addLast("codec", new PacketCodec(protocol, CLIENTBOUND))
@@ -152,12 +152,18 @@ public final class Session {
     if (current == null) {
       pipeline.addAfter("timeout", "encryption", encryption);
       pipeline.addAfter("timeout","decryption", decryption);
+
+      pipeline.addAfter("decryption", "accumulator", new Accumulator());
+      pipeline.addAfter("encryption", "prepender", new Prepender());
     } else {
       pipeline.replace("encryption", "encryption", encryption);
       pipeline.replace("decryption", "decryption", decryption);
     }
 
     System.out.println("[Intave/Cloud] Encryption set");
+    System.out.print("[Intave/Cloud] Pipeline:");
+    pipeline.forEach(entry -> System.out.print(" " + entry.getKey() + " ->"));
+    System.out.println();
   }
 
   public void setProcessor(ChannelHandler handler) {

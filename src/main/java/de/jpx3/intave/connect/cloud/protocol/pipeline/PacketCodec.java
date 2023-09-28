@@ -40,6 +40,7 @@ public final class PacketCodec extends ByteToMessageCodec<Packet<?>> {
       throw new RuntimeException("Packet " + packet.name() + " is not " + sending.name().toLowerCase());
     }
     packet.serialize(new ByteBufOutputStream(byteBuf));
+    byteBuf.writeByte(-1);
   }
 
   @Override
@@ -55,8 +56,12 @@ public final class PacketCodec extends ByteToMessageCodec<Packet<?>> {
     if (packet.direction() != receiving) {
       throw new RuntimeException("Packet " + packet.name() + " is not " + receiving.name().toLowerCase());
     }
-    packet.deserialize(new ByteBufInputStream(byteBuf.readBytes(byteBuf.readableBytes())));
+    packet.deserialize(new ByteBufInputStream(byteBuf));
     list.add(packet);
+
+    if (byteBuf.readByte() != -1) {
+      throw new RuntimeException("Packet not fully read");
+    }
   }
 
   private void writeString(String string, ByteBuf byteBuf) {

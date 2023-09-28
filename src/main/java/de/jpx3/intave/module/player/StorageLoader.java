@@ -79,12 +79,14 @@ public final class StorageLoader extends Module {
     User user = UserRepository.userOf(player);
     Storage storage = user.mainStorage();
     UUID id = player.getUniqueId();
-    BackgroundExecutors.execute(() ->
-      storageGateway.requestStorage(id, buffer -> {
-        StorageIOProcessor.inputTo(storage, buffer);
-        checkDebugTag(player, storage);
-        user.notifyStorageLoadSubscribers();
-      })
+    BackgroundExecutors.execute(() -> {
+      System.out.println("Background execute");
+        storageGateway.requestStorage(id, buffer -> {
+          StorageIOProcessor.inputTo(storage, buffer);
+          checkDebugTag(player, storage);
+          user.notifyStorageLoadSubscribers();
+        });
+      }
     );
   }
 

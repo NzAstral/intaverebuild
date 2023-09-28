@@ -56,7 +56,7 @@ public final class Cloud {
 
   private void setupKeepAliveTick() {
     taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(
-      IntavePlugin.singletonInstance(), this::keepAliveTick, 20 * 5, 20 * 5
+      IntavePlugin.singletonInstance(), this::keepAliveTick, 20 * 10, 20 * 30
     );
     TaskTracker.begun(taskId);
   }
@@ -112,7 +112,6 @@ public final class Cloud {
   public void serveTrustfactorRequest(Identity identity, TrustFactor trustFactor) {
     Request<TrustFactor> request = trustfactorRequests.remove(identity.id());
     if (request != null) {
-      System.out.println("Trustfactor Request Acknowledged, is " + trustFactor);
       request.publish(trustFactor);
     }
   }

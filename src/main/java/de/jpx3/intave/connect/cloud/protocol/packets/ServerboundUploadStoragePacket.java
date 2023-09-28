@@ -39,9 +39,9 @@ public final class ServerboundUploadStoragePacket extends BinaryPacket<Serverbou
     try {
       id.serialize(buffer);
       byte[] array = data.array();
-      buffer.write(array.length);
+      buffer.writeInt(array.length);
       buffer.write(array);
-      buffer.write(digest.get().digest(array));
+      buffer.write(digest.get().digest(array), 0, 32);
     } catch (Exception e) {
       e.printStackTrace();
     }
