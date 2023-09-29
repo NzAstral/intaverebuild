@@ -1,6 +1,7 @@
 package de.jpx3.intave.connect.cloud;
 
 import de.jpx3.intave.IntaveAccessor;
+import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveAccess;
 import de.jpx3.intave.access.player.trust.TrustFactor;
@@ -11,16 +12,20 @@ import de.jpx3.intave.connect.cloud.protocol.Packet;
 import de.jpx3.intave.connect.cloud.protocol.Shard;
 import de.jpx3.intave.connect.cloud.protocol.Token;
 import de.jpx3.intave.connect.cloud.protocol.listener.Serverbound;
+import de.jpx3.intave.connect.cloud.protocol.packets.ServerboundPassNayoroPacket;
 import de.jpx3.intave.connect.cloud.protocol.packets.ServerboundRequestStoragePacket;
 import de.jpx3.intave.connect.cloud.protocol.packets.ServerboundRequestTrustfactorPacket;
 import de.jpx3.intave.connect.cloud.protocol.packets.ServerboundUploadStoragePacket;
 import de.jpx3.intave.connect.cloud.request.CloudStorageGateaway;
 import de.jpx3.intave.connect.cloud.request.CloudTrustfactorResolver;
 import de.jpx3.intave.connect.cloud.request.Request;
+import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.TaskTracker;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.Resources;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -37,21 +42,39 @@ public final class Cloud {
   private final List<Session> sessions = new ArrayList<>();
   private final Map<UUID, Request<TrustFactor>> trustfactorRequests = new HashMap<>();
   private final Map<UUID, Request<ByteBuffer>> storageRequests = new HashMap<>();
+  private CloudConfig cloudConfig;
   private int taskId;
 
   public void init() {
     setupKeepAliveTick();
   }
 
-  public void connect() throws Exception {
-    Session masterSession = new Session(shardCache.masterShard(), this);
+  public void configInit(ConfigurationSection config) {
+    cloudConfig = CloudConfig.from(config);
+  }
+
+  public void connectMasterShard() {
+    if (cloudConfig.isEnabled()) {
+      openSession(shardCache.masterShard());
+      ShutdownTasks.add(this::disable);
+    }
+  }
+
+  public void openSession(Shard shard) {
+    if (shard == null) {
+      throw new IllegalArgumentException("Shard cannot be null");
+    }
+    IntaveLogger.logger().info("Connecting to " + shard);
+    Session masterSession = new Session(shard, this);
     masterSession.init(success -> {
       if (success) {
+        IntaveLogger.logger().info("Connected to " + shard);
         setTrustAndStorage();
+      } else {
+        IntaveLogger.logger().warning("Unable to connect to " + shard);
       }
     });
     sessions.add(masterSession);
-    ShutdownTasks.add(this::disable);
   }
 
   private void setupKeepAliveTick() {
@@ -63,8 +86,10 @@ public final class Cloud {
 
   private void setTrustAndStorage() {
     IntaveAccess unsafe = IntaveAccessor.unsafeAccess();
-    unsafe.setTrustFactorResolver(new CloudTrustfactorResolver(this));
-    unsafe.setStorageGateway(new CloudStorageGateaway(this));
+    if (cloudConfig.features().cloudTrustfactorEnabled())
+      unsafe.setTrustFactorResolver(new CloudTrustfactorResolver(this));
+    if (cloudConfig.features().cloudStorageEnabled())
+      unsafe.setStorageGateway(new CloudStorageGateaway(this));
   }
 
   private void disable() {
@@ -85,18 +110,24 @@ public final class Cloud {
   }
 
   private void sendPacket(Packet<Serverbound> packet) {
-    for (Session session : sessions) {
-      if (session.canSend(packet)) {
-        session.send(packet);
-        break;
+    BackgroundExecutors.execute(() -> {
+      for (Session session : sessions) {
+        if (session.canSend(packet)) {
+          session.send(packet);
+          break;
+        }
       }
-    }
+    });
   }
 
   private void keepAliveTick() {
     for (Session session : sessions) {
       session.keepAliveTick();
     }
+  }
+
+  public void uploadSample(Player player, ByteBuffer buffer) {
+    sendPacket(new ServerboundPassNayoroPacket(Identity.from(player), buffer));
   }
 
   public void trustfactorRequest(UUID id, Consumer<TrustFactor> callback) {
@@ -135,5 +166,9 @@ public final class Cloud {
 
   public void saveStorage(UUID id, ByteBuffer buffer) {
     sendPacket(new ServerboundUploadStoragePacket(Identity.from(id), buffer));
+  }
+
+  public boolean isEnabled() {
+    return cloudConfig.isEnabled();
   }
 }

@@ -15,11 +15,11 @@ public final class ServerboundPassNayoroPacket extends BinaryPacket<Serverbound>
   private ByteBuffer data;
 
   public ServerboundPassNayoroPacket() {
-    super(SERVERBOUND, "PASS_NAYORO", "1");
+    super(SERVERBOUND, "PASS_SAMPLE", "1");
   }
 
   public ServerboundPassNayoroPacket(Identity id, ByteBuffer data) {
-    super(SERVERBOUND, "PASS_NAYORO", "1");
+    super(SERVERBOUND, "PASS_SAMPLE", "1");
     this.id = id;
     this.data = data;
   }

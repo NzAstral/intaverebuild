@@ -144,6 +144,17 @@ check:
         - "intave internals kickip {player} &cYou have been kicked, as an account with your ip address was removed from the game"
         - "kick {player} &cYou have been removed from the game based on data that was collected by the anti-cheat"
 
+cloud:
+  enabled: true
+  shard-limit: 10
+  reconnect-delay: 5000
+
+  features:
+    cloud-storage: true
+    cloud-trustfactor: true
+    cloud-heuristics: true
+    cloud-logs: true
+
 storage:
   # Set to ignore the "intave internals storelog" command and auto-store suggested violations instead
   auto-logs: false

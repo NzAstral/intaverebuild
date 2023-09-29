@@ -80,7 +80,6 @@ public final class StorageLoader extends Module {
     Storage storage = user.mainStorage();
     UUID id = player.getUniqueId();
     BackgroundExecutors.execute(() -> {
-      System.out.println("Background execute");
         storageGateway.requestStorage(id, buffer -> {
           StorageIOProcessor.inputTo(storage, buffer);
           checkDebugTag(player, storage);

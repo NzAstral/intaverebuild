@@ -60,7 +60,7 @@ public final class Session {
         protected void initChannel(SocketChannel ch) throws Exception {
           ch.pipeline()
             .addLast("timeout", new ReadTimeoutHandler(120))
-            .addLast("logger", new LoggingHandler(LogLevel.INFO))
+//            .addLast("logger", new LoggingHandler(LogLevel.INFO))
 //            .addLast("decompression", new Decompression(256))
 //            .addLast("compression", new Compression(256))
             .addLast("codec", new PacketCodec(protocol, CLIENTBOUND))
@@ -70,8 +70,7 @@ public final class Session {
       });
 
     try {
-      // todo replace with actual cloud address
-      boolean connected = bootstrap.connect("localhost", 2024).await().addListener(future -> {
+      boolean connected = bootstrap.connect(shard.domain(), shard.port()).await().addListener(future -> {
         if (!future.isSuccess()) {
           future.cause().printStackTrace();
           return;
@@ -159,11 +158,11 @@ public final class Session {
       pipeline.replace("encryption", "encryption", encryption);
       pipeline.replace("decryption", "decryption", decryption);
     }
-
-    System.out.println("[Intave/Cloud] Encryption set");
-    System.out.print("[Intave/Cloud] Pipeline:");
-    pipeline.forEach(entry -> System.out.print(" " + entry.getKey() + " ->"));
-    System.out.println();
+//
+//    System.out.println("[Intave/Cloud] Encryption set");
+//    System.out.print("[Intave/Cloud] Pipeline:");
+//    pipeline.forEach(entry -> System.out.print(" " + entry.getKey() + " ->"));
+//    System.out.println();
   }
 
   public void setProcessor(ChannelHandler handler) {

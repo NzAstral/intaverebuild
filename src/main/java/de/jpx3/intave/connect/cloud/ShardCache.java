@@ -2,6 +2,7 @@ package de.jpx3.intave.connect.cloud;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.connect.cloud.protocol.Shard;
 import de.jpx3.intave.connect.cloud.protocol.Token;
 
@@ -18,6 +19,9 @@ public final class ShardCache {
   private boolean wasUpdated = false;
 
   public ShardCache() {
+    if (IntaveControl.CLOUD_LOCALHOST_MASTER_SHARD) {
+      addShard("master", new Shard("master", "localhost", 2024, new Token()));
+    }
   }
 
   public void addShard(Shard shard) {

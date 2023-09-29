@@ -1,5 +1,6 @@
 package de.jpx3.intave.packet.reader;
 
+import com.google.common.collect.Maps;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -13,7 +14,10 @@ public final class WindowBulkItemReader extends AbstractPacketReader implements 
 
   @Override
   public Map<Integer, ItemStack> itemMap() {
-    List<ItemStack> read = packet().getItemListModifier().read(0);
+    List<ItemStack> read = packet().getItemListModifier().readSafely(0);
+    if (read == null) {
+      return Maps.newHashMap();
+    }
     // to map with indices
     Map<Integer, ItemStack> map = new java.util.HashMap<>();
     for (int i = 0; i < read.size(); i++) {

@@ -712,11 +712,13 @@ public final class IntavePlugin extends JavaPlugin {
 
       // resolve config hash
       configurationService.setupConfiguration(requiredState);
-      prefix = configurationService.configuration().getString("layout.prefix", prefix);
+      YamlConfiguration configuration = configurationService.configuration();
+      prefix = configuration.getString("layout.prefix", prefix);
       prefix = ChatColor.translateAlternateColorCodes('&', prefix);
       defaultColor = ChatColor.getLastColors(prefix);
-      FaultKicks.applyFrom(configurationService.configuration().getConfigurationSection("fault-kicks"));
-      ConsoleOutput.applyFrom(configurationService.configuration().getConfigurationSection("logging"));
+      FaultKicks.applyFrom(configuration.getConfigurationSection("fault-kicks"));
+      ConsoleOutput.applyFrom(configuration.getConfigurationSection("logging"));
+      cloud.configInit(configuration.getConfigurationSection("cloud"));
 
       // stage 8
       Modules.proceedBoot(BootSegment.STAGE_8);
@@ -756,7 +758,7 @@ public final class IntavePlugin extends JavaPlugin {
       analytics.setup();
 
       try {
-        cloud.connect();
+        cloud.connectMasterShard();
       } catch (Exception exception) {
         logger.info("Unable to connect to cloud: " + exception.getMessage());
       }
@@ -1180,6 +1182,10 @@ public final class IntavePlugin extends JavaPlugin {
 
   public IntaveLogger logger() {
     return logger;
+  }
+
+  public Cloud cloud() {
+    return cloud;
   }
 
   public ProxyMessenger proxy() {

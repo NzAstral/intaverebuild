@@ -75,6 +75,11 @@ public class Shard implements Serializable, Comparable<Shard> {
     return token.compareTo(o.token);
   }
 
+  @Override
+  public String toString() {
+    return "Shard{" + name + "@" + domain + ":" + port + "}";
+  }
+
   public static Shard from(DataInput buffer) {
     Shard shard = new Shard();
     shard.deserialize(buffer);

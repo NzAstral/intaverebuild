@@ -22,7 +22,7 @@ public final class StandardClientRetriever extends ChannelInboundHandlerAdapter 
     if (o instanceof Packet) {
       Packet<?> packet = (Packet<?>) o;
       if (packet.direction() == CLIENTBOUND) {
-        System.out.println("[Intave/Cloud] Received " + packet.name());
+        System.out.println("[Intave/Cloud] Received " + packet.name() + " on thread " + Thread.currentThread().getName() + " from " + channelHandlerContext.channel().remoteAddress());
         onSelect(packet);
       }
     }

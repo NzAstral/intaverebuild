@@ -3,6 +3,7 @@ package de.jpx3.intave.module.nayoro;
 import com.google.common.collect.Sets;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
+import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.cleanup.StartupTasks;
 import de.jpx3.intave.executor.BackgroundExecutors;
@@ -22,8 +23,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -208,8 +211,25 @@ public final class Nayoro extends Module {
       }
       Sample sample = new Sample();
       samples.put(user.id(), sample);
-      Resource resource = sample.resource();
-      DataOutputStream dataOutput = new DataOutputStream(resource.writeStream());
+//      Resource resource = sample.resource();
+      DataOutputStream dataOutput = new DataOutputStream(new BufferedOutputStream(new OutputStream() {
+        @Override
+        public void write(int b) throws IOException {
+          throw new UnsupportedOperationException("Not implemented");
+        }
+
+        @Override
+        public void write(@NotNull byte[] b) throws IOException {
+          write(b, 0, b.length);
+        }
+
+        @Override
+        public void write(@NotNull byte[] b, int off, int len) throws IOException {
+          ByteBuffer buffer = ByteBuffer.wrap(b, off, len);
+          IntavePlugin plugin = IntavePlugin.singletonInstance();
+          plugin.cloud().uploadSample(user.player(), buffer);
+        }
+      }, 1024 * 10));
       RecordEventSink recordEventSink = new RecordEventSink(new LiveEnvironment(user), dataOutput);
       eventSinks.get(user).add(recordEventSink);
       lastRecording.get(user).set(System.currentTimeMillis());

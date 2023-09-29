@@ -3,6 +3,7 @@ package de.jpx3.intave.connect.cloud.protocol;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.jpx3.intave.annotate.Nullable;
+import org.bukkit.entity.Player;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -111,6 +112,10 @@ public class Identity implements JsonSerializable {
 
   public static Identity from(String name) {
     return new Identity(name);
+  }
+
+  public static Identity from(Player player) {
+    return new Identity(player.getUniqueId(), player.getName());
   }
 
   public static Identity from(UUID id) {
