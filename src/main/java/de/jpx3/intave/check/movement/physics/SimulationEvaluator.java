@@ -43,9 +43,9 @@ public final class SimulationEvaluator {
     boolean accountedSkippedMovement = movement.receivedFlyingPacketIn(2);
     double verticalLegitimateDeviation = accountedSkippedMovement ? 0.01 : 0.00001;
 
-    if (accountedSkippedMovement && movement.pastNearbyCollisionInaccuracy == 0) {
+    if (accountedSkippedMovement) {
       if (abs(movement.motionX()) < 0.05 && abs(movement.motionZ()) < 0.05 && movement.motionY() < 0 && movement.motionY() > -0.4) {
-        verticalLegitimateDeviation = 0.15;
+        verticalLegitimateDeviation = movement.pastNearbyCollisionInaccuracy == 0 ? 0.15 : (0.08);
       }
     }
 
