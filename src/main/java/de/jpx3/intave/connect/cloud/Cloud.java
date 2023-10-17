@@ -153,11 +153,16 @@ public final class Cloud {
 
   private void sendPacket(Packet<Serverbound> packet) {
     BackgroundExecutors.execute(() -> {
+      boolean sent = false;
       for (Session session : sessions.values()) {
         if (session.canSend(packet)) {
           session.send(packet);
+          sent = true;
           break;
         }
+      }
+      if (!sent) {
+        IntaveLogger.logger().error("Unable to send packet " + packet.name() + " to any shard");
       }
     });
   }

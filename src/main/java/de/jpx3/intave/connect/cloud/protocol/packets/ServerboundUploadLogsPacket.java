@@ -8,12 +8,13 @@ import de.jpx3.intave.connect.cloud.protocol.listener.Serverbound;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ServerboundUploadLogsPacket extends BinaryPacket<Serverbound> {
   private int packetNonce;
   private Identity identity;
-  private List<String> logs;
+  private List<String> logs = new ArrayList<>();
   private Type type;
 
   public ServerboundUploadLogsPacket() {
@@ -25,6 +26,7 @@ public final class ServerboundUploadLogsPacket extends BinaryPacket<Serverbound>
     this.packetNonce = packetNonce;
     this.identity = identity;
     this.logs = logs;
+    this.type = Type.PLAYER_VIOLATION;
   }
 
   @Override
@@ -37,13 +39,14 @@ public final class ServerboundUploadLogsPacket extends BinaryPacket<Serverbound>
       } else {
         buffer.writeBoolean(false);
       }
+      System.out.println("logs.size() = " + logs.size());
       buffer.writeInt(logs.size());
       for (String log : logs) {
         buffer.writeUTF(log);
       }
       buffer.writeUTF(type.name());
     } catch (Exception exception) {
-      throw new RuntimeException(exception);
+      exception.printStackTrace();
     }
   }
 
@@ -60,7 +63,7 @@ public final class ServerboundUploadLogsPacket extends BinaryPacket<Serverbound>
       }
       type = Type.valueOf(buffer.readUTF());
     } catch (Exception exception) {
-      throw new RuntimeException(exception);
+      exception.printStackTrace();
     }
   }
 

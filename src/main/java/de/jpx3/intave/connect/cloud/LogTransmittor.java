@@ -2,12 +2,17 @@ package de.jpx3.intave.connect.cloud;
 
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.cleanup.ShutdownTasks;
+import de.jpx3.intave.cleanup.StartupTasks;
 import de.jpx3.intave.diagnostic.ConsoleOutput;
 import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriber;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -21,7 +26,7 @@ public final class LogTransmittor implements BukkitEventSubscriber {
 
   public void addPlayerLog(Player player, String line) {
     LogState logState = logStateOf(player);
-    logState.addLine(line);
+    logState.addLine(ChatColor.stripColor(line));
   }
 
   public void addIntaveLog(String line) {
@@ -30,11 +35,7 @@ public final class LogTransmittor implements BukkitEventSubscriber {
 
   public void init() {
     if (scheduledUploadLogTaskId == 0) {
-      scheduledUploadLogTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(IntavePlugin.singletonInstance(), () -> {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-          uploadLogOf(player);
-        }
-      }, 20 * 60 * 5, 20 * 60 * 5).getTaskId();
+      scheduledUploadLogTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(IntavePlugin.singletonInstance(), this::uploadAll, 20 * 60 * 5, 20 * 60 * 5).getTaskId();
       TaskTracker.begun(scheduledUploadLogTaskId);
     }
     if (logIdRequestFailedUpdateScheduleTaskId == 0) {
@@ -50,10 +51,19 @@ public final class LogTransmittor implements BukkitEventSubscriber {
       }, 20 * 5, 20 * 5).getTaskId();
       TaskTracker.begun(logIdRequestFailedUpdateScheduleTaskId);
     }
+    StartupTasks.add(() -> Modules.linker().bukkitEvents().registerEventsIn(this));
+    ShutdownTasks.add(this::uploadAll);
+  }
+
+  private void uploadAll() {
+    for (Player player : Bukkit.getOnlinePlayers()) {
+      uploadLogOf(player);
+    }
   }
 
   @BukkitEventSubscription
-  public void onPlayerQuit(Player player) {
+  public void onPlayerQuit(PlayerQuitEvent quit) {
+    Player player = quit.getPlayer();
     uploadLogOf(player, logId -> {
       if (ConsoleOutput.CLOUD_LOG_IDS) {
         IntaveLogger.logger().info("Log-Id of " + player.getName() + " in this session is " + logId);
@@ -107,7 +117,7 @@ public final class LogTransmittor implements BukkitEventSubscriber {
       if (o != null) {
         fulfill(o);
       } else {
-        throw new IllegalArgumentException("Expected String, got " + o);
+        throw new IllegalArgumentException("Expected String, got " + null);
       }
     }
 
@@ -132,7 +142,7 @@ public final class LogTransmittor implements BukkitEventSubscriber {
     cloud.uploadPlayerLogs(
       player,
       logState.currentNonce(),
-      logState.pendingLogs(),
+      new ArrayList<>(logState.pendingLogs()),
       logId -> {
         if (logState.logId() == null) {
           logIdCallback.accept(logId);
