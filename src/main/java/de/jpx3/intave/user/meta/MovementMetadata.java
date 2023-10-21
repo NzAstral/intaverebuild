@@ -404,6 +404,10 @@ public final class MovementMetadata implements SimulationEnvironment {
 
   // formally Entity#getOnPos
   private Material compileBlockBelow(double reduction) {
+    if (player == null) {
+      return Material.AIR;
+    }
+
     World world = player.getWorld();
     int blockCollisionPosX = floor(positionX);
     int blockCollisionPosY = floor(positionY - reduction);
