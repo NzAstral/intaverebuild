@@ -9,6 +9,7 @@ import de.jpx3.intave.connect.cloud.protocol.Packet;
 import de.jpx3.intave.connect.cloud.protocol.listener.Clientbound;
 import de.jpx3.intave.connect.cloud.protocol.packets.*;
 import de.jpx3.intave.module.Modules;
+import de.jpx3.intave.module.nayoro.Classifier;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.module.violation.ViolationProcessor;
 import io.netty.channel.ChannelHandlerContext;
@@ -67,6 +68,15 @@ public final class StandardClientRetriever extends ChannelInboundHandlerAdapter 
   @Override
   public void onLogReceive(ClientboundLogReceive packet) {
     session.serverUploadPlayerLogsRequest(packet.id(), packet.packetNonceResult(), packet.logId());
+  }
+
+  @Override
+  public void onSampleTransmissionAcknowledgement(ClientboundSampleTransmissionAcknowledgement packet) {
+    session.serveSampleTransmissionRequest(
+      packet.identity(),
+      packet.state() == ClientboundSampleTransmissionAcknowledgement.AcceptedState.ACCEPTED,
+      Classifier.valueOf(packet.classification().name())
+    );
   }
 
   @Override

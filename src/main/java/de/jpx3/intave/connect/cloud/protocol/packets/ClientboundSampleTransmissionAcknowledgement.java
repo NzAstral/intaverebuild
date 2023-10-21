@@ -17,6 +17,18 @@ public final class ClientboundSampleTransmissionAcknowledgement extends JsonPack
 		super(Direction.CLIENTBOUND, "SAMPLE_TRANSMISSION_ACKNOWLEDGEMENT", "1");
 	}
 
+	public Identity identity() {
+		return identity;
+	}
+
+	public AcceptedState state() {
+		return state;
+	}
+
+	public Classification classification() {
+		return classification;
+	}
+
 	@Override
 	public void serialize(JsonWriter writer) {
 		try {

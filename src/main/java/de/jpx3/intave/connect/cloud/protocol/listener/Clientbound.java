@@ -23,7 +23,17 @@ public interface Clientbound extends PacketListener {
       onViolation((ClientboundViolation) packet);
     } else if (packet instanceof ClientboundShardsPacket) {
       onShardsPacket((ClientboundShardsPacket) packet);
+    } else if (packet instanceof ClientboundSampleTransmissionAcknowledgement) {
+      onSampleTransmissionAcknowledgement((ClientboundSampleTransmissionAcknowledgement) packet);
+    } else if (packet instanceof ClientboundLogReceive) {
+      onLogReceive((ClientboundLogReceive) packet);
+    } else {
+      onUncaught(packet);
     }
+  }
+
+  default void onSampleTransmissionAcknowledgement(ClientboundSampleTransmissionAcknowledgement packet) {
+    onUncaught(packet);
   }
 
   default void onClientHello(ClientboundHello packet) {

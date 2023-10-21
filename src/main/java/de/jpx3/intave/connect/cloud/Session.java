@@ -7,6 +7,7 @@ import de.jpx3.intave.connect.cloud.protocol.listener.Clientbound;
 import de.jpx3.intave.connect.cloud.protocol.listener.Serverbound;
 import de.jpx3.intave.connect.cloud.protocol.packets.ServerboundKeepAlive;
 import de.jpx3.intave.connect.cloud.protocol.pipeline.*;
+import de.jpx3.intave.module.nayoro.Classifier;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -153,6 +154,10 @@ public final class Session {
 
   public void serverUploadPlayerLogsRequest(Identity id, int nonce, String logId) {
     cloud.serveUploadPlayerLogs(id, nonce, logId);
+  }
+
+  public void serveSampleTransmissionRequest(Identity id, boolean allowed, Classifier classifier) {
+    cloud.serveSampleTransmissionRequest(id, allowed, classifier);
   }
 
   public void onShardsAddition(List<? extends Shard> shards) {
