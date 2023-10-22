@@ -167,7 +167,7 @@ public final class SimulationEvaluator {
     if (movement.pastWaterMovement <= 3) {
       double liquidMotionY;
       if (protocol.waterUpdate()) {
-        liquidMotionY = receivedMotionY + 0.6f /*- movement.positionY + movement.verifiedPositionY*/;
+        liquidMotionY = receivedMotionY + 0.6f - movement.positionY + movement.verifiedPositionY;
       } else {
         liquidMotionY = receivedMotionY + 0.3f;
       }
