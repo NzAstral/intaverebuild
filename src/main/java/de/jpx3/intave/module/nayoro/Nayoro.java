@@ -187,7 +187,7 @@ public final class Nayoro extends Module {
       case CLOUD_STORAGE:
       case CLOUD_TRANSMISSION:
         boolean store = mode == CLOUD_STORAGE;
-        return new BufferedOutputStream(new OutputStream() {
+        return new ManualBufferedOutputStream(new OutputStream() {
           @Override
           public void write(int b) {
             throw new UnsupportedOperationException("Not implemented, expected buffered output stream");
@@ -200,12 +200,23 @@ public final class Nayoro extends Module {
 
           @Override
           public void write(byte @NotNull [] b, int off, int len) {
-            ByteBuffer buffer = ByteBuffer.wrap(b, off, len);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(1);
+            outputStream.write(b, off, len);
+//            outputStream.write(1);
+
+            byte[] writeStream = outputStream.toByteArray();
+            ByteBuffer buffer = ByteBuffer.wrap(writeStream);
             IntavePlugin plugin = IntavePlugin.singletonInstance();
             plugin.cloud().uploadSample(player, buffer/*, store*/);
-            System.out.println("Uploaded " + len + " sample bytes");
+            System.out.println("Uploaded " + writeStream.length + " sample bytes");
           }
-        }, 1024 * 10);
+
+          @Override
+          public void flush() throws IOException {
+            // no-op
+          }
+        }, 1024 * 16);
       case LOCAL_STORAGE:
         return sample.resource().writeStream();
       default:

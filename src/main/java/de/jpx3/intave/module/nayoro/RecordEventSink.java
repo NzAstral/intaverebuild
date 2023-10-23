@@ -7,6 +7,7 @@ import de.jpx3.intave.security.LicenseAccess;
 
 import java.io.Closeable;
 import java.io.DataOutput;
+import java.io.Flushable;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -112,7 +113,7 @@ class RecordEventSink extends EventSink {
   }
 
   @Override
-  public void visitAny(Event event) {
+  public synchronized void visitAny(Event event) {
     setupIfNeeded();
     try {
       writeLock.lock();
@@ -123,6 +124,9 @@ class RecordEventSink extends EventSink {
       event.serialize(environment, dataOutput);
       if (checkFullEventRead) {
         dataOutput.writeByte(0xa);
+      }
+      if (dataOutput instanceof Flushable) {
+        ((Flushable) dataOutput).flush();
       }
     } catch (IOException exception) {
       throw new IllegalStateException("Could not serialize event " + event.getClass().getName(), exception);
