@@ -184,7 +184,7 @@ public final class InventoryTracker extends Module {
     if (reader.container() == 0) {
       List<String> collect = reader.items().stream().map(itemStack -> itemStack.getType().name()).collect(Collectors.toList());
       user.tickFeedback(() -> user.meta().inventory().setItems(collect));
-      System.out.println(collect);
+//      System.out.println(collect);
     }
   }
 }

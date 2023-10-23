@@ -37,7 +37,7 @@ public final class NotOpenCheck extends CheckPart<InventoryClickAnalysis> {
     InventoryMetadata inventory = user.meta().inventory();
     InventoryClickType clickType = reader.clickType();
 
-    player.sendMessage(clickType.name() + "/"+reader.clickedItemTypeIfPossible(player)+" " + inventory.inventoryOpen() + " " + reader.container() + " " + reader.slot() + " " + reader.button());
+//    player.sendMessage(clickType.name() + "/"+reader.clickedItemTypeIfPossible(player)+" " + inventory.inventoryOpen() + " " + reader.container() + " " + reader.slot() + " " + reader.button());
 
     boolean isNativeInventoryClick = reader.container() == 0;
     boolean forceInventoryOnClickOpen = user.meta().inventory().forceInventoryOnClickOpen;
