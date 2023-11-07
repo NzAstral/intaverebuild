@@ -144,15 +144,22 @@ check:
         - "intave internals kickip {player} &cYou have been kicked, as an account with your ip address was removed from the game"
         - "kick {player} &cYou have been removed from the game based on data that was collected by the anti-cheat ({log-id})"
 
+# Cloud features
 cloud:
   enabled: true
-  shard-limit: 10
-  reconnect-delay: 5000
-
   features:
+    # Set to enable cloud storage
+    # This option is required for the cloud trustfactor feature
     cloud-storage: true
+
+    # Set to enable cloud trustfactor
     cloud-trustfactor: true
+
+    # Set to enable cloud-based cheat detection
     cloud-heuristics: true
+
+    # Set to allow Intave to send logs to the cloud
+    # See https://logs.intave.ac for logs
     cloud-logs: true
 
 storage:

@@ -194,6 +194,9 @@ public final class Cloud {
   }
 
   public void requestSampleTransmission(Player player, Consumer<Classifier> callbackIfAccepted) {
+    if (!cloudConfig.isEnabled() || !cloudConfig.features().sampleTransmission()) {
+      return;
+    }
     UUID id = player.getUniqueId();
     Request<Classifier> request = sampleTransmissionRequests.get(id);
     if (request == null) {
@@ -204,7 +207,17 @@ public final class Cloud {
     sendPacket(new ServerboundSampleTransmissionRequest(Identity.from(player)));
   }
 
+  public void noteEndOfSampleTransmission(Player player) {
+    if (!cloudConfig.isEnabled() || !cloudConfig.features().sampleTransmission()) {
+      return;
+    }
+    sendPacket(new ServerboundSampleCompleted(Identity.from(player)));
+  }
+
   public void serveSampleTransmissionRequest(Identity identity, boolean allowed, Classifier classifier) {
+    if (!cloudConfig.isEnabled() || !cloudConfig.features().sampleTransmission()) {
+      return;
+    }
     Request<Classifier> request = sampleTransmissionRequests.remove(identity.id());
     if (request != null && allowed) {
       request.publish(classifier);

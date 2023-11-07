@@ -5,20 +5,10 @@ import org.bukkit.configuration.ConfigurationSection;
 
 public final class CloudConfig {
   private boolean enabled;
-  private int shardLimit;
-  private int reconnectDelay;
   private CloudFeatures features;
 
   public boolean isEnabled() {
     return this.enabled;
-  }
-
-  public int shardLimit() {
-    return this.shardLimit;
-  }
-
-  public int reconnectDelay() {
-    return this.reconnectDelay;
   }
 
   public CloudFeatures features() {
@@ -28,8 +18,6 @@ public final class CloudConfig {
   public static CloudConfig from(ConfigurationSection section) {
     // enabled by default
     boolean enabled = section == null ? !IntaveControl.GOMME_MODE : section.getBoolean("enabled", !IntaveControl.GOMME_MODE);
-    int shardLimit = section == null ? 1000 : section.getInt("shard-limit", 1000);
-    int reconnectDelay = section == null ? 1000 : section.getInt("reconnect-delay", 1000);
     ConfigurationSection featuresSection = section == null ? null : section.getConfigurationSection("features");
     boolean cloudStorage = featuresSection == null || featuresSection.getBoolean("cloud-storage", true);
     boolean cloudTrustFactor = featuresSection == null || featuresSection.getBoolean("cloud-trustfactor", true);
@@ -42,8 +30,6 @@ public final class CloudConfig {
     features.cloudLogs = cloudLogs;
     CloudConfig config = new CloudConfig();
     config.enabled = enabled;
-    config.shardLimit = shardLimit;
-    config.reconnectDelay = reconnectDelay;
     config.features = features;
     return config;
   }
@@ -62,7 +48,7 @@ public final class CloudConfig {
       return this.cloudTrustFactor;
     }
 
-    public boolean isCloudHeuristics() {
+    public boolean sampleTransmission() {
       return this.cloudHeuristics;
     }
 

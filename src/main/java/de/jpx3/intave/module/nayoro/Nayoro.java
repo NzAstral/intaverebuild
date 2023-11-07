@@ -138,7 +138,7 @@ public final class Nayoro extends Module {
       if (!COMBAT_SAMPLING || recordingActiveFor(user)) {
         return;
       }
-      System.out.println("Enabling recording for " + user.player().getName());
+//      System.out.println("Enabling recording for " + user.player().getName());
       recording.get(user).set(true);
       Sample sample = new Sample();
       samples.put(user.id(), sample);
@@ -161,7 +161,6 @@ public final class Nayoro extends Module {
       if (!COMBAT_SAMPLING || !recordingActiveFor(user)) {
         return;
       }
-      System.out.println("Disabling recording for " + user.player().getName());
       recording.get(user).set(false);
       List<EventSink> remove = eventSinks.get(user).stream()
         .filter(eventSink -> eventSink instanceof RecordEventSink)
@@ -172,6 +171,8 @@ public final class Nayoro extends Module {
       if (!MODE.keepCopyOfSamples()) {
         sample.delete();
       }
+      Cloud cloud = IntavePlugin.singletonInstance().cloud();
+      cloud.noteEndOfSampleTransmission(user.player());
     } finally {
       localRecordingLock.unlock();
     }
