@@ -891,6 +891,11 @@ public final class MovementMetadata implements SimulationEnvironment {
     if (inventoryData.inventoryOpen()) {
       return true;
     }
+    // disable for 1.15+ clients
+    // I don't expect them to find this anytime soon
+    if (user.meta().protocol().beeUpdate()) {
+      return false;
+    }
     int trustFactorSetting = user.trustFactorSetting("physics.joap-limit") + (REPLACE_JOAP_SETBACK_WITH_CM ? 1 : 0);
     return pastVelocity == 0 && sprinting && lastVelocityApplicableForJumpDenial() && physicsJumpedOverrideVL >= trustFactorSetting;
   }
