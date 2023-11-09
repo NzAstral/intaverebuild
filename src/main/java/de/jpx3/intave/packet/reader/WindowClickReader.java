@@ -7,6 +7,7 @@ import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -68,6 +69,8 @@ public final class WindowClickReader extends AbstractPacketReader {
       return clickType() == InventoryClickType.THROW && slot() != -999;
     } else {
       return packet().getIntegers().read(3) == 4 && slot() != -999;
+    }
+  }
 
   @KeepEnumInternalNames
   public enum InventoryClickType {
