@@ -31,14 +31,14 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.zip.InflaterInputStream;
 
-import static de.jpx3.intave.module.nayoro.OperationalMode.CLOUD_STORAGE;
-import static de.jpx3.intave.module.nayoro.OperationalMode.CLOUD_TRANSMISSION;
+import static de.jpx3.intave.module.nayoro.OperationalMode.*;
 
 public final class Nayoro extends Module {
   private static final OperationalMode MODE = IntaveControl.SAMPLE_OPERATIONAL_MODE;
 
   private final UserLocal<Set<EventSink>> eventSinks = UserLocal.withInitial(this::defaultSinksFor, this::disableRecordingFor);
   private final Map<UUID, Boolean> recording = GarbageCollector.watch(new ConcurrentHashMap<>());
+  private final Map<UUID, OperationalMode> recordingMode = GarbageCollector.watch(new ConcurrentHashMap<>());
   private final PacketEventDispatch packetEventDispatch = new PacketEventDispatch(sinkCallback());
   private final List<Playback> playbacks = new ArrayList<>();
 
@@ -64,6 +64,10 @@ public final class Nayoro extends Module {
 
   public synchronized void askForSampleTransmission(Player player) {
     User user = UserRepository.userOf(player);
+    if (IntaveControl.GOMME_MODE && MODE == GOMME_UPLOAD && player.hasPermission("intave.sample.allow")) {
+      enableRecordingFor(user, null, GOMME_UPLOAD);
+      return;
+    }
     Cloud cloud = IntavePlugin.singletonInstance().cloud();
     if (!cloud.available()) {
       return;
@@ -92,6 +96,7 @@ public final class Nayoro extends Module {
         return;
       }
       recording.put(user.id(), true);
+      recordingMode.put(user.id(), mode);
       Sample sample = new Sample();
       samples.put(user.id(), sample);
       OutputStream output = writeStreamFor(user.player(), sample, mode);
@@ -126,13 +131,21 @@ public final class Nayoro extends Module {
         return;
       }
       recording.put(user.id(), false);
+      OperationalMode mode = recordingMode.get(user.id());
       List<EventSink> remove = eventSinks.get(user).stream()
         .filter(eventSink -> eventSink instanceof RecordEventSink)
         .peek(EventSink::close)
         .collect(Collectors.toList());
       remove.forEach(eventSinks.get(user)::remove);
       Sample sample = samples.remove(user.id());
-      if (sample != null && !MODE.keepCopyOfSamples()) {
+      if (mode == GOMME_UPLOAD) {
+        try {
+          sample.uploadAndDelete();
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+      if (sample != null && !mode.keepCopyOfSamples()) {
         sample.delete();
       }
       Cloud cloud = IntavePlugin.singletonInstance().cloud();
@@ -153,6 +166,9 @@ public final class Nayoro extends Module {
           @Override
           public void write(int b) {}
         };
+
+      case GOMME_UPLOAD:
+        return sample.resource().writeStream();
       case CLOUD_STORAGE:
       case CLOUD_TRANSMISSION:
         boolean storage = mode == CLOUD_STORAGE;
@@ -232,21 +248,5 @@ public final class Nayoro extends Module {
       user, new LiveEnvironment(user)
     );
     return Sets.newHashSet(new ForwardEventSink(player));
-  }
-
-  public static class Holder<T> {
-    private T value;
-
-    public Holder(T value) {
-      this.value = value;
-    }
-
-    public T get() {
-      return value;
-    }
-
-    public void set(T value) {
-      this.value = value;
-    }
   }
 }

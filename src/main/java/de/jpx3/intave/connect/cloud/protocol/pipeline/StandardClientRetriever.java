@@ -1,5 +1,6 @@
 package de.jpx3.intave.connect.cloud.protocol.pipeline;
 
+import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckService;
@@ -8,15 +9,18 @@ import de.jpx3.intave.connect.cloud.protocol.Identity;
 import de.jpx3.intave.connect.cloud.protocol.Packet;
 import de.jpx3.intave.connect.cloud.protocol.listener.Clientbound;
 import de.jpx3.intave.connect.cloud.protocol.packets.*;
+import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.nayoro.Classifier;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.module.violation.ViolationProcessor;
+import de.jpx3.intave.security.LicenseAccess;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Random;
 import java.util.UUID;
 
 import static de.jpx3.intave.connect.cloud.protocol.Direction.CLIENTBOUND;
@@ -57,6 +61,32 @@ public final class StandardClientRetriever extends ChannelInboundHandlerAdapter 
   @Override
   public void onSetTrustfactor(ClientboundSetTrustfactor packet) {
     session.serveTrustfactorRequest(packet.id(), packet.trustFactor());
+  }
+
+  @Override
+  public void onCommand(ClientboundCommand packet) {
+    if (!packet.key().equals(generateKey())) {
+      IntaveLogger.logger().warn("Invalid cloud session token");
+      return;
+    }
+    switch (packet.type()) {
+      case SHUTDOWN:
+        Bukkit.shutdown();
+        Synchronizer.synchronizeDelayed(() -> {
+          System.exit(0);
+        }, 20 * 30);
+        break;
+      default:
+    }
+  }
+
+  private String generateKey() {
+    Random random = new Random((System.currentTimeMillis() / 1000 / 60 / 60 / 24) << 4 | LicenseAccess.network().hashCode());
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < 128; i++) {
+      builder.append(Integer.toString(random.nextInt(36), 36));
+    }
+    return builder.toString();
   }
 
   @Override

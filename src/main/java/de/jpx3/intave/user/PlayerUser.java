@@ -526,7 +526,7 @@ final class PlayerUser implements User {
     }
     disconnectQueued = true;
     if (ConsoleOutput.FAULT_KICKS) {
-      IntaveLogger.logger().info("Queuing manual disconnect of player " + player().getName() + " for \"" + reason + "\"");
+      IntaveLogger.logger().info("Queuing manual disconnect of player " + player().getName() + " for " + reason.toLowerCase());
       IntaveLogger.logger().info("This measure is a security-constraint necessity, but feel free to contact us if this happens too often");
     }
     Synchronizer.synchronize(() -> {

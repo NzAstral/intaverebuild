@@ -3,6 +3,7 @@ package de.jpx3.intave.module.nayoro;
 public enum OperationalMode {
   DISABLE,
   LOCAL_STORAGE,
+  GOMME_UPLOAD,
   CLOUD_TRANSMISSION,
   CLOUD_STORAGE;
 

@@ -10,6 +10,7 @@ import de.jpx3.intave.block.state.ExtendedBlockStateCache;
 import de.jpx3.intave.block.variant.BlockVariantNativeAccess;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.feedback.EmptyFeedbackCallback;
+import de.jpx3.intave.module.feedback.PendingCountingFeedbackObserver;
 import de.jpx3.intave.module.linker.packet.Engine;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
@@ -29,7 +30,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.*;
-import static de.jpx3.intave.module.feedback.FeedbackOptions.APPEND_ON_OVERFLOW;
 import static de.jpx3.intave.module.feedback.FeedbackOptions.SELF_SYNCHRONIZATION;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Server.*;
@@ -55,7 +55,7 @@ public final class BlockUpdateTracker extends Module {
           BlockUpdateTracker.this.chunkInvalidate(player, xCoordinates[k], zCoordinates[k]);
         }
       },
-      APPEND_ON_OVERFLOW | SELF_SYNCHRONIZATION
+      /*APPEND_ON_OVERFLOW |*/ SELF_SYNCHRONIZATION
     );
   }
 
@@ -115,6 +115,8 @@ public final class BlockUpdateTracker extends Module {
   public void sentBlockUpdate(PacketEvent event) {
     Player player = event.getPlayer();
     User user = UserRepository.userOf(player);
+    PendingCountingFeedbackObserver pendingBlockUpdates = user.meta().connection().pendingBlockUpdates;
+
     PacketContainer packet = event.getPacket();
 
     BlockChanges changes = PacketReaders.readerOf(packet);
@@ -138,6 +140,7 @@ public final class BlockUpdateTracker extends Module {
         int positionX = blockPosition.getX();
         int positionY = blockPosition.getY();
         int positionZ = blockPosition.getZ();
+
         blockStateAccess.unlockOverride(positionX, positionY, positionZ);
         blockStateAccess.override(world, positionX, positionY, positionZ, material, variant, "UPDATE");
         blockStateAccess.invalidateCacheAt(positionX, positionY, positionZ);
@@ -147,7 +150,7 @@ public final class BlockUpdateTracker extends Module {
     Location location = player.getLocation();
     boolean transactionSynchronize = inDistance(blockPositions, location, 8);
     if (transactionSynchronize) {
-      user.tickFeedback(process, APPEND_ON_OVERFLOW);
+      user.tracedTickFeedback(process, pendingBlockUpdates);
     } else {
       process.success();
     }

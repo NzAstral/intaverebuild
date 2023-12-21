@@ -17,6 +17,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.IBlockAccess;
 import net.minecraft.world.level.block.state.IBlockData;
 import net.minecraft.world.level.chunk.LightChunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -112,17 +113,17 @@ public final class v20BlockAccessor implements BlockAccessor {
     return blockData.getBlock().getDamage(blockData, entityPlayer, blockAccess, blockPosition);
   }
 
+  private static final Method isReplaceableMethod = Lookup.serverMethod("BlockData", "isReplaceable", boolean.class);
+
   @Override
   @PatchyAutoTranslation
   public boolean replacementPlace(World world, Player player, BlockPosition nativeBlockPosition) {
-    WorldServer worldServer = ((CraftWorld) world).getHandle();
-    IBlockAccess blockAccess = findChunk(worldServer.getChunkProvider(), nativeBlockPosition.getX() >> 4, nativeBlockPosition.getZ() >> 4);
-    if (blockAccess == null) {
-      return false;
-    }
     User user = UserRepository.userOf(player);
     int heldSlot = user.meta().inventory().handSlot();
-    IBlockData blockData = blockAccess.getType(positionOfNative(nativeBlockPosition));
+    Location location = nativeBlockPosition.toLocation(world);
+    Material material = VolatileBlockAccess.typeAccess(user, location);
+    int variant = VolatileBlockAccess.variantIndexAccess(user, location);
+    IBlockData blockData = (IBlockData) BlockVariantRegister.rawVariantOf(material, variant);
     Object heldItem;
     if (INVENTORY_VIA_GETTER) {
       heldItem = ((org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer) player).getHandle().getInventory().getItem(heldSlot).getItem();
@@ -130,16 +131,13 @@ public final class v20BlockAccessor implements BlockAccessor {
       heldItem = ((CraftPlayer) player).getHandle().getInventory().getItem(heldSlot).getItem();
     }
     Item targetItem = blockData.getBlock().getItem();
-
     // implement this properly, without reflections
-    Method method = Lookup.serverMethod("BlockData", "isReplaceable", boolean.class);
     boolean replaceable = false;
     try {
-      replaceable = (boolean) method.invoke(blockData);
+      replaceable = (boolean) isReplaceableMethod.invoke(blockData);
     } catch (IllegalAccessException | InvocationTargetException ignored) {
       ignored.printStackTrace();
     }
-
     return replaceable && !Objects.equals(targetItem, heldItem);
   }
 
@@ -158,7 +156,6 @@ public final class v20BlockAccessor implements BlockAccessor {
   @PatchyAutoTranslation
   @PatchyTranslateParameters
   private LightChunk findChunk(ChunkProviderServer server, int x, int z) {
-//    return (LightChunk) server.c(x, z);
     Class<?> chunk = Lookup.serverClass("LightChunk");
     Method providerMethod = Lookup.serverMethod("ChunkProviderServer", "c", new Type[]{Type.INT_TYPE, Type.INT_TYPE}, Type.getType(chunk));
     try {

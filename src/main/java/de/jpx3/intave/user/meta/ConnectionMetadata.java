@@ -15,6 +15,7 @@ import de.jpx3.intave.math.Occurrences;
 import de.jpx3.intave.module.feedback.DelayedPacket;
 import de.jpx3.intave.module.feedback.FeedbackQueue;
 import de.jpx3.intave.module.feedback.FeedbackRequest;
+import de.jpx3.intave.module.feedback.PendingCountingFeedbackObserver;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.packet.PacketSender;
 import org.bukkit.entity.Player;
@@ -36,6 +37,7 @@ public final class ConnectionMetadata {
 
   private final Set<Integer> entityIds = new HashSet<>();
   private final List<Entity> synchronizedEntities = Lists.newCopyOnWriteArrayList();
+  public PendingCountingFeedbackObserver pendingBlockUpdates;
   private List<Entity> tickedEntities = new CopyOnWriteArrayList<>();
   private final Map<Long, Long> remainingPingPacketTimestamps = Maps.newConcurrentMap();
   private final List<Long> latencyDifferenceBalance = Lists.newCopyOnWriteArrayList();

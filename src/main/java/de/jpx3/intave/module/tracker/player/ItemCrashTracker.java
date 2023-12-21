@@ -6,6 +6,7 @@ import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
+import de.jpx3.intave.player.FaultKicks;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.InventoryMetadata;
@@ -122,7 +123,7 @@ public class ItemCrashTracker extends Module {
         event.setCancelled(true);
       }
     }
-    if (inventoryData.windowClickCounter++ > 500) {
+    if (inventoryData.windowClickCounter++ > 500 && FaultKicks.INVENTORY_FAULTS) {
       user.kick("Too many inventory interactions");
       event.setCancelled(true);
     }

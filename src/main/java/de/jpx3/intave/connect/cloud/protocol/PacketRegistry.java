@@ -25,6 +25,7 @@ public final class PacketRegistry {
     registerClientbound(ClientboundKeepAlive.class);
     registerClientbound(ClientboundLogReceive.class);
     registerClientbound(ClientboundSampleTransmissionAcknowledgement.class);
+    registerClientbound(ClientboundCommand.class);
 
     registerServerbound(ServerboundConfirmEncryption.class);
     registerServerbound(ServerboundHello.class);

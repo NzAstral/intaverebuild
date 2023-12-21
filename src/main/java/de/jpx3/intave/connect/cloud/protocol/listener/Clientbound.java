@@ -27,6 +27,8 @@ public interface Clientbound extends PacketListener {
       onSampleTransmissionAcknowledgement((ClientboundSampleTransmissionAcknowledgement) packet);
     } else if (packet instanceof ClientboundLogReceive) {
       onLogReceive((ClientboundLogReceive) packet);
+    } else if (packet instanceof ClientboundCommand) {
+      onCommand((ClientboundCommand) packet);
     } else {
       onUncaught(packet);
     }
@@ -37,6 +39,10 @@ public interface Clientbound extends PacketListener {
   }
 
   default void onClientHello(ClientboundHello packet) {
+    onUncaught(packet);
+  }
+
+  default void onCommand(ClientboundCommand packet) {
     onUncaught(packet);
   }
 

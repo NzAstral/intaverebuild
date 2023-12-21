@@ -1,5 +1,8 @@
 package de.jpx3.intave.adapter.viaversion;
 
+import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.protocol.packet.PacketTracker;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -33,7 +36,7 @@ public final class ViaVersion4Access implements ViaVersionAccess {
         maxPPSField.setAccessible(true);
       }
       int maxpps = maxPPSField.getInt(configuration);
-      maxPPSField.set(configuration, Math.max(maxpps, 300));
+      maxPPSField.set(configuration, Math.max(maxpps, 600));
     } catch (Exception exception) {
       throw new IllegalStateException("Failed to alter ViaVersion configuration", exception);
     }
@@ -46,6 +49,17 @@ public final class ViaVersion4Access implements ViaVersionAccess {
     } catch (Exception exception) {
       throw new IllegalStateException("Unable to resolve player version", exception);
     }
+  }
+
+  @Override
+  public void decrementReceivedPackets(Player player, int amount) {
+    UserConnection connection = Via.getAPI().getConnection(player.getUniqueId());
+    if (connection == null) {
+      return;
+    }
+    PacketTracker packetTracker = connection.getPacketTracker();
+    packetTracker.setReceivedPackets(Math.max(0, packetTracker.getReceivedPackets() - amount));
+    packetTracker.setPacketsPerSecond(Math.max(0, packetTracker.getPacketsPerSecond() - amount));
   }
 
   @Override

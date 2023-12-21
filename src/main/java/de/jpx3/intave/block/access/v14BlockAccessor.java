@@ -9,6 +9,7 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.world.WorldHeight;
 import net.minecraft.server.v1_14_R1.*;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -105,22 +106,20 @@ public final class v14BlockAccessor implements BlockAccessor {
   @Override
   @PatchyAutoTranslation
   public boolean replacementPlace(World world, Player player, BlockPosition nativeBlockPosition) {
-    WorldServer worldServer = ((CraftWorld) world).getHandle();
-    IBlockAccess blockAccess = worldServer.getChunkProvider().c(nativeBlockPosition.getX() >> 4, nativeBlockPosition.getZ() >> 4);
-    if (blockAccess == null) {
-      return false;
-    }
     User user = UserRepository.userOf(player);
     int heldSlot = user.meta().inventory().handSlot();
-    IBlockData blockData = blockAccess.getType(positionOfNative(nativeBlockPosition));
+    Location location = nativeBlockPosition.toLocation(world);
+    Material material = VolatileBlockAccess.typeAccess(user, location);
+    int variant = VolatileBlockAccess.variantIndexAccess(user, location);
+    IBlockData rawVariant = (IBlockData) BlockVariantRegister.rawVariantOf(material, variant);
     Object heldItem;
     if (INVENTORY_VIA_GETTER) {
       heldItem = ((org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer) player).getHandle().getInventory().getItem(heldSlot).getItem();
     } else {
       heldItem = ((CraftPlayer) player).getHandle().inventory.getItem(heldSlot).getItem();
     }
-    Item targetItem = blockData.getBlock().getItem();
-    return blockData.getMaterial().isReplaceable() && !Objects.equals(targetItem, heldItem);
+    Item targetItem = rawVariant.getBlock().getItem();
+    return rawVariant.getMaterial().isReplaceable() && !Objects.equals(targetItem, heldItem);
   }
 
   @PatchyAutoTranslation

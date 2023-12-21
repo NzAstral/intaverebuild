@@ -14,6 +14,7 @@ public final class FaultKicks {
   public static boolean IGNORING_FEEDBACK = true;
   public static boolean IGNORING_KEEP_ALIVE = true;
   public static boolean INVALID_KEY_INPUT = true;
+  public static boolean INVENTORY_FAULTS = true;
 
   private static final List<String> CONSOLE_OUTPUT = new ArrayList<>();
 
@@ -25,6 +26,7 @@ public final class FaultKicks {
     IGNORING_KEEP_ALIVE = loadFrom(section, "ignoring-keep-alive", "ignoring keep alive packets");
     INVALID_KEY_INPUT = loadFrom(section, "invalid-key-input", "invalid key inputs");
     INVALID_PLAYER_ACTION = loadFrom(section, "invalid-player-action", "invalid player actions");
+    INVENTORY_FAULTS = loadFrom(section, "inventory-faults", "inventory faults");
     printWarnings();
   }
 

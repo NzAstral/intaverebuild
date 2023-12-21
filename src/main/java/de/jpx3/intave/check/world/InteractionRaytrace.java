@@ -167,11 +167,11 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
           }
           event.setCancelled(true);
           if (IntaveControl.DEBUG_INTERACTION_DISCREET && IntaveControl.INTERACTION_DEBUG_NAMES.contains(player.getName())) {
-            System.out.println("[Intave/DID] PLACE/INITIAL/PREPRO/EMU_FAILED " + type + " " + typeUsedInHand + " " + enumDirection);
+            System.out.println("[Intave/DID] PLACE/INITIAL/PREPRO/EMU_FAILED " + type + " " + typeUsedInHand + " " + enumDirection + " " + blockPosition.getY());
           }
         } else {
           if (IntaveControl.DEBUG_INTERACTION_DISCREET && IntaveControl.INTERACTION_DEBUG_NAMES.contains(player.getName())) {
-            System.out.println("[Intave/DID] PLACE/INITIAL/PREPRO/EMU_SUCCESS " + type + " " + typeUsedInHand + " " + enumDirection);
+            System.out.println("[Intave/DID] PLACE/INITIAL/PREPRO/EMU_SUCCESS " + type + " " + typeUsedInHand + " " + enumDirection + " " + blockPosition.getY());
           }
         }
       } else {
@@ -180,7 +180,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
         boolean usable = ItemProperties.canItemBeUsed(player, heldItem)
           && !ItemProperties.isPotion(interaction.itemTypeInHand());
         if (IntaveControl.DEBUG_INTERACTION_DISCREET && IntaveControl.INTERACTION_DEBUG_NAMES.contains(player.getName())) {
-          System.out.println("[Intave/DID] PLACE/INITIAL/POSTPONE " + type + " " + typeUsedInHand + " " + enumDirection + " " + usable);
+          System.out.println("[Intave/DID] PLACE/INITIAL/POSTPONE " + type + " " + typeUsedInHand + " " + enumDirection + " " + usable + " " + blockPosition.getY());
         }
         if (!usable) {
           if (MinecraftVersions.VER1_19.atOrAbove()) {
@@ -474,7 +474,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
 
     if (raytraceFailed) {
       if (IntaveControl.DEBUG_INTERACTION_DISCREET && IntaveControl.INTERACTION_DEBUG_NAMES.contains(interaction.player().getName())) {
-        System.out.println("[Intave/DID] PROC/" + interaction.type() + "/RAYTRACE_A_FAILED " + interaction.itemTypeInHand() + " " + interaction.digType() + " (" + hitMiss + "||" + (positionMismatch(interaction, raycastLocation, targetLocation)? raycastLocation + "|" + targetLocation : "false") + "||" + wrongBlockFace(interaction, firstRaytraceResult) + "["+interaction.targetDirectionIndex()+"-"+firstRaytraceResult.sideHit.getIndex()+"])");
+        System.out.println("[Intave/DID] PROC/" + interaction.type() + "/RAYTRACE_A_FAILED " + interaction.itemTypeInHand() + " " + interaction.digType() + " (" + hitMiss + "||" + (positionMismatch(interaction, raycastLocation, targetLocation)? raycastLocation + "|" + targetLocation : "false") + "||" + wrongBlockFace(interaction, firstRaytraceResult) + "["+interaction.targetDirectionIndex()+"-"+(firstRaytraceResult == null ? "null" : firstRaytraceResult.sideHit.getIndex())+"])");
       }
     }
 

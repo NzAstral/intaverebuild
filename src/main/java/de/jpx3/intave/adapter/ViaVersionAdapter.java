@@ -68,6 +68,12 @@ public class ViaVersionAdapter {
     }
   }
 
+  public static void decrementReceivedPackets(Player player, int amount) {
+    if (foundLinkage()) {
+      access.decrementReceivedPackets(player, amount);
+    }
+  }
+
   public static boolean foundLinkage() {
     return access != null;
   }

@@ -2,6 +2,7 @@ package de.jpx3.intave.module.feedback;
 
 public final class FeedbackOptions {
   public static int SELF_SYNCHRONIZATION = 1;
+  @Deprecated
   public static int APPEND_ON_OVERFLOW = 2;
   @Deprecated
   public static int APPEND = 4;

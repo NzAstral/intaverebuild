@@ -30,17 +30,7 @@ final class MultiChunkKeyExtendedBlockStateCache implements ExtendedBlockStateCa
   private final Player player;
   private final ShapeResolverPipeline shapeResolver;
   private final Map<Long, BlockState> blockCache = new ConcurrentHashMap<>(1024);
-//  private final Map<Long, BlockState> blockCache = Long2ObjectMaps.synchronize(new Long2ObjectOpenCustomHashMap<>(new LongHash.Strategy() {
-//    @Override
-//    public int hashCode(long l) {
-//      return Long.hashCode(l);
-//    }
-//
-//    @Override
-//    public boolean equals(long l, long l1) {
-//      return l == l1;
-//    }
-//  }));
+
   private final BlockStateReplacementCache<Long> replacementCache;
   private int originChunkX, originChunkZ;
   private int chunkX, chunkZ;

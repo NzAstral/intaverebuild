@@ -20,7 +20,7 @@ check:
     high-tolerance: false
 
     # Mitigation mode
-    #   Choose between AGGRESSIVE, CAREFUL, LENIENT and SILENT
+    #   Choose between AGGRESSIVE, CAREFUL, LENIENT, BARELY and SILENT
     #   FALSE POSITIVES -> REPORT THEM
     mitigation: CAREFUL
 
@@ -227,6 +227,7 @@ fault-kicks:
   ignoring-keep-alive: true
   invalid-key-input: true
   invalid-player-action: true
+  inventory-faults: true
 
 # Remove some data from packets used to slightly improve cheats
 filter:

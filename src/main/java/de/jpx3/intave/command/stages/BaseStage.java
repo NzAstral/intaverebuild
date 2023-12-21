@@ -175,7 +175,11 @@ public final class BaseStage extends CommandStage {
   )
   @Native
   public void recordCommand(User user, @Optional Player target, @Optional Classifier classifier) {
-    if (!IntaveControl.DISABLE_LICENSE_CHECK) {
+    if (!IntaveControl.DISABLE_LICENSE_CHECK && !IntaveControl.AUTHENTICATION_DEBUG_MODE) {
+      user.player().sendMessage(ChatColor.RED + "This command is not available");
+      return;
+    }
+    if (IntaveControl.GOMME_MODE) {
       user.player().sendMessage(ChatColor.RED + "This command is not available");
       return;
     }

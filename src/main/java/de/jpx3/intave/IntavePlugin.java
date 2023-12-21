@@ -826,7 +826,7 @@ public final class IntavePlugin extends JavaPlugin {
 //      logger.warn(ChatColor.RED + "Upgrading Java has incredible performance benefits");
 //      logger.warn(ChatColor.RED + "We strongly recommend updating Java now");
 //      logger.warn(ChatColor.RED + "Support for older versions of Java might eventually be dropped");
-      logger.info(ChatColor.RED + "Your version of Java is outdated, consider updating");
+      logger.info(ChatColor.RED + "Your version of Java is seriously outdated, consider updating");
     }
 
     if (IntaveControl.NETTY_DUMP_ON_TIMEOUT) {
@@ -889,6 +889,7 @@ public final class IntavePlugin extends JavaPlugin {
     enforceDisabled.put("CM debugging is enabled", DEBUG_CMS);
     enforceDisabled.put("Red trustfactor is enabled globally", APPLY_GLOBAL_LOW_TRUSTFACTOR);
     enforceDisabled.put("Block-placements are deactivated", DISALLOW_ALL_BLOCK_PLACEMENTS);
+    enforceDisabled.put("Block-placements are deactivated with event", DISALLOW_ALL_BLOCK_PLACEMENTS_WITH_EVENT);
     enforceDisabled.put("Hitboxes are dumped on right-click", DUMP_BLOCK_HITBOX_ON_RIGHT_CLICK);
 
     for (Map.Entry<String, Boolean> entry : enforceDisabled.entrySet()) {

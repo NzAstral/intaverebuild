@@ -51,7 +51,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import static de.jpx3.intave.module.feedback.FeedbackOptions.*;
+import static de.jpx3.intave.module.feedback.FeedbackOptions.TRACER_ENTITY_FAR;
+import static de.jpx3.intave.module.feedback.FeedbackOptions.TRACER_ENTITY_NEAR;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Server.*;
@@ -400,9 +401,9 @@ public final class EntityTracker extends Module {
         Synchronizer.synchronize(() -> {
           user.tickFeedback(() -> {
             connection.removeEntityIfMarked(entityId);
-          }, APPEND_ON_OVERFLOW);
+          }/*, APPEND_ON_OVERFLOW*/);
         });
-      }, APPEND_ON_OVERFLOW);
+      }/*, APPEND_ON_OVERFLOW*/);
     });
 
     if (entity != null) {

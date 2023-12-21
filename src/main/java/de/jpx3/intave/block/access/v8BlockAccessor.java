@@ -1,10 +1,15 @@
 package de.jpx3.intave.block.access;
 
 import com.comphenix.protocol.wrappers.BlockPosition;
+import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.klass.rewrite.PatchyAutoTranslation;
+import de.jpx3.intave.user.User;
+import de.jpx3.intave.user.UserRepository;
 import net.minecraft.server.v1_8_R3.Chunk;
 import net.minecraft.server.v1_8_R3.EntityPlayer;
+import net.minecraft.server.v1_8_R3.IBlockData;
 import net.minecraft.server.v1_8_R3.WorldServer;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -59,11 +64,12 @@ public final class v8BlockAccessor implements BlockAccessor {
   @PatchyAutoTranslation
   public boolean replacementPlace(World world, Player player, BlockPosition blockPosition) {
     WorldServer worldServer = ((CraftWorld) world).getHandle();
-    Chunk chunk = worldServer.getChunkIfLoaded(blockPosition.getX() >> 4, blockPosition.getZ() >> 4);
-    if (chunk == null) {
-      return false;
-    }
     net.minecraft.server.v1_8_R3.BlockPosition blockposition = new net.minecraft.server.v1_8_R3.BlockPosition(blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
-    return chunk.getBlockData(blockposition).getBlock().a(worldServer, blockposition);
+    User user = UserRepository.userOf(player);
+    Location location = blockPosition.toLocation(world);
+    Material material = VolatileBlockAccess.typeAccess(user, location);
+    int variant = VolatileBlockAccess.variantIndexAccess(user, location);
+    IBlockData rawVariant = (IBlockData) BlockVariantRegister.rawVariantOf(material, variant);
+    return rawVariant.getBlock().a(worldServer, blockposition);
   }
 }

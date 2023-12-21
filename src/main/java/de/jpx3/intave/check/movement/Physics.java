@@ -592,7 +592,6 @@ public final class Physics extends Check {
         int val = I_EXIST_FOR_THE_BREAKPOINT.length();
       }
 
-
       // a few helpful states
       boolean isMidAir = !movementData.onGround && !movementData.collidedHorizontally && !movementData.collidedVertically;
       boolean isOnGround = movementData.onGround;
@@ -625,6 +624,15 @@ public final class Physics extends Check {
           boolean flagAnyways = (verticalViolationIncrease >= 100 && predictedY < 0 && violationLevelAfter > 30)/* || (verticalViolationIncrease >= 100)*/;
           setback = (distanceMoved > (violationLevelAfter > 30 ? 0.4 : 0.6) || violationLevelAfter > 200 || user.justJoined() || flagAnyways) && deepPitchViolationOverflow && (highPitchAggressiveViolationOverflow || violationLevelAfter > 100);
           manualOverrideDistance = 0.75;
+          break;
+        case BARELY:
+          boolean freeOfColliders = !Collision.nearSolidBlock(user, currentBoundingBox.grow(1));
+          boolean flagAnywayss = freeOfColliders && ((isMidAir && violationLevelAfter > 60) || (verticalViolationIncrease >= 100 && predictedY < 0 && violationLevelAfter >= 100));
+          boolean velocityFlag = velocityDetected && violationLevelAfter > 30 && (verticalViolationIncrease >= 100 || horizontalViolationIncrease >= 100);
+          setback =
+            (distanceMoved > (violationLevelAfter > 80 ? 0.5 : 0.7) || violationLevelAfter > 200 || user.justJoined() || flagAnywayss || velocityFlag)
+            && deepPitchViolationOverflow && (highPitchAggressiveViolationOverflow || violationLevelAfter > 200);
+          manualOverrideDistance = 1;
           break;
         case SILENT:
           setback = false;

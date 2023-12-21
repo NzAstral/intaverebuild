@@ -13,6 +13,7 @@ public enum MitigationStrategy {
   CAREFUL("CAREFUL"),
   LENIENT("LENIENT"),
   SILENT("SILENT"),
+  BARELY("BARELY"),
 
   NOT_SUPPORTED("");
 

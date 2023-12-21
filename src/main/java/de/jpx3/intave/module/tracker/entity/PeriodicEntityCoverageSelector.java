@@ -87,7 +87,7 @@ public final class PeriodicEntityCoverageSelector {
         entity.setResponseTracingEnabled(false);
       }
     }
-    validEntities.sort(Comparator.comparingDouble(entity -> entity.distanceToPlayerCache * (entity.isPlayer ? 0.5 : 1)));
+    validEntities.sort(Comparator.comparingDouble(entity -> entity.distanceToPlayerCache * (entity.isPlayer ? 0.1 : 1)));
     int count = 0;
     List<Entity> traced = connection.tracedEntities();
     List<Entity> lastTraced = new ArrayList<>(traced);

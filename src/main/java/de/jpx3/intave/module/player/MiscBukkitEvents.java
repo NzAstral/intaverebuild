@@ -21,6 +21,7 @@ import de.jpx3.intave.version.IntaveVersion;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -29,6 +30,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 
+import static de.jpx3.intave.IntaveControl.DISALLOW_ALL_BLOCK_PLACEMENTS_WITH_EVENT;
 import static org.bukkit.event.EventPriority.MONITOR;
 
 @SplitMeUp
@@ -67,6 +69,13 @@ public final class MiscBukkitEvents extends Module {
       PluginInvocation pluginInvocation = Caller.pluginInfo();
       String pluginClass = pluginInvocation == null ? "no other plugin" : pluginInvocation.className();
       teleport.getPlayer().sendMessage("Teleport " + teleport.getCause() + " " + teleport.getTo() + " by " + pluginClass);
+    }
+  }
+
+  @BukkitEventSubscription
+  public void on(BlockPlaceEvent place) {
+    if (DISALLOW_ALL_BLOCK_PLACEMENTS_WITH_EVENT) {
+      place.setCancelled(true);
     }
   }
 

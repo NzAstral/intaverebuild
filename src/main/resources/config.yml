@@ -17,7 +17,7 @@ ban-commands:
   - "ban {player} Cheating / {log-id}"
 
 # Movement setback sensitivity
-#   Choose between AGGRESSIVE, CAREFUL, LENIENT and SILENT
+#   Choose between AGGRESSIVE, CAREFUL, LENIENT, BARELY and SILENT
 #   FALSE POSITIVES? -> REPORT THEM
 physics-mm: CAREFUL
 

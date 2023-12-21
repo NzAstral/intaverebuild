@@ -92,17 +92,17 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
         // For enterprise users
       if (enterprise) {
         appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.clickpatterns.OldAirClickLimitHeuristic");
-        appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.clickpatterns.AttackReduceIgnoreHeuristic");
+        appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.other.AttackReduceIgnoreHeuristic");
         appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.RotationStandardDeviationHeuristic");
         if (!IntaveControl.GOMME_MODE && IntaveControl.DISABLE_LICENSE_CHECK) {
           appendCheckPart(new RotationStandardDeviationRelayHeuristic(this));
         }
-        appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.RotationSnapHeuristic");
+        appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.other.RotationSnapHeuristic");
         appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.LongTermClickAccuracyHeuristic");
         if (!IntaveControl.GOMME_MODE && IntaveControl.DISABLE_LICENSE_CHECK) {
           appendCheckPart(new LongTermClickAccuracyRelayHeuristic(this));
         }
-        appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.ReshapedJumpHeuristic");
+        appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.other.ReshapedJumpHeuristic");
         appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.RotationAccuracyYawHeuristic");
         appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.RotationAccuracyPitchHeuristic");
         appendCheckPart("de.jpx3.intave.check.combat.heuristics.detect.combatpatterns.PerfectAttackHeuristic");
@@ -153,7 +153,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     try {
       Class<?> clazz = Class.forName(name);
       if (CheckPart.class.isAssignableFrom(clazz)) {
-        CheckPart<?> check = (CheckPart<?>) clazz.getConstructor(IntavePlugin.class).newInstance(plugin);
+        CheckPart<?> check = (CheckPart<?>) clazz.getConstructor(Heuristics.class).newInstance(this);
         appendCheckPart(check);
       }
     } catch (ClassNotFoundException ex) {

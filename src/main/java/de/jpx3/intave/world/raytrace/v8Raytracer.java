@@ -137,6 +137,8 @@ public final class v8Raytracer implements Raytracer {
       IBlockData iblockdata1 = typeOf(player, world, blockposition);
       Block block1 = iblockdata1.getBlock();
 
+//      System.out.println("Raytrace " + lookX + " " + lookY + " " + lookZ + " " + block1 + " " + iblockdata1);
+
       // block1.a refers to isSolid
       boolean solid = block1.a(iblockdata1, false);
       if (solid) {
@@ -174,14 +176,14 @@ public final class v8Raytracer implements Raytracer {
     int positionX = blockPosition.getX();
     int positionY = blockPosition.getY();
     int positionZ = blockPosition.getZ();
-    boolean inOverride = blockStates.currentlyInOverride(positionX, positionY, positionZ);
-    if (inOverride) {
+//    boolean inOverride = blockStates.currentlyInOverride(positionX, positionY, positionZ);
+//    if (inOverride) {
       Material material = blockStates.typeAt(positionX, positionY, positionZ);
       int variant = blockStates.variantIndexAt(positionX, positionY, positionZ);
       return (IBlockData) BlockVariantRegister.rawVariantOf(material, variant);
-    } else {
-      return world.getType(blockPosition);
-    }
+//    } else {
+//      return world.getType(blockPosition);
+//    }
   }
 
   private boolean includesInvalidCoordinate(NativeVector nativeVector) {

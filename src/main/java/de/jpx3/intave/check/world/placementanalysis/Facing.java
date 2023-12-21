@@ -9,7 +9,6 @@ import de.jpx3.intave.check.world.PlacementAnalysis;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
-import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.module.violation.ViolationContext;
 import de.jpx3.intave.user.User;
@@ -86,9 +85,9 @@ public final class Facing extends CheckPart<PlacementAnalysis> {
         .withVL(0)
         .build();
       ViolationContext context = Modules.violationProcessor().processViolation(violation);
-      if (context.shouldCounterThreat()) {
-        place.setCancelled(true);
-      }
+//      if (context.shouldCounterThreat()) {
+//        place.setCancelled(true);
+//      }
     }
   }
 }

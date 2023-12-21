@@ -55,6 +55,7 @@ public final class Cloud {
   private final Map<Integer, Request<String>> uploadLogRequests = new HashMap<>();
   private CloudConfig cloudConfig;
   private int taskId;
+  private boolean wasConnected = false;
 
   public void init() {
     setupKeepAliveTick();
@@ -95,28 +96,32 @@ public final class Cloud {
 //          IntaveLogger.logger().info("Connected to " + shard);
           setTrustAndStorage();
           askForGlobalSampleTransmission();
+          wasConnected = true;
         });
       } else {
         // called on failure or connection closure
         int attempts = reconnectAttempts.getOrDefault(shard, 0);
-        int retryingIn = (int) (Math.pow(2, attempts) * 2);
+        int retryingIn = (int) (Math.pow(2, attempts + 1) * 2);
 
         // add random 25% jitter
         retryingIn += (int) (retryingIn * (Math.random() * 0.25));
 
-        try {
-          Nayoro nayoro = Modules.nayoro();
-          int delay = 0;
-          for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            nayoro.disableRecordingFor(UserRepository.userOf(onlinePlayer));
+        if (wasConnected) {
+          try {
+            Nayoro nayoro = Modules.nayoro();
+            int delay = 0;
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+              nayoro.disableRecordingFor(UserRepository.userOf(onlinePlayer));
+            }
+          } catch (Exception exception) {
+            // just return
+            return;
           }
-        } catch (Exception exception) {
-          // just return
-          return;
+          wasConnected = false;
         }
 
-        IntaveLogger.logger().warning("Unable to connect to " + shard + ", retrying in " + retryingIn + " seconds, attempt " + attempts + "/10");
-        if (attempts < 10) {
+        IntaveLogger.logger().warning("Unable to connect to " + shard + ", retrying in " + retryingIn + " seconds, attempt " + attempts + "/20");
+        if (attempts < 20) {
           reconnectAttempts.put(shard, attempts + 1);
           Synchronizer.synchronizeDelayed(() -> {
             BackgroundExecutors.executeWhenever(() -> openSession(shard));

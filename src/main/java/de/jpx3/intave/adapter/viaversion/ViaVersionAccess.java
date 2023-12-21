@@ -11,6 +11,9 @@ public interface ViaVersionAccess {
 
   boolean ignoreBlocking(Player player);
 
+  default void decrementReceivedPackets(Player player, int amount) {
+  }
+
   boolean available(String version);
 
   String version();
