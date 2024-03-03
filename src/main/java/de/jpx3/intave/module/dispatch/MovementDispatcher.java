@@ -77,6 +77,7 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.VEHICLE_MOVE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Server.*;
+import static de.jpx3.intave.module.violation.Violation.ViolationFlags.DISPLAY_IN_ALL_VERBOSE_MODES;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_16;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_9;
 
@@ -480,7 +481,11 @@ public final class MovementDispatcher extends Module {
       return;
     }
 
-    connectionData.movementPassedForNFS = true;
+    if (!connectionData.nextFeedbackSubscribers.isEmpty()) {
+      connectionData.movementPassedForNFS = true;
+    }
+
+//    System.out.println("Received movement");
 
     if (!movementData.isTeleportConfirmationPacket) {
       timerCheck.receiveMovement(event);
@@ -614,6 +619,7 @@ public final class MovementDispatcher extends Module {
     boolean vehicleMove = packetType == PacketType.Play.Client.VEHICLE_MOVE;
     boolean hasMovement = vehicleMove || packet.getBooleans().read(1);
     boolean hasRotation = vehicleMove || packet.getBooleans().read(2);
+    boolean claimsToBeOnGround = vehicleMove ? player.isOnGround() : packet.getBooleans().read(0);
 
     for (Superposition<?> superposition : movement.superpositions()) {
       superposition.completeTick();
@@ -629,6 +635,23 @@ public final class MovementDispatcher extends Module {
       movement.verifiedPositionY = movement.positionY;
       movement.verifiedPositionZ = movement.positionZ;
       return;
+    }
+
+    if (!vehicleMove && !movement.awaitTeleport && !movement.awaitOutgoingTeleport && !movement.invalidMovement && !movement.dropPostTickMotionProcessing) {
+      if (claimsToBeOnGround != movement.onGround) {
+        double requiredFallDistance = Collision.present(player, user.meta().movement().boundingBox().grow(0.1, 0.1, 0.1)) ? 0.5 : 0.1;
+        if (movement.artificialFallDistance > requiredFallDistance && !movement.onGround && claimsToBeOnGround) {
+          Violation violation = Violation.builderFor(Physics.class)
+            .forPlayer(player)
+            .withMessage("claimed to be on ground midair")
+            .withDetails("falling " + formatDouble(movement.artificialFallDistance, 2) + " blocks")
+            .withVL(0.5)
+            .appendFlags(DISPLAY_IN_ALL_VERBOSE_MODES)
+            .build();
+          Modules.violationProcessor().processViolation(violation);
+          packet.getBooleans().write(0, false);
+        }
+      }
     }
 
     // onGround == true -> falldamage
@@ -729,6 +752,7 @@ public final class MovementDispatcher extends Module {
     inventoryData.pastHotBarSlotChange++;
     inventoryData.pastItemUsageTransition++;
     movement.pastWaterMovement++;
+    movement.pastLavaMovement++;
     movement.pastVelocity++;
     movement.pastStep++;
     movement.pastEdgeSneak++;

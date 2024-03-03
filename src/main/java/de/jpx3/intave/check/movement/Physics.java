@@ -92,6 +92,7 @@ public final class Physics extends Check {
   private final boolean highToleranceMode;
   private final boolean resetItemUsage;
   private final boolean closeInventory;
+  private final boolean closeInventorySilentMode;
   private final boolean refreshNearbyBlocks;
 
   public Physics(IntavePlugin plugin) {
@@ -103,11 +104,25 @@ public final class Physics extends Check {
     this.highToleranceMode = settings.boolBy("high-tolerance", false);
     if (settings.has("on-detection")) {
       this.resetItemUsage = settings.boolBy("on-detection.reset-item-usage", true);
-      this.closeInventory = settings.boolBy("on-detection.close-inventory", true);
+      String inventoryCloseMode;
+      try {
+        inventoryCloseMode = settings.stringBy("on-detection.close-inventory", "true");
+      } catch (Exception exception) {
+        inventoryCloseMode = settings.boolBy("on-detection.close-inventory", true) ? "true" : "false";
+      }
+      this.closeInventory = inventoryCloseMode.equalsIgnoreCase("true") || inventoryCloseMode.equalsIgnoreCase("silent");
+      this.closeInventorySilentMode = inventoryCloseMode.equalsIgnoreCase("silent");
       this.refreshNearbyBlocks = settings.boolBy("on-detection.refresh-nearby-blocks", true);
     } else {
       this.resetItemUsage = settings.boolBy("reset-item-usage", true);
-      this.closeInventory = settings.boolBy("close-inventory-on-detection", true);
+      String inventoryCloseMode;
+      try {
+        inventoryCloseMode = settings.stringBy("inventory-close-mode", "true");
+      } catch (Exception exception) {
+        inventoryCloseMode = settings.boolBy("inventory-close-mode", true) ? "true" : "false";
+      }
+      this.closeInventory = inventoryCloseMode.equalsIgnoreCase("true") || inventoryCloseMode.equalsIgnoreCase("silent");
+      this.closeInventorySilentMode = inventoryCloseMode.equalsIgnoreCase("silent");
       this.refreshNearbyBlocks = settings.boolBy("refresh-nearby-blocks-on-detection", true);
     }
 
@@ -309,6 +324,7 @@ public final class Physics extends Check {
   public void updateAquatics(User user) {
     MovementMetadata movementData = user.meta().movement();
     updateInWater(user);
+    updateInLava(user);
     movementData.updateEyesInWater();
   }
 
@@ -331,6 +347,13 @@ public final class Physics extends Check {
       movementData.inWaterSinceFallDamagePostCheck = true;
       movementData.pastWaterMovement = 0;
       movementData.artificialFallDistance = 0;
+    }
+  }
+
+  private void updateInLava(User user) {
+    MovementMetadata movementData = user.meta().movement();
+    if (movementData.inLava()) {
+      movementData.pastLavaMovement = 0;
     }
   }
 
@@ -676,13 +699,16 @@ public final class Physics extends Check {
           boolean flagAnywayss = freeOfColliders && ((isMidAir && violationLevelAfter > 60) || (verticalViolationIncrease >= 100 && predictedY < 0 && violationLevelAfter >= 100));
           boolean velocityFlag = velocityDetected && violationLevelAfter > 30 && (verticalViolationIncrease >= 100 || horizontalViolationIncrease >= 100);
           setback =
-            (distanceMoved > (violationLevelAfter > 80 ? 0.5 : 0.7) || violationLevelAfter > 200 || user.justJoined() || flagAnywayss || velocityFlag)
-            && deepPitchViolationOverflow && (highPitchAggressiveViolationOverflow || violationLevelAfter > 200);
+            (distanceMoved > (violationLevelAfter > 80 ? 0.5 : 0.7) || violationLevelAfter > 200 || flagAnywayss || velocityFlag)
+            && deepPitchViolationOverflow && (highPitchAggressiveViolationOverflow || violationLevelAfter > 200 || user.justJoined());
           manualOverrideDistance = 1;
           break;
         case SILENT:
           setback = false;
-          manualOverrideDistance = 1.25;
+          manualOverrideDistance = 1.5;
+          if (violationLevelAfter > 20 && closeInventorySilentMode && user.meta().inventory().inventoryOpen()) {
+            player.closeInventory();
+          }
           break;
       }
 
@@ -1041,10 +1067,10 @@ public final class Physics extends Check {
     if (movementData.artificialFallDistance > 3.0F) {
       float fallDistance = movementData.artificialFallDistance;
       movementData.seenFallDamage = 0;
-      movementData.inWaterSinceFallDamagePostCheck = false;
-      Synchronizer.synchronizeDelayed(() -> user.tickFeedback(() -> {
-        Synchronizer.synchronize(() -> postCheckFalldamage(user, movementData, fallDistance));
-      }), 2);
+//      movementData.inWaterSinceFallDamagePostCheck = false;
+//      Synchronizer.synchronizeDelayed(() -> user.tickFeedback(() -> {
+//        Synchronizer.synchronize(() -> postCheckFalldamage(user, movementData, fallDistance));
+//      }), 2);
       movementData.artificialFallDistance = 0F;
     }
   }
