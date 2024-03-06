@@ -141,11 +141,11 @@ public class PlayerTime extends MetaCheckPart<Timer, PlayerTime.PlayerTimeMeta> 
     long diff = checkMeta.time - System.nanoTime();
 //    ChatColor color = diff > 10_000_000 ? ChatColor.RED : ChatColor.GRAY;
 //    player.sendMessage(color + "" + ((double)diff / 1_000_000L) + "ms ");
-    // We could most likely flag for > 1_000_000 but let's be safe
 //    player.setLevel(Math.max(0, (int) (diff / 1_000_000L) + 100000));
     statisticApply(user, CheckStatistics::increaseTotal);
 
-    if ((diff > 50_000_000) && !user.meta().movement().isInVehicle()) {
+    int limit = System.currentTimeMillis() - movementData.lastMovement > 30_000 ? 150_000_000 : 50_000_000;
+    if ((diff > limit) && !user.meta().movement().isInVehicle()) {
       double displayValue = diff / (50 * 1_000_000f);
       if (displayValue < 0.01) {
         displayValue = 0.01;
