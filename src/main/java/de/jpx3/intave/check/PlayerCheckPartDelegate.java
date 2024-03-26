@@ -5,12 +5,12 @@ import de.jpx3.intave.module.linker.bukkit.PlayerBukkitEventSubscriber;
 import de.jpx3.intave.module.linker.packet.PacketEventSubscriber;
 import de.jpx3.intave.module.linker.packet.PlayerPacketEventSubscriber;
 import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.meta.CheckCustomMetadata;
+import de.jpx3.intave.user.UserLocal;
 
 import java.util.function.Function;
 
 class PlayerCheckPartDelegate<P extends Check, D extends PlayerCheckPart<P>>
-  extends MetaCheckPart<P, PlayerCheckPartDelegate.DelegateMeta>
+  extends CheckPart<P>
   implements PlayerBukkitEventSubscriber, PlayerPacketEventSubscriber
 {
   private final Function<? super User, ? extends D> generator;
@@ -25,9 +25,12 @@ class PlayerCheckPartDelegate<P extends Check, D extends PlayerCheckPart<P>>
     });
   }
 
+  private final UserLocal<D> checks;
+
   protected PlayerCheckPartDelegate(P parentCheck, Function<? super User, ? extends D> generator) {
-    super(parentCheck, DelegateMeta.class);
+    super(parentCheck);
     this.generator = generator;
+    this.checks = UserLocal.withInitial(generator);
   }
 
   @Override
@@ -41,16 +44,6 @@ class PlayerCheckPartDelegate<P extends Check, D extends PlayerCheckPart<P>>
   }
 
   private D delegateOf(User user) {
-    //noinspection unchecked
-    D delegate = (D) metaOf(user).delegate;
-    if (delegate == null) {
-      delegate = generator.apply(user);
-      metaOf(user).delegate = delegate;
-    }
-    return delegate;
-  }
-
-  public static class DelegateMeta extends CheckCustomMetadata {
-    private Object delegate;
+    return checks.get(user);
   }
 }

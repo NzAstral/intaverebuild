@@ -117,25 +117,12 @@ public class RotationFlick extends PlayerCheckPart<PlacementAnalysis> {
     edgeMidpoints[2] = blockMidpoint.add(northSouth ? 0.5 : 0, 0, northSouth ? 0 : 0.5);
     edgeMidpoints[3] = blockMidpoint.add(northSouth ? -0.5 : 0, 0, northSouth ? 0 : -0.5);
 
-//    // play effect
-//    player.playEffect(blockMidpoint.toLocation(player.getWorld()), Effect.HAPPY_VILLAGER, 0);
-//    for (Position edgeMidpoint : edgeMidpoints) {
-//      player.playEffect(edgeMidpoint.toLocation(player.getWorld()), Effect.HAPPY_VILLAGER, 0);
-//    }
-
-//    player.sendMessage(direction.directionVecAsVector().toString());
-//    player.sendMessage(ChatColor.RED + "" + blockMidpoint + " " + edgeMidpoints[0] + " " + edgeMidpoints[1] + " " + edgeMidpoints[2] + " " + edgeMidpoints[3]);
-
     Rotation[] rotations = new Rotation[4];
     for (int i = 0; i < 4; i++) {
       rotations[i] = eyePosition.rotationTo(edgeMidpoints[i]);
     }
 
     float verticalLineLength = Math.abs(rotations[0].pitch() - rotations[1].pitch());
-//    float horizontalLineLength = rotations[2].yaw() - rotations[3].yaw();
-//    double area = Math.sqrt(verticalLineLength * verticalLineLength + horizontalLineLength * horizontalLineLength);
-
-//    player.sendMessage(ChatColor.RED + "" + movement.rotationPitch + " " + average  + " over vline " + verticalLineLength);
 
     float prevPitch = lastPitch;
     float pitchDiff = Math.abs(movement.rotationPitch - prevPitch);
@@ -162,7 +149,7 @@ public class RotationFlick extends PlayerCheckPart<PlacementAnalysis> {
           Violation violation = Violation.builderFor(PlacementAnalysis.class)
             .forPlayer(player).withDefaultThreshold()
             .withMessage(COMMON_FLAG_MESSAGE)
-            .withDetails("suspicious rotation activity while placing blocks")
+            .withDetails("exhibits micro pitch adjustments")
             .appendFlags(DISPLAY_IN_ALL_VERBOSE_MODES)
             .withDefaultThreshold().withVL(10).build();
           Modules.violationProcessor().processViolation(violation);
@@ -236,6 +223,7 @@ public class RotationFlick extends PlayerCheckPart<PlacementAnalysis> {
       rotationHistogram.clear();
       return;
     }
+//    player.sendMessage(ChatColor.GRAY + "" + movementData.rotationYaw + " " + (movementData.rotationYaw % 45));
     if (event.getPacketType() == PacketType.Play.Client.POSITION || event.getPacketType() == PacketType.Play.Client.FLYING) {
       return;
     }

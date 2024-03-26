@@ -49,6 +49,7 @@ public final class PlacementAnalysis extends Check {
     appendCheckPart(new Facing(this));
     appendCheckPart(new RoundedRotation(this));
 
+    appendPlayerCheckPart(AngleSnap.class);
     appendPlayerCheckPart(RotationFlick.class);
   }
 

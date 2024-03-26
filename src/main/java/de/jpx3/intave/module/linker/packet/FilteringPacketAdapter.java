@@ -58,7 +58,11 @@ public final class FilteringPacketAdapter extends WeakReferencePacketAdapter imp
       if (user.shouldIgnoreNextInboundPacket()) {
         return;
       }
-      subscriber.apply(user, usr -> executor.invoke(usr, event));
+      try {
+        subscriber.apply(user, usr -> executor.invoke(usr, event));
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
     } catch (UnsupportedFallbackOperationException ignored) {
       // ignored
     } catch (RuntimeException exception) {
