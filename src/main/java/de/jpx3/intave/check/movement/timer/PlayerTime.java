@@ -54,7 +54,6 @@ public class PlayerTime extends MetaCheckPart<Timer, PlayerTime.PlayerTimeMeta> 
     toleranceTicks = parentCheck.timerTolerance();
   }
 
-
   @PacketSubscription(
     priority = ListenerPriority.HIGHEST,
     packetsOut = {
@@ -134,7 +133,7 @@ public class PlayerTime extends MetaCheckPart<Timer, PlayerTime.PlayerTimeMeta> 
     // Exclude players in certain states such as creative, spectator or teleport
     // We also have to check if the player received the initial join packet due to proxies doing weird things
     if (!checkMeta.gameJoinReceived || movementData.lastTeleport == 0
-      || abilityData.inGameModeIncludePending(AbilityTracker.GameMode.CREATIVE) || abilityData.ignoringMovementPackets()) {
+      || abilityData.inGameModeIncludePending(AbilityTracker.GameMode.CREATIVE) || abilityData.ignoringMovementPackets() || user.meta().movement().isInVehicle()) {
       return;
     }
     checkMeta.time += 49_950_000; // allow constant 0.05ms clock error = give 1s every 2000s (33min)

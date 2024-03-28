@@ -53,12 +53,13 @@ public class AngleSnap extends PlayerCheckPart<PlacementAnalysis> {
       boolean recentBlockPlacement = user.meta().movement().pastBlockPlacement < 20;
       if (rotationSum > 60 && recentBlockPlacement && user.meta().movement().lastTeleport > 5 && rotationSum < 300) {
         if (vl > 2) {
-          int outputVL = rotationSum > 150 || (Math.abs(rotationSum - 90) < 0.1) ? 25 : 10;
-          float lastRot = Math.abs(movementData.rotationYaw - movementData.lastRotationYaw);
-          if (pastDistanceTo45Deg < 0.08 && (lastRot > 30)) {
-            outputVL += 35;
-          }
-          outputVL += (int) (vl * 3);
+//          int outputVL = rotationSum > 150 || (Math.abs(rotationSum - 90) < 0.1) ? 25 : 10;
+//          float lastRot = Math.abs(movementData.rotationYaw - movementData.lastRotationYaw);
+//          if (pastDistanceTo45Deg < 0.08 && (lastRot > 30)) {
+//            outputVL += 35;
+//          }
+//          outputVL += (int) (vl * 3);
+          int outputVL = (int) vl * 3;
           Violation violation = Violation.builderFor(PlacementAnalysis.class)
             .forPlayer(player).withDefaultThreshold()
             .withMessage(COMMON_FLAG_MESSAGE)
