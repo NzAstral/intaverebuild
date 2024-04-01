@@ -313,7 +313,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       String confidenceSymbol = overallActiveConfidence.output();
       String confidence = confidenceName + " (" + confidenceSymbol + ")";
       String typeName = findDominantTypeIn(activeAnomalies).typeName();
-      String details = "on-premise id " + identifier + " at " + confidenceName.toUpperCase();
+      String details = "on-premise " + identifier + " at " + confidenceSymbol;
 
       Violation violation = Violation.builderFor(Heuristics.class)
         .forPlayer(player).withMessage(message).withDetails(details)

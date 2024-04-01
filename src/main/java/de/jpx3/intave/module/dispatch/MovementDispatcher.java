@@ -366,9 +366,9 @@ public final class MovementDispatcher extends Module {
       double positionX = modifier.read(0);
       double positionY = modifier.read(1);
       double positionZ = modifier.read(2);
-      double motionX = positionX - movementData.lastPositionX;
-      double motionY = positionY - movementData.lastPositionY;
-      double motionZ = positionZ - movementData.lastPositionZ;
+      double motionX = positionX - movementData.verifiedPositionX;
+      double motionY = positionY - movementData.verifiedPositionY;
+      double motionZ = positionZ - movementData.verifiedPositionZ;
       double distance = MathHelper.hypot3d(motionX, motionY, motionZ);
 
       if (distance < 0.00001) {

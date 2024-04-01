@@ -177,6 +177,9 @@ final class MovementConfiguration {
     if (Math.abs(forward) > 1 || Math.abs(strafe) > 1) {
       throw new IllegalStateException("That key can not exist " + forward + " " + strafe);
     }
+    if (attackReduceTicks > 4) {
+      attackReduceTicks = 4;
+    }
     int key = (attackReduceTicks & 0b11) << BOOLEANS + 4 |
       forward + 1 << BOOLEANS + 2 | strafe + 1 << BOOLEANS |
       (attackReduceTicks > 0 ? 8 : 0) | (sprinting ? 4 : 0) |

@@ -30,6 +30,7 @@ import de.jpx3.intave.check.world.interaction.InteractionType;
 import de.jpx3.intave.executor.RateLimiter;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.Lookup;
+import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
@@ -55,9 +56,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.*;
@@ -1036,9 +1035,17 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     if (user.meta().movement().awaitTeleport) {
       mustFlag = true;
     }
-    details += ", " + searches + " rays";
+    Map<String, String> granulars = new LinkedHashMap<>();
+    granulars.put("type", type.name());
+    granulars.put("rays", String.valueOf(searches));
+    granulars.put("expected_block", MathHelper.formatPosition(targetLocation));
+    granulars.put("expected_direction", interaction.targetDirection().name());
+    granulars.put("actual_block", MathHelper.formatPosition(raycastLocation));
+    granulars.put("actual_direction", raycastResult == null ? "null" : raycastResult.sideHit.name());
+//    details += ", " + searches + " rays";
     Violation violation = Violation.builderFor(InteractionRaytrace.class)
       .forPlayer(player).withMessage(message).withDetails(details).withVL(vl)
+      .withGranulars(granulars)
       .build();
     ViolationContext violationContext = Modules.violationProcessor().processViolation(violation);
     metaOf(user).lastInteractionFlag = System.currentTimeMillis();

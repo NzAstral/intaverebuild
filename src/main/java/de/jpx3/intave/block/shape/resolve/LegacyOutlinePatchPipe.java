@@ -33,7 +33,11 @@ public class LegacyOutlinePatchPipe implements ShapeResolverPipeline {
 
   private final Set<Material> affectedMaterials = MaterialSearch.materialsThatContain(
     "LADDER",
-    "STAIRS"
+    "STAIRS",
+    "THIN_GLASS",
+    "STAINED_GLASS_PANE",
+    "IRON_FENCE",
+    "CAULDRON"
   );
 
   private boolean affected(Material type) {
