@@ -15,6 +15,7 @@ import de.jpx3.intave.check.combat.heuristics.Anomaly;
 import de.jpx3.intave.check.combat.heuristics.Confidence;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
+import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.packet.PacketSender;
 import de.jpx3.intave.user.User;
@@ -64,12 +65,19 @@ public final class AttackInInvalidStateHeuristic extends MetaCheckPart<Heuristic
       return;
     }
     // not checked yet
+    AttackInInvalidStateMeta meta = metaOf(user);
     if (user.meta().inventory().handActive() && user.meta().movement().lastTeleport > 10) {
       Anomaly anomaly = Anomaly.anomalyOf("162", Confidence.NONE, Anomaly.Type.KILLAURA, "attacked whilst using an item");
       parentCheck().saveAnomaly(player, anomaly);
       //dmc28
       user.nerf(BLOCKING, "28");
 //      user.nerf(CRITICALS, "28");
+      // This will never happen to a legit player
+      if (meta.internalVl++ > 20) {
+        user.nerf(AttackNerfStrategy.DMG_ARMOR_INEFFECTIVE, "28");
+        user.nerf(AttackNerfStrategy.BURN_LONGER, "28");
+        meta.internalVl = 0;
+      }
       sendStopUseItemPacketToServer(user);
     }
   }
@@ -144,5 +152,6 @@ public final class AttackInInvalidStateHeuristic extends MetaCheckPart<Heuristic
 
   public static final class AttackInInvalidStateMeta extends CheckCustomMetadata {
     public long lastGUIAttackTimestamps;
+    public int internalVl;
   }
 }

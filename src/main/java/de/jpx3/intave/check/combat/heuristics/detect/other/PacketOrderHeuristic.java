@@ -60,6 +60,11 @@ public final class PacketOrderHeuristic extends MetaCheckPart<Heuristics, Packet
         parentCheck().saveAnomaly(player, anomaly);
         user.nerf(AttackNerfStrategy.BLOCKING, "31");
         user.nerf(AttackNerfStrategy.CRITICALS, "31");
+        if (meta.internalVl++ >= 30) {
+          user.nerf(AttackNerfStrategy.DMG_ARMOR_INEFFECTIVE, "31");
+          user.nerf(AttackNerfStrategy.BURN_LONGER, "31");
+          meta.internalVl = 0;
+        }
       }
       meta.movementSentThisTick = false;
     } else if (meta.movementSentThisTick) {
@@ -70,5 +75,6 @@ public final class PacketOrderHeuristic extends MetaCheckPart<Heuristics, Packet
   public static class PacketOrderHeuristicMeta extends CheckCustomMetadata {
     public boolean movementSentThisTick;
     public Set<PacketType> betweenTransactionAndFlying = new HashSet<>();
+    public int internalVl;
   }
 }
