@@ -683,6 +683,11 @@ public final class Physics extends Check {
         details += ", strict";
       }
 
+      if (movementData.forceCorrectReduce) {
+        details += velocityDetected ? "&" : ",";
+        details += " reduce force";
+      }
+
 //      if (IntaveControl.DISABLE_LICENSE_CHECK) {
 //        if (!verticalTags.isEmpty()) {
 //          details += ", V" + verticalTags.stream().map(EvaluationTag::toString).map(String::toLowerCase).distinct().collect(Collectors.joining(","));
