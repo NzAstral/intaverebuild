@@ -30,9 +30,8 @@ public final class ClickPatterns extends Check {
 
   private void setupCheckParts() {
     appendCheckParts(
-      new Variance(this),
-      new Skewness(this),
-      new Spikes(this),
+      new Deviation(this),
+      new Entropy(this),
       new Fluctuation(this),
       new Repetitive(this),
       new Kurtosis(this)

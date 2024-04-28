@@ -14,20 +14,18 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Queue;
 
 import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.ARM_ANIMATION;
 
 @Relocate
-public final class Repetitive extends MetaCheckPart<ClickPatterns, Repetitive.RepetitiveMeta> {
-
+public final class Deviation extends MetaCheckPart<ClickPatterns, Deviation.DeviationMeta> {
     private static final int BUFFER_TIMEOUT = 4000;
-    private static final int BUFFER_LENGTH = 10;
+    private static final int BUFFER_LENGTH = 50;
 
-    public Repetitive(ClickPatterns parentCheck) {
-        super(parentCheck, RepetitiveMeta.class);
+    public Deviation(ClickPatterns parentCheck) {
+        super(parentCheck, DeviationMeta.class);
     }
 
     @PacketSubscription(
@@ -36,7 +34,7 @@ public final class Repetitive extends MetaCheckPart<ClickPatterns, Repetitive.Re
     public void receiveSwing(PacketEvent event) {
         Player player = event.getPlayer();
         User user = userOf(player);
-        RepetitiveMeta meta = metaOf(user);
+        DeviationMeta meta = metaOf(user);
 
         // Calculating when the last swing was
         long lastSwing = meta.lastSwing;
@@ -57,33 +55,36 @@ public final class Repetitive extends MetaCheckPart<ClickPatterns, Repetitive.Re
         attacks.add(swingDifference);
 
         if (attacks.size() >= BUFFER_LENGTH) {
-            double cps = cpsOf(attacks);
+            long length = System.currentTimeMillis() - meta.started;
 
-            double difference = cps - meta.lastCPS;
-            if (difference != 0.0) {
-                meta.pattern.add(difference);
-            }
-
-            meta.lastCPS = cps;
+            double standardDeviation = standardDeviation(attacks);
+            // Necessary for the statistically low variance check
+            meta.deviations.add((long) standardDeviation);
             attacks.clear();
         }
 
-        if (meta.pattern.size() >= 30) {
-            if (hasRepetitivePattern(meta.pattern, 0.01)) {
-                if (++meta.vl > 2) {
+        // After we got 4 deviation samples, we are going to check the deviation of these samples, if it's too low, the player is performing a long-term consistency
+        if (meta.deviations.size() >= 4) {
+            double std = standardDeviation(meta.deviations);
+
+            long length = System.currentTimeMillis() - meta.started;
+
+            if (std < 40 && length < 4000) {
+                int vlAdd = std < 10 ? 2 : 1;
+                meta.vl += vlAdd;
+                if (meta.vl > 2) {
                     parentCheck().makeDetection(
                             player,
-                            "repetitive",
-                            "std:" + formatDouble(meta.pattern.getLast(), 3),
-                            meta.vl > 0 ? 5 : 0
+                            "low deviation",
+                            "sd:" + formatDouble(std, 3) + " t:" + formatDouble(length / 1000d, 2),
+                            meta.vl > 0 ? 10 : 0
                     );
                 }
             } else if (meta.vl > 0) {
                 meta.vl -= 0.2;
                 meta.vl *= 0.98;
             }
-
-            meta.pattern.clear();
+            meta.deviations.clear();
         }
     }
 
@@ -99,57 +100,23 @@ public final class Repetitive extends MetaCheckPart<ClickPatterns, Repetitive.Re
                 (heldItem != null && heldItem.getType() == Material.FISHING_ROD);
     }
 
-    private double cpsOf(Collection<? extends Number> input) {
-        return 20d / sumOf(input) * 50d;
+    private double standardDeviation(Collection<? extends Number> sd) {
+        double sum = 0, newSum = 0;
+        for (Number v : sd) {
+            sum = sum + v.doubleValue();
+        }
+        double mean = sum / sd.size();
+        for (Number v : sd) {
+            newSum = newSum + (v.doubleValue() - mean) * (v.doubleValue() - mean);
+        }
+        return Math.sqrt(newSum / sd.size());
     }
 
-    private boolean hasRepetitivePattern(LinkedList<Double> list, double threshold) {
-        int length = list.size();
-
-        // Repetitive
-        for (int patternLength = 2; patternLength <= length / 2; patternLength++) {
-            boolean isRepetitive = true;
-
-            for (int i = 0; i < length - patternLength; i++) {
-                if (!list.get(i).equals(list.get(i + patternLength))) {
-                    isRepetitive = false;
-                    break;
-                }
-            }
-
-            if (isRepetitive) {
-                return true;
-            }
-        }
-
-        // This will detect samples that are close to each other, based on the threshold
-        for (int i = 0; i < length - 1; i++) {
-            if (Math.abs(list.get(i) - list.get(i + 1)) <= threshold) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-
-    private double sumOf(Collection<? extends Number> input) {
-        double val = 0;
-        for (Number number : input) {
-            val += number.doubleValue();
-        }
-        return val;
-    }
-
-    public static class RepetitiveMeta extends CheckCustomMetadata {
+    public static class DeviationMeta extends CheckCustomMetadata {
         private final Queue<Long> attacks = new ArrayDeque<>();
+        private final Queue<Long> deviations = new ArrayDeque<>();
         private double vl = 0;
-        private double lastCPS = 0;
         private long lastSwing = 0;
-
-        private final LinkedList<Double> pattern = new LinkedList<>();
-
         private long started = System.currentTimeMillis();
     }
 }
