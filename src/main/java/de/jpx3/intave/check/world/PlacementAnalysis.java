@@ -1,6 +1,5 @@
 package de.jpx3.intave.check.world;
 
-import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.DoNotFlowObfuscate;
 import de.jpx3.intave.annotate.Native;
@@ -82,10 +81,10 @@ public final class PlacementAnalysis extends Check {
     YamlConfiguration settings = IntavePlugin.singletonInstance().settings();
     ConfigurationSection section = settings.getConfigurationSection("check.placementanalysis.cloud-thresholds.on-premise");
     if (section != null) {
-      IntaveLogger.logger().info("Using new placementanalysis format");
+//      IntaveLogger.logger().info("Using new placementanalysis format");
       return legacyConfigLayCache = false;
     } else {
-      IntaveLogger.logger().info("Still using old placementanalysis config format");
+//      IntaveLogger.logger().info("Still using old placementanalysis config format");
       return legacyConfigLayCache = true;
     }
   }
