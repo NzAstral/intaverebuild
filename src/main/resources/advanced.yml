@@ -30,6 +30,9 @@ check:
     # Disable tick leniency for velocity packets
     no-speculative-velocity: true
 
+    # Disable bundling of Ping packets with their respective attach packets
+    no-bundling: false
+
     on-detection:
       # Can help reduce item-related false positives
       reset-item-usage: true

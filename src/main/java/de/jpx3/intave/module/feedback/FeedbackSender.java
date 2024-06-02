@@ -42,6 +42,7 @@ public final class FeedbackSender extends Module {
   @Override
   public void enable() {
     dumpFeedback = plugin.settings().getBoolean("logging.feedback-dump", false);
+    bundlingDisabled = plugin.settings().getBoolean("check.physics.no-bundling", false);
   }
 
   public <T> void doubleSynchronize(
@@ -289,6 +290,7 @@ public final class FeedbackSender extends Module {
   // for the billions of transaction packets we send, caching is easy and makes sense
   private final PacketContainer[] PACKET_CACHE = new PacketContainer[256];
   private final PacketContainer[] PACKET_CACHE_NO_PING_MASK = new PacketContainer[256];
+  private boolean bundlingDisabled;
 
   private void performRequest(
     Player receiver, FeedbackRequest<?> request, @Nullable PacketEvent toBundle
@@ -333,7 +335,7 @@ public final class FeedbackSender extends Module {
 //      System.out.println("Received " + transactionIdentifier + "/" +transactionResponse.num() + " from " + player.getName());
       System.out.println("Sent " + id + "/"+request.num() + " to " + receiver.getName());
     }
-    if (MinecraftVersions.VER1_19_4.atOrAbove() && toBundle != null) {
+    if (MinecraftVersions.VER1_19_4.atOrAbove() && !bundlingDisabled && toBundle != null) {
       PacketContainer bundle = new PacketContainer(BUNDLE);
       StructureModifier<Iterable<PacketContainer>> containingPackets = bundle.getPacketBundles();
       containingPackets.write(0, Arrays.asList(packet, toBundle.getPacket().shallowClone()));
