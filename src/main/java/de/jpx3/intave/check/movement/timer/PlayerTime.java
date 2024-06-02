@@ -1,7 +1,6 @@
 package de.jpx3.intave.check.movement.timer;
 
 import com.comphenix.protocol.events.PacketEvent;
-import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.DispatchTarget;
 import de.jpx3.intave.check.CheckStatistics;
@@ -164,7 +163,8 @@ public class PlayerTime extends MetaCheckPart<Timer, PlayerTime.PlayerTimeMeta> 
     } else if (System.currentTimeMillis() - checkMeta.lastTimerFlag > 10000) {
       decrementer.decrement(user, 0.005);
     }
-    if ((IntaveControl.GOMME_MODE || IntaveControl.DISABLE_LICENSE_CHECK) && !checkMeta.inTeleport && diff < -2_500_000_000L) {
+    int blinkLimit = parentCheck().blinkLimit();
+    if (!checkMeta.inTeleport && blinkLimit > 0 && diff < blinkLimit * -50_000L/*-2_500_000_000L*/) {
       checkMeta.inTeleport = true;
       user.tickFeedback(() -> {
         checkMeta.inTeleport = false;
