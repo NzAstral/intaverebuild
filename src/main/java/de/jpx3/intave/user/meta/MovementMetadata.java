@@ -240,8 +240,8 @@ public final class MovementMetadata implements SimulationEnvironment {
   private double attachMoveDistance;
   // Flight disallow protection
   public int criticalFlyingDisallowStacks;
-//  public boolean criticalFlyingDisallowWasTeleported;
-//  public double criticalEnterPosX, criticalEnterPosY, criticalEnterPosZ;
+  public boolean criticalFlyingDisallowWasTeleported;
+  public double criticalEnterPosX, criticalEnterPosY, criticalEnterPosZ;
   private volatile Location verifiedLocation;
 
   public MovementMetadata(Player player, User user) {
