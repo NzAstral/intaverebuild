@@ -98,7 +98,7 @@ public final class RestartCheck extends MetaCheckPart<BreakSpeedLimiter, Restart
               meta.blockBreakStartVL--;
             }
           } else if (meta.blockBreakStartVL > 0) {
-            meta.blockBreakStartVL -= 0.2;
+            meta.blockBreakStartVL -= 0.4;
           }
         }
         break;

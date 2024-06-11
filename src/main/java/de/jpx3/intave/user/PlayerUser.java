@@ -552,7 +552,7 @@ final class PlayerUser implements User {
   public void refreshSprintState(Consumer<Void> callback) {
     Player player = player();
     FeedbackSender feedbackSender = Modules.feedback();
-    feedbackSender.synchronize(player, UserRepository.userOf(player), (player1, user) -> {
+    feedbackSender.synchronize(player, this, (player1, user) -> {
       sendStatsUpdate(player, 0, 0);
       feedbackSender.synchronize(player, null, (player2, target1) -> {
         feedbackSender.synchronize(player, null, (player3, target2) -> {

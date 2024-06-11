@@ -46,10 +46,7 @@ public final class VanishFilter extends Filter {
   );
 
   @PacketSubscription(
-    prioritySlot = PrioritySlot.INTERNAL,
-    packetsOut = {
-      PLAYER_INFO
-    }
+    packetsOut = {PLAYER_INFO}
   )
   public void on(PacketEvent event) {
     Player player = event.getPlayer();

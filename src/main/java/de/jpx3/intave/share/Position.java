@@ -82,4 +82,12 @@ public final class Position extends Vector implements Serializable {
     float pitch = -(float) Math.toDegrees(Math.atan2(otherPoint.y - y, Math.sqrt(Math.pow(otherPoint.x - x, 2) + Math.pow(otherPoint.z - z, 2))));
     return new Rotation(yaw, pitch);
   }
+
+  public int chunkX() {
+    return floor(x) >> 4;
+  }
+
+  public int chunkZ() {
+    return floor(z) >> 4;
+  }
 }

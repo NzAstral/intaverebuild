@@ -154,16 +154,12 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     /*
      * ViaBackwards messes up the order of teleportation packets, so we need to account for that
      */
-    if (!user.meta().protocol().outdatedClient()) {
-      if (teleportFeedbackSyncEnforcement) {
-        user.doubleTickFeedback(
-          event,
-          () -> movementData.transactionTeleportAllow = true,
-          () -> movementData.transactionTeleportAllow = false
-        );
-      } else {
-        movementData.transactionTeleportAllow = true;
-      }
+    if (!user.meta().protocol().outdatedClient() && teleportFeedbackSyncEnforcement) {
+      user.doubleTickFeedback(
+        event,
+        () -> movementData.transactionTeleportAllow = true,
+        () -> movementData.transactionTeleportAllow = false
+      );
     } else {
       movementData.transactionTeleportAllow = true;
     }

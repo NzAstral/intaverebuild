@@ -189,7 +189,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     NativeCheck.registerNative(() -> resolveIdentifier(null));
   }
 
-  @Native
+//  @Native
   private void debug(Player player, Anomaly anomaly) {
     if (NativeCheck.checkActive() || anomaly == null) {
       return;
@@ -234,7 +234,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   private static final long MAXIMUM_STORAGE_SAVE = 1000 * 60 * 30; // 30 minutes
 
-  @Native
+//  @Native
   public void evaluate(Player player, boolean enforceDecision) {
     if (NativeCheck.checkActive()) {
       return;
@@ -345,7 +345,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
     }
   }
 
-  @Native
+//  @Native
   @NotNull
   @SuppressWarnings("UnusedAssignment")
   public List<Anomaly> catchAnomaliesOf(User user, boolean delay) {
@@ -531,7 +531,7 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
 
   // encryption
 
-  @Native
+//  @Native
   private String resolveIdentifier(List<Anomaly> anomalies) {
     if (NativeCheck.checkActive()) {
       return null;
@@ -575,10 +575,13 @@ public final class Heuristics extends MetaCheck<Heuristics.HeuristicMeta> {
       return null;
     }
     List<String> usableAnomalies = new ArrayList<>();
+    int limit = 10;
     for (Anomaly anomaly : anomalies) {
       String key = anomaly.key();
       if (!usableAnomalies.contains(key)) {
-        usableAnomalies.add(key);
+        if (limit-- > 0) {
+          usableAnomalies.add(key);
+        }
       }
     }
     StringBuilder nonPaddedBuilder = new StringBuilder();
