@@ -52,7 +52,8 @@ public final class PacketSubscriptionLinker extends Module {
   @Override
   public void enable() {
     this.customInjector = new InjectionService(plugin);
-    IGNORE_CHAT_PACKETS = IGNORE_SCOREBOARD_TEAM_PACKETS = plugin.getConfig().getBoolean("compatibility.ignore-scoreboard-packets", false);
+    boolean protocolLib4 = ProtocolLibrary.getPlugin().getDescription().getVersion().startsWith("4");
+    IGNORE_CHAT_PACKETS = IGNORE_SCOREBOARD_TEAM_PACKETS = plugin.getConfig().getBoolean("compatibility.ignore-scoreboard-packets", !protocolLib4);
   }
 
   @Override
@@ -204,10 +205,17 @@ public final class PacketSubscriptionLinker extends Module {
     return Arrays.stream(input).filter(Objects::nonNull).distinct().toArray(generator);
   }
 
+  private final Set<String> exclusionNoted = new HashSet<>();
+
   private PacketType[] excludeProblematic(PacketType[] input) {
     for (int i = 0; i < input.length; i++) {
       PacketType packetType = input[i];
       if (excluded(packetType)) {
+        String typeName = packetType.name();
+        if (!exclusionNoted.contains(typeName)) {
+          IntaveLogger.logger().info("Ignoring " + typeName + " packets");
+        }
+        exclusionNoted.add(typeName);
         input[i] = null;
       }
     }
