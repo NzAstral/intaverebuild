@@ -71,7 +71,7 @@ public final class AbilityTracker extends Module {
     float walkingSpeed = reader.walkingSpeed();
     boolean allowedFlight = reader.flyingAllowed();
     boolean critical = abilityData.allowFlying() && !allowedFlight;
-    if (critical && movement.lastTeleport < 20) {
+    if (critical /*&& movement.lastTeleport < 20*/) {
       // Teleport again to force transaction synchronization
       Synchronizer.synchronizeDelayed(() -> {
         MovementMetadata moovement = user.meta().movement();
@@ -80,6 +80,11 @@ public final class AbilityTracker extends Module {
           Player player = user.player();
           position.setWorld(player.getWorld());
           player.teleport(position);
+          Synchronizer.synchronizeDelayed(() -> {
+            user.tickFeedback(() -> {
+              moovement.criticalFlyingBlockMovementStacks++;
+            });
+          }, 1);
           if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
             player.sendMessage(IntavePlugin.prefix() + "Teleport to " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " as " + ChatColor.RED + " not responding to critical flight disallow");
           }
@@ -101,6 +106,7 @@ public final class AbilityTracker extends Module {
         if (movement.criticalFlyingDisallowStacks > 0) {
           movement.criticalFlyingDisallowStacks--;
         }
+        movement.criticalFlyingBlockMovementStacks = 0;
       }
     });
   }
@@ -124,6 +130,11 @@ public final class AbilityTracker extends Module {
         }
         movementData.criticalFlyingDisallowStacks = 0;
       }
+    } else if (movementData.criticalFlyingBlockMovementStacks > 0) {
+      player.teleport(player.getLocation());
+      if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
+        player.sendMessage(IntavePlugin.prefix() + "Teleport to " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " for " + ChatColor.RED + " critical flying disallow protection (movement block)");
+      }
     }
   }
 
@@ -132,7 +143,7 @@ public final class AbilityTracker extends Module {
   )
   public void outgoingPositionUpdate(User user) {
     MovementMetadata movementData = user.meta().movement();
-    movementData.criticalFlyingDisallowWasTeleported = movementData.criticalFlyingDisallowStacks > 0;
+    movementData.criticalFlyingDisallowWasTeleported = movementData.criticalFlyingDisallowStacks == 1;
   }
 
   @PacketSubscription(

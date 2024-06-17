@@ -1,6 +1,7 @@
 package de.jpx3.intave.user;
 
 import de.jpx3.intave.cleanup.GarbageCollector;
+import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,6 +21,10 @@ public final class UserLocal<T> {
   private UserLocal(Function<? super User, ? extends T> initializer, Consumer<? super User> finalizer) {
     this.initializer = initializer;
     this.finalizer = finalizer;
+  }
+
+  public T get(Player player) {
+    return get(UserRepository.userOf(player));
   }
 
   public T get(User user) {
