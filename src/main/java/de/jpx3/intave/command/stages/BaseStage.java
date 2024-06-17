@@ -2,6 +2,7 @@ package de.jpx3.intave.command.stages;
 
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.annotate.KeepEnumInternalNames;
 import de.jpx3.intave.annotate.Native;
 import de.jpx3.intave.command.CommandStage;
@@ -23,6 +24,7 @@ import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.user.permission.BukkitPermissionCheck;
 import de.jpx3.intave.user.storage.LongTermViolationStorage;
+import de.jpx3.intave.user.storage.PlaytimeStorage;
 import de.jpx3.intave.user.storage.StorageViolationEvent;
 import de.jpx3.intave.user.storage.StorageViolationEvents;
 import de.jpx3.intave.version.DurationTranslator;
@@ -414,6 +416,48 @@ public final class BaseStage extends CommandStage {
     }
   }
 
+  @SubCommand(
+    selectors = "info",
+    usage = "<player>",
+    description = "Show player info",
+    permission = "intave.command.verbose"
+  )
+  public void infoCommand(CommandSender sender, Player target) {
+    User targetUser = UserRepository.userOf(target);
+    String versionString = targetUser.meta().protocol().versionString();
+    int protocolVersion = targetUser.meta().protocol().protocolVersion();
+    int latency = targetUser.latency();
+    int latencyJitter = targetUser.latencyJitter();
+    TrustFactor trustFactor = targetUser.trustFactor();
+    PlaytimeStorage playtimeStorage = targetUser.storageOf(PlaytimeStorage.class);
+    long joins = playtimeStorage.totalJoins();
+    int activePlaytime = (int) playtimeStorage.minutesPlayed();
+    int afkPlaytime = (int) playtimeStorage.minutesAfk();
+    boolean mitigated = !targetUser.meta().punishment().activeNerfers().isEmpty();
+
+    String brand = targetUser.meta().protocol().clientBrand();
+    String language = targetUser.meta().protocol().locale();
+
+    UUID offlineTest = UUID.nameUUIDFromBytes(("OfflinePlayer:" + target.getName()).getBytes());
+    boolean isOffline = target.getUniqueId().equals(offlineTest);
+
+    sender.sendMessage(IntavePlugin.prefix() + "Information");
+    // Name, UUID, Brand/Locale, Version, Latency, Trust, Playtime, Joins, Mitigated,
+    sender.sendMessage(ChatColor.GRAY + "Name: " + ChatColor.RED + target.getName());
+    sender.sendMessage(ChatColor.GRAY + "UUID: " + ChatColor.RED + target.getUniqueId() + (isOffline ? ChatColor.GRAY + " (offline)" : ""));
+    sender.sendMessage(ChatColor.GRAY + "Brand/Locale: " + ChatColor.RED + brand + ChatColor.GRAY + "/" + ChatColor.RED + language);
+    sender.sendMessage(ChatColor.GRAY + "Version: " + ChatColor.RED + versionString + ChatColor.GRAY + " (" + ChatColor.RED + protocolVersion + ChatColor.GRAY + ")");
+    sender.sendMessage(ChatColor.GRAY + "Latency: " + ChatColor.RED + latency + ChatColor.GRAY + "ms (+-" + ChatColor.RED + latencyJitter + ChatColor.GRAY + "ms)");
+    sender.sendMessage(ChatColor.GRAY + "Trust: " + trustFactor.coloredBaseName());
+
+    String activePlaytimeDisplay = DurationTranslator.translateMinutes(activePlaytime * 60 * 1000L);
+    String afkPlaytimeDisplay = DurationTranslator.translateMinutes(afkPlaytime * 60 * 1000L);
+
+    sender.sendMessage(ChatColor.GRAY + "Playtime (active/afk): " + ChatColor.RED + activePlaytimeDisplay + ChatColor.GRAY+ "/" + ChatColor.RED + afkPlaytimeDisplay);
+    sender.sendMessage(ChatColor.GRAY + "Joins: " + ChatColor.RED + joins);
+    sender.sendMessage(ChatColor.GRAY + "Nerfed: " + ChatColor.RED + mitigated);
+  }
+
   private void outputHistory(CommandSender sender, String name, UUID id, LongTermViolationStorage violationStorage) {
     StorageViolationEvents violations = violationStorage.violations();
     sender.sendMessage(String.format("%sHistory of " + ChatColor.RED + "%s%s:", IntavePlugin.prefix(), name, IntavePlugin.defaultColor()));
@@ -645,7 +689,7 @@ public final class BaseStage extends CommandStage {
       version = "(version hidden)";
     } else if (versionInformation != null) {
       boolean outdated = versionInformation.outdated();
-      version = IntavePlugin.version() + " (" + (outdated ? "outdated, " : "") + DurationTranslator.translateDuration(System.currentTimeMillis() - versionInformation.release()) + " old)";
+      version = IntavePlugin.version() + " (" + (outdated ? "outdated, " : "") + DurationTranslator.translateHours(System.currentTimeMillis() - versionInformation.release()) + " old)";
     } else {
       version = IntavePlugin.version() + " (unknown version)";
     }
