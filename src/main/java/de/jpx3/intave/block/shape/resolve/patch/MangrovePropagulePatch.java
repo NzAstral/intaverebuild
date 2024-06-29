@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.share.ClientMath.coordinateRandom;
 
-public class MangrovePropagulePatch extends BlockShapePatch {
+public final class MangrovePropagulePatch extends BlockShapePatch {
   private static final BoundingBox[] SHAPE_PER_AGE = new BoundingBox[]{
     BoundingBox.originFromX16(7.0D, 13.0D, 7.0D, 9.0D, 16.0D, 9.0D),
     BoundingBox.originFromX16(7.0D, 10.0D, 7.0D, 9.0D, 16.0D, 9.0D),
@@ -30,7 +30,7 @@ public class MangrovePropagulePatch extends BlockShapePatch {
     BlockVariant variant = BlockVariantRegister.variantOf(type, variantIndex);
     Boolean hanging = variant.propertyOf("hanging");
     if (hanging == null) {
-      System.out.println("MangrovePropagulePatch: hanging is null");
+      System.out.println("MangrovePropagule: hanging is null");
       return shape;
     }
     int age = hanging ? variant.propertyOf("age") : 4;
