@@ -46,9 +46,12 @@ public final class FeedbackSender extends Module {
     dumpFeedback = plugin.settings().getBoolean("logging.feedback-dump", false);
     bundlingDisabled = plugin.settings().getBoolean("check.physics.no-bundling", false);
     boolean disabledTransactionObfuscation = plugin.settings().getBoolean("compatibility.no-transaction-obfuscation", false);
-    if (!disabledTransactionObfuscation && !MinecraftVersions.VER1_17_1.atOrAbove() && !shouldRefrainFromObfuscation()) {
-      activeGenerator = IdGeneratorMode.modeOfTheDay();
-      System.out.println("Selected feedback id mode: " + activeGenerator.name());
+    if (!disabledTransactionObfuscation && !shouldRefrainFromObfuscation()) {
+      if (MinecraftVersions.VER1_17_1.atOrAbove()) {
+        activeGenerator = IdGeneratorMode.RANDOM;
+      } else {
+        activeGenerator = IdGeneratorMode.modeOfTheDay();
+      }
     }
   }
 

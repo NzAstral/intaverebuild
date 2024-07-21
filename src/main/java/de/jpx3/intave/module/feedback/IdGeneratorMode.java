@@ -17,7 +17,7 @@ public enum IdGeneratorMode {
     FeedbackQueue feedbackQueue = connection.feedbackQueue();
     // With a 50% probability, we will start at feedbackQueue.size() to reduce the chance of clogging.
     if (connection.generatorRunningNum == 0) {
-      connection.generatorRunningNum = feedbackQueue.size() > 500 && ThreadLocalRandom.current().nextBoolean() ? feedbackQueue.size() : 1;
+      connection.generatorRunningNum = feedbackQueue.size() > 500 ? ThreadLocalRandom.current().nextInt(ThreadLocalRandom.current().nextInt(feedbackQueue.size()), feedbackQueue.size()) : 1;
     }
     return outOfBounds(last) ? 0 : connection.generatorRunningNum++;
   }),
@@ -26,7 +26,7 @@ public enum IdGeneratorMode {
     FeedbackQueue feedbackQueue = connection.feedbackQueue();
     // With a 50% probability, we will start at feedbackQueue.size() to reduce the chance of clogging.
     if (connection.generatorRunningNum == 0) {
-      connection.generatorRunningNum = feedbackQueue.size() > 500 && ThreadLocalRandom.current().nextBoolean() ? -feedbackQueue.size() : -1;
+      connection.generatorRunningNum = feedbackQueue.size() > 500 ? -1 * ThreadLocalRandom.current().nextInt(ThreadLocalRandom.current().nextInt(feedbackQueue.size()), feedbackQueue.size()) : -1;
     }
     return outOfBounds(last) ? 0 : connection.generatorRunningNum--;
   }),
@@ -53,7 +53,7 @@ public enum IdGeneratorMode {
   }
 
   public static IdGeneratorMode highestCompatibility() {
-    return INTAVE_VANILLA_NEGATIVE;
+    return INTAVE_VANILLA_POSITIVE;
   }
 
   public static IdGeneratorMode mostStableAndRobust() {

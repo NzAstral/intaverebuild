@@ -4,14 +4,9 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.events.PacketListener;
 import com.comphenix.protocol.injector.PacketFilterManager;
-import com.comphenix.protocol.injector.PrioritizedListener;
-import com.comphenix.protocol.injector.SortedPacketListenerList;
 import com.comphenix.protocol.utility.MinecraftVersion;
-import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.jpx3.intave.IntaveControl;
@@ -371,25 +366,25 @@ public final class DiagnosticsStage extends CommandStage {
       } catch (NoSuchFieldException e) {
         throw new RuntimeException(e);
       }
-      SortedPacketListenerList sortedPacketListenerList;
-      try {
-        sortedPacketListenerList = (SortedPacketListenerList) inboundListeners.get(packetFilterManager);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-
-      PacketContainer packet = new PacketContainer(PacketType.Play.Client.USE_ENTITY);
-      packet.getIntegers().write(0, 0);
-      packet.getEntityUseActions().write(0, EnumWrappers.EntityUseAction.ATTACK);
-
-      PacketEvent event = PacketEvent.fromClient(packet.getHandle(), packet, player);
-      Collection<PrioritizedListener<PacketListener>> listeners = sortedPacketListenerList.getListener(PacketType.Play.Client.USE_ENTITY);
-      if (listeners != null) {
-        for (PrioritizedListener<PacketListener> listener : listeners) {
-          listener.getListener().onPacketReceiving(event);
-          player.sendMessage("Listener " + listener.getListener().getClass() + " " + listener.getPriority() + ", cancelled: " + event.isCancelled());
-        }
-      }
+//      SortedPacketListenerList sortedPacketListenerList;
+//      try {
+//        sortedPacketListenerList = (SortedPacketListenerList) inboundListeners.get(packetFilterManager);
+//      } catch (IllegalAccessException e) {
+//        throw new RuntimeException(e);
+//      }
+//
+//      PacketContainer packet = new PacketContainer(PacketType.Play.Client.USE_ENTITY);
+//      packet.getIntegers().write(0, 0);
+//      packet.getEntityUseActions().write(0, EnumWrappers.EntityUseAction.ATTACK);
+//
+//      PacketEvent event = PacketEvent.fromClient(packet.getHandle(), packet, player);
+//      Collection<PrioritizedListener<PacketListener>> listeners = sortedPacketListenerList.getListener(PacketType.Play.Client.USE_ENTITY);
+//      if (listeners != null) {
+//        for (PrioritizedListener<PacketListener> listener : listeners) {
+//          listener.getListener().onPacketReceiving(event);
+//          player.sendMessage("Listener " + listener.getListener().getClass() + " " + listener.getPriority() + ", cancelled: " + event.isCancelled());
+//        }
+//      }
     } catch (Exception exception) {
       exception.printStackTrace();
       user.player().sendMessage("Invalid protocollib version? Error: " + exception.getMessage());

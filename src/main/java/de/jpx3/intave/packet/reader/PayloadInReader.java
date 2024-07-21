@@ -2,6 +2,7 @@ package de.jpx3.intave.packet.reader;
 
 import com.comphenix.protocol.wrappers.CustomPacketPayloadWrapper;
 import com.google.common.base.Charsets;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.klass.Lookup;
 import io.netty.buffer.ByteBuf;
 
@@ -11,6 +12,9 @@ public final class PayloadInReader extends AbstractPacketReader {
   public String tag() {
     String tag;
     if (packet().getStrings().getValues().isEmpty()) {
+      if (MinecraftVersions.VER1_21.atOrAbove()) {
+        return "unsupported";
+      }
       Object minecraftKey = null;
       if (packet().getMinecraftKeys().getValues().isEmpty()) {
         for (CustomPacketPayloadWrapper value : packet().getCustomPacketPayloads().getValues()) {

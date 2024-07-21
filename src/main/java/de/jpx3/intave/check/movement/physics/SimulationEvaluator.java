@@ -299,7 +299,7 @@ public final class SimulationEvaluator {
     User user,
     double predictedX, double predictedZ,
     boolean onLadder, boolean collidedWithBoat,
-    Set<EvaluationTag> tags
+    Set<? super EvaluationTag> tags
   ) {
     Player player = user.player();
     MetadataBundle meta = user.meta();

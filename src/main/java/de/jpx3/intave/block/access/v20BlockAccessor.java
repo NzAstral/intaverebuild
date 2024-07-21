@@ -11,6 +11,7 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.world.WorldHeight;
 import net.minecraft.server.level.ChunkProviderServer;
+import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.IBlockAccess;
@@ -26,6 +27,8 @@ import org.bukkit.craftbukkit.v1_20_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -108,7 +111,38 @@ public final class v20BlockAccessor implements BlockAccessor {
     Material material = VolatileBlockAccess.typeAccess(user, location);
     int variant = VolatileBlockAccess.variantIndexAccess(user, location);
     IBlockData rawVariant = (IBlockData) BlockVariantRegister.rawVariantOf(material, variant);
-    return rawVariant.getBlock().getDamage(rawVariant, ((CraftPlayer) player).getHandle(), worldServer, blockposition);
+    if (MinecraftVersions.VER1_21.atOrAbove()) {
+      // solve with invokedynamic auto reflections later, no time for sophisticated fix rn
+      return reflectiveBlockDataResolution(rawVariant, ((CraftPlayer) player).getHandle(), worldServer, blockposition);
+    } else {
+      return rawVariant.getBlock().getDamage(rawVariant, ((CraftPlayer) player).getHandle(), worldServer, blockposition);
+    }
+  }
+
+  private static MethodHandle methodHandle;
+
+  @PatchyAutoTranslation
+  @PatchyTranslateParameters
+  private static float reflectiveBlockDataResolution(
+    IBlockData blockData, EntityPlayer player, WorldServer worldServer, net.minecraft.core.BlockPosition blockPosition
+  ) {
+    if (methodHandle == null) {
+      try {
+        Method method = Lookup.serverMethod(
+          "Block",
+          "getDamage(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F"
+        );
+        method.setAccessible(true);
+        methodHandle = MethodHandles.lookup().unreflect(method);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    try {
+      return (float) methodHandle.invoke(blockData.getBlock(), blockData, player, worldServer, blockPosition);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static final Method isReplaceableMethod = Lookup.serverMethod("BlockData", "isReplaceable", boolean.class);

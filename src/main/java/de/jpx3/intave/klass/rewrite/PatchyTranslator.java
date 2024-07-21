@@ -9,10 +9,7 @@ import de.jpx3.intave.library.asm.Type;
 import de.jpx3.intave.library.asm.tree.*;
 import org.bukkit.Bukkit;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static de.jpx3.intave.library.asm.ClassReader.SKIP_FRAMES;
@@ -76,16 +73,59 @@ final class PatchyTranslator {
   @Native
   private static void processMethodInstructions(MethodNode methodNode) {
     PatchyTranslationConfiguration configuration = PatchyTranslationConfiguration.createFrom(methodNode);
-    for (AbstractInsnNode instruction : methodNode.instructions) {
+    for (ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator(); iterator.hasNext(); ) {
+      AbstractInsnNode instruction = iterator.next();
       if (instruction instanceof MethodInsnNode) {
         MethodInsnNode methodInsnNode = (MethodInsnNode) instruction;
         InstructionTarget originalInstruction = InstructionTarget.methodInstructionTarget(
           methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc
         ), instructionTarget = originalInstruction;
         instructionTarget = process(instructionTarget, configuration);
-        methodInsnNode.owner = instructionTarget.owner;
-        methodInsnNode.name = instructionTarget.name;
-        methodInsnNode.desc = instructionTarget.desc;
+//        if (instructionTarget.modifiedFrom(methodInsnNode) && isPrivate(instructionTarget)) {
+//          /*
+//          INVOKEDYNAMIC run()Ljava/lang/Runnable; [
+//            // handle kind 0x6 : INVOKESTATIC
+//            java/lang/invoke/LambdaMetafactory.metafactory(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+//            // arguments:
+//            ()V,
+//            // handle kind 0x6 : INVOKESTATIC
+//            de/jpx3/intave/klass/rewrite/PatchyTranslator.lambda$static$0()V,
+//            ()V
+//          ]
+//           */
+//          InvokeDynamicInsnNode indy = new InvokeDynamicInsnNode(
+//            instructionTarget.name,
+//            instructionTarget.desc,
+//            new Handle(
+//              H_INVOKESTATIC,
+//              "java/lang/invoke/LambdaMetafactory",
+//              "metafactory",
+//              "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+//              false
+//            ),
+//            // args:
+//            instructionTarget.desc,
+//            new Handle(
+//              methodInsnNode.getOpcode(),
+//              instructionTarget.owner,
+//              instructionTarget.name,
+//              instructionTarget.desc,
+//              false
+//            ),
+//            instructionTarget.desc
+//          );
+//          System.out.println(indy);
+////          iterator.set(indy);
+//          try {
+//            Thread.sleep(100);
+//          } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//          }
+//        } else {
+          methodInsnNode.owner = instructionTarget.owner;
+          methodInsnNode.name = instructionTarget.name;
+          methodInsnNode.desc = instructionTarget.desc;
+//        }
       } else if (instruction instanceof LdcInsnNode) {
         LdcInsnNode ldcInsnNode = (LdcInsnNode) instruction;
         Object cst = ldcInsnNode.cst;
@@ -134,6 +174,53 @@ final class PatchyTranslator {
     }
     methodNode.localVariables = null;
   }
+
+//  static {
+//    Runnable runnable = () -> {};
+//  }
+//
+//  private static boolean isPrivate(InstructionTarget instructionTarget) {
+//    System.out.println(instructionTarget.owner + " " + instructionTarget.name + " " + instructionTarget.desc + " private lookup");
+//    // perform check
+//    switch (instructionTarget.type) {
+//      case METHOD:
+//        try {
+//          Type[] argumentTypes = Type.getArgumentTypes(instructionTarget.desc);
+//          Class[] array = Arrays.stream(argumentTypes)
+//            .map(Type::tryGetClass)
+//            .toArray(Class[]::new);
+//          Class<?> owner = Class.forName(instructionTarget.owner.replace("/", "."));
+//          do {
+//            try {
+//              int modifiers = owner.getDeclaredMethod(instructionTarget.name, array).getModifiers();
+//              if (modifiers == Modifier.PRIVATE || modifiers == Modifier.PROTECTED) {
+//                return true;
+//              }
+//            } catch (NoSuchMethodException ignored) {}
+//            owner = owner.getSuperclass();
+//          } while (owner != null);
+//        } catch (ClassNotFoundException e) {
+//          throw new RuntimeException(e);
+//        }
+//      case FIELD:
+//        try {
+//          Class<?> clazz = Class.forName(instructionTarget.owner.replace("/", "."));
+//          do {
+//            try {
+//              int mods = clazz.getDeclaredField(instructionTarget.name).getModifiers();
+//              if (mods == Modifier.PRIVATE || mods == Modifier.PROTECTED) {
+//                return true;
+//              }
+//            } catch (NoSuchFieldException ignored) {}
+//            clazz = clazz.getSuperclass();
+//          } while (clazz != null);
+//        } catch (ClassNotFoundException e) {
+//          throw new RuntimeException(e);
+//        }
+//      default:
+//        return false;
+//    }
+//  }
 
   private static InstructionTarget process(InstructionTarget original, PatchyTranslationConfiguration configuration) {
     VersionMethodReference methodReference = configuration.resolveCustomMethodDescriptor(original.owner, original.name, original.desc);
@@ -307,5 +394,21 @@ final class PatchyTranslator {
       result = 31 * result + desc.hashCode();
       return result;
     }
+
+//    public boolean sameAs(MethodInsnNode methodInsnNode) {
+//      return isMethod() && owner.equals(methodInsnNode.owner) && name.equals(methodInsnNode.name) && desc.equals(methodInsnNode.desc);
+//    }
+//
+//    public boolean modifiedFrom(MethodInsnNode methodInsnNode) {
+//      return isMethod() && !owner.equals(methodInsnNode.owner) || !name.equals(methodInsnNode.name) || !desc.equals(methodInsnNode.desc);
+//    }
+//
+//    public boolean sameAs(FieldInsnNode fieldInsnNode) {
+//      return isField() && owner.equals(fieldInsnNode.owner) && name.equals(fieldInsnNode.name) && desc.equals(fieldInsnNode.desc);
+//    }
+//
+//    public boolean modifiedFrom(FieldInsnNode fieldInsnNode) {
+//      return isField() && !owner.equals(fieldInsnNode.owner) || !name.equals(fieldInsnNode.name) || !desc.equals(fieldInsnNode.desc);
+//    }
   }
 }
