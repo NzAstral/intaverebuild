@@ -547,6 +547,46 @@ public final class Type {
     }
   }
 
+  public Class<?> tryGetClass() {
+    switch (sort) {
+      case VOID:
+        return void.class;
+      case BOOLEAN:
+        return boolean.class;
+      case CHAR:
+        return char.class;
+      case BYTE:
+        return byte.class;
+      case SHORT:
+        return short.class;
+      case INT:
+        return int.class;
+      case FLOAT:
+        return float.class;
+      case LONG:
+        return long.class;
+      case DOUBLE:
+        return double.class;
+      case ARRAY:
+        try {
+          return Class.forName(getDescriptor().replace('/', '.'));
+        } catch (ClassNotFoundException e) {
+          e.printStackTrace();
+          return null;
+        }
+      case OBJECT:
+      case INTERNAL:
+        try {
+          return Class.forName(valueBuffer.substring(valueBegin, valueEnd).replace('/', '.'));
+        } catch (ClassNotFoundException e) {
+          e.printStackTrace();
+          return null;
+        }
+      default:
+        throw new IllegalStateException("Invalid type sort");
+    }
+  }
+
   public String getCanonicalClassName() {
     return getClassName().replaceAll("\\.", "/");
   }

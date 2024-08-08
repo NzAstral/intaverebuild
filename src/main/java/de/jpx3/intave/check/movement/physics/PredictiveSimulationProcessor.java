@@ -186,7 +186,6 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
     MetadataBundle meta = user.meta();
     MovementMetadata movementData = meta.movement();
     InventoryMetadata inventoryData = meta.inventory();
-    ProtocolMetadata protocol = meta.protocol();
     Motion motion = movementData.motionProcessorContext;
     double lastMotionX = movementData.baseMotionX;
     double lastMotionZ = movementData.baseMotionZ;
@@ -458,12 +457,12 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
             boolean canExpectCorrectReduce = !protocol.combatUpdate() && movementData.pastVelocity > 1 && movementData.motion().horizontalLength() > 0.2;
             boolean enforceCorrectReduction = movementData.forceCorrectReduce && canExpectCorrectReduce;
             for (int reduceIndex = 0; reduceIndex <= Math.min(movementData.reduceTicks, 3); reduceIndex++) {
-              if (enforceCorrectReduction && reduceIndex != movementData.reduceTicks) {
-                continue;
-              }
-              if (!sprinting && reduceIndex > 0 && !protocol.combatUpdate()) {
-                continue;
-              }
+//              if (enforceCorrectReduction && reduceIndex > movementData.reduceTicks) {
+//                continue;
+//              }
+//              if (!sprinting && reduceIndex > 0 && !protocol.combatUpdate()) {
+//                continue;
+//              }
               IterativeStudy.ATTACK_REDUCE_ITERATOR.run();
               for (boolean jumped : estimatedJump ? OPTIMISTIC : PESSIMISTIC) {
                 // Jumps are only allowed on the ground :(

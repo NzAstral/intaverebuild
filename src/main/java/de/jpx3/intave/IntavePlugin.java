@@ -236,6 +236,11 @@ public final class IntavePlugin extends JavaPlugin {
       TaskTracker.setup();
       Locate.setup();
 
+
+      Thread.sleep(5);
+
+      ReflectiveAccess.setup();
+
       // for some reason, we get an ILLEGAL_ACCESS_VIOLATION if we don't sleep here
       // I don't know why, I don't care why, but this approach works
 
@@ -250,7 +255,6 @@ public final class IntavePlugin extends JavaPlugin {
       Thread.sleep(5);
 
       SibylBroadcast.setup();
-      ReflectiveAccess.setup();
 
       Thread.sleep(5);
 

@@ -61,6 +61,10 @@ public final class ConnectionMetadata {
 
   public RateLimiter refreshBlockRatelimit = new RateLimiter(400, 2, TimeUnit.SECONDS);
 
+  public final Random feedbackUserKeyRandom = new Random();
+  public int lastFeedbackUserKey = Integer.MIN_VALUE;
+  public int generatorRunningNum = 0;
+
   public int windowClickId;
 
   public enum DecoySide {

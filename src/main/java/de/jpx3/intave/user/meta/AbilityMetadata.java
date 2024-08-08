@@ -23,7 +23,10 @@ import static de.jpx3.intave.module.tracker.player.AbilityTracker.GameMode.NOT_S
 @Relocate
 public final class AbilityMetadata {
   private static final UUID SPEED_MODIFIER_SPRINTING_UUID = UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
-  public static final Predicate<WrappedAttributeModifier> EXCLUDE_SPRINT_MODIFIER = modifier -> !modifier.getUUID().equals(SPEED_MODIFIER_SPRINTING_UUID);
+  public static final Predicate<WrappedAttributeModifier> EXCLUDE_SPRINT_MODIFIER = modifier -> modifier.getUUID() == null ?
+    !"662A6B8D-DA3E-4C1C-8813-96EA6097278D".equalsIgnoreCase(modifier.getKey().getKey()) && !"minecraft:sprinting".equalsIgnoreCase(modifier.getKey().getFullKey())
+    : !modifier.getUUID().equals(SPEED_MODIFIER_SPRINTING_UUID);
+
 
   private final Player player;
   private boolean flying;
@@ -101,22 +104,38 @@ public final class AbilityMetadata {
 
   public double attributeValue(String key, Predicate<? super WrappedAttributeModifier> filter) {
     key = keyTranslation(key);
-    for (Map.Entry<String, List<WrappedAttributeModifier>> wrappedAttributeListEntry : attributeModifiers.entrySet()) {
-      WrappedAttribute attribute = attributes.get(wrappedAttributeListEntry.getKey());
-      if (attribute == null) {
-        continue;
-      }
-      if (keyTranslation(attribute.getAttributeKey()).equals(key)) {
-        List<WrappedAttributeModifier> modifiers = wrappedAttributeListEntry.getValue();
-        if (!modifiers.isEmpty()) {
-          modifiers = new ArrayList<>(modifiers);
-          modifiers.removeIf(filter.negate());
-          attribute = attribute.withModifiers(modifiers);
+    WrappedAttribute attribute = attributes.get(key);
+    List<WrappedAttributeModifier> attributeModifiers = this.attributeModifiers.get(key);
+    if (attribute == null || attributeModifiers == null) {
+      return Double.NaN;
+    }
+    double x = attribute.getBaseValue();
+    double y = 0.0;
+    // ProtocolLib code pasted,
+    for(int phase = 0; phase < 3; ++phase) {
+      for (WrappedAttributeModifier modifier : attributeModifiers) {
+        if (!filter.test(modifier)) {
+          continue;
         }
-        return attribute.getFinalValue();
+        if (modifier.getOperation().getId() == phase) {
+          switch (phase) {
+            case 0:
+              x += modifier.getAmount();
+              break;
+            case 1:
+              y += x * modifier.getAmount();
+              break;
+            case 2:
+              y *= 1.0 + modifier.getAmount();
+              break;
+          }
+        }
+      }
+      if (phase == 0) {
+        y = x;
       }
     }
-    return Double.NaN;
+    return y;
   }
 
   public List<WrappedAttributeModifier> modifiersOf(WrappedAttribute attribute) {
@@ -166,10 +185,10 @@ public final class AbilityMetadata {
     key = keyTranslation(key);
     WrappedAttribute attribute = findAttribute(key);
     if (attribute != null) {
-      attributes.put(key, WrappedAttribute.newBuilder(attribute).baseValue(baseValue).modifiers(Collections.emptyList()).build());
+      attributes.put(key, WrappedAttribute.newBuilder(attribute).baseValue(baseValue).build());
       List<WrappedAttributeModifier> modifiers = modifiersOf(attribute);
       attributeModifiers.remove(key);
-      attributeModifiers.put(key, modifiers);
+      attributeModifiers.put(key, new ArrayList<>(modifiers));
     }
   }
 
