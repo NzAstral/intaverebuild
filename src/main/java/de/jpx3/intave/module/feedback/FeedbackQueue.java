@@ -10,7 +10,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class FeedbackQueue {
-  private static final int MAX_DIRECT_SIZE = 256;
+  private static final int MAX_DIRECT_SIZE = 2048;
+  private static final int DIRECT_TRANSLATION = 1024;
   private final FeedbackEntry[] directLocalAccess = new FeedbackEntry[MAX_DIRECT_SIZE];
   private final Map<Short, FeedbackEntry> fallbackLocalAccess = new ConcurrentHashMap<>();
   private FeedbackEntry head, tail;
@@ -24,15 +25,22 @@ public final class FeedbackQueue {
     writeLock.lock();
     try {
       short userKey = request.userKey();
-      if (userKey >= 0 && userKey < MAX_DIRECT_SIZE) {
-        directLocalAccess[userKey] = entry;
+      if (userKey > -DIRECT_TRANSLATION && userKey < DIRECT_TRANSLATION) {
+        short localAccessKey = (short) (userKey + DIRECT_TRANSLATION);
+        if (directLocalAccess[localAccessKey] != null) {
+          directLocalAccess[localAccessKey].appendSameUserKey(entry);
+        } else {
+          directLocalAccess[localAccessKey] = entry;
+        }
+      } else if (fallbackLocalAccess.containsKey(userKey)) {
+        fallbackLocalAccess.get(userKey).appendSameUserKey(entry);
       } else {
         fallbackLocalAccess.put(userKey, entry);
       }
       if (head == null) {
         head = tail = entry;
       } else {
-        tail.setNext(entry);
+        tail.setFollowingRequest(entry);
         tail = entry;
       }
       size++;
@@ -54,8 +62,8 @@ public final class FeedbackQueue {
     readLock.lock();
     try {
       FeedbackEntry entry;
-      if (userKey >= 0 && userKey < MAX_DIRECT_SIZE) {
-        entry = directLocalAccess[userKey];
+      if (userKey > -DIRECT_TRANSLATION && userKey < DIRECT_TRANSLATION) {
+        entry = directLocalAccess[userKey + DIRECT_TRANSLATION];
       } else {
         entry = fallbackLocalAccess.get(userKey);
       }
@@ -72,15 +80,22 @@ public final class FeedbackQueue {
         return null;
       }
       FeedbackEntry entry = head;
-      head = head.next();
+      head = head.followingRequest();
       if (head == null) {
         tail = null;
       }
       short userKey = entry.request.userKey();
-      if (userKey >= 0 && userKey < MAX_DIRECT_SIZE) {
-        directLocalAccess[userKey] = null;
+      FeedbackEntry replacement = entry.nextSameUserKeyEntry();
+      if (userKey > -DIRECT_TRANSLATION && userKey < DIRECT_TRANSLATION) {
+        directLocalAccess[userKey + DIRECT_TRANSLATION] = replacement;
+      } else if (replacement != null) {
+        fallbackLocalAccess.put(userKey, replacement);
       } else {
         fallbackLocalAccess.remove(userKey);
+      }
+      if (replacement != null) {
+        replacement.sameUserKeyTail = entry.sameUserKeyTail;
+        entry.sameUserKeyNext = null;
       }
       size--;
       return entry.request;
@@ -103,15 +118,22 @@ public final class FeedbackQueue {
           list = new ArrayList<>();
         }
         list.add(entry.request);
-        head = head.next();
+        head = head.followingRequest();
         if (head == null) {
           tail = null;
         }
+        FeedbackEntry replacement = entry.nextSameUserKeyEntry();
         short userKey = entry.request.userKey();
-        if (userKey >= 0 && userKey < MAX_DIRECT_SIZE) {
-          directLocalAccess[userKey] = null;
+        if (userKey > -DIRECT_TRANSLATION && userKey < DIRECT_TRANSLATION) {
+          directLocalAccess[userKey + DIRECT_TRANSLATION] = replacement;
+        } else if (replacement != null) {
+          fallbackLocalAccess.put(userKey, replacement);
         } else {
           fallbackLocalAccess.remove(userKey);
+        }
+        if (replacement != null) {
+          replacement.sameUserKeyTail = entry.sameUserKeyTail;
+          entry.sameUserKeyNext = null;
         }
         size--;
         entry = head;
@@ -129,8 +151,8 @@ public final class FeedbackQueue {
   public synchronized boolean hasUserKey(short userKey) {
     readLock.lock();
     try {
-      if (userKey >= 0 && userKey < MAX_DIRECT_SIZE) {
-        return directLocalAccess[userKey] != null;
+      if (userKey > -DIRECT_TRANSLATION && userKey < DIRECT_TRANSLATION) {
+        return directLocalAccess[userKey + DIRECT_TRANSLATION] != null;
       } else {
         return fallbackLocalAccess.containsKey(userKey);
       }
@@ -150,22 +172,48 @@ public final class FeedbackQueue {
 
   public static class FeedbackEntry {
     private final FeedbackRequest<?> request;
-    private FeedbackEntry next;
+    private FeedbackEntry nextRequest;
+    private FeedbackEntry sameUserKeyNext;
+    private FeedbackEntry sameUserKeyTail;
 
     public FeedbackEntry(FeedbackRequest<?> request) {
       this.request = request;
     }
 
-    public FeedbackEntry next() {
-      return next;
+    public FeedbackEntry followingRequest() {
+      return nextRequest;
     }
 
-    public void setNext(FeedbackEntry next) {
-      this.next = next;
+    public void setFollowingRequest(FeedbackEntry nextRequest) {
+      this.nextRequest = nextRequest;
+    }
+
+    public FeedbackEntry nextSameUserKeyEntry() {
+      return sameUserKeyNext;
+    }
+
+    public void appendSameUserKey(FeedbackEntry entry) {
+      if (sameUserKeyNext == null) {
+        sameUserKeyNext = entry;
+        sameUserKeyTail = entry;
+      } else {
+        sameUserKeyTail.sameUserKeyNext = entry;
+        sameUserKeyTail = entry;
+      }
     }
 
     public long globalIndex() {
       return request.num();
+    }
+
+    @Override
+    public String toString() {
+      return "FeedbackEntry{" +
+        "request=" + request +
+        ", nextRequest=" + nextRequest +
+        ", sameUserKeyNext=" + sameUserKeyNext +
+        ", userKey=" + request.userKey() +
+        '}';
     }
   }
 }

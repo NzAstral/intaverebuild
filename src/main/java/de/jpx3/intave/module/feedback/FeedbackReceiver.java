@@ -164,6 +164,10 @@ public final class FeedbackReceiver extends Module {
     long expected = connection.lastReceivedTransactionNum + 1;
     long received = response.num();
 
+    if (IntaveControl.DEBUG_FEEDBACK_PACKETS) {
+      System.out.println("Expected: " + expected + ", received: " + received);
+    }
+
     if (received != expected) {
       for (FeedbackRequest<?> missedRequest : feedbackQueue.pollUpTo(Math.max(expected, received))) {
         if (IntaveControl.DEBUG_FEEDBACK_PACKETS) {

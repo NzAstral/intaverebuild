@@ -22,7 +22,6 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 import static com.comphenix.protocol.PacketType.Play.Server.*;
@@ -270,15 +269,15 @@ public final class FeedbackSender extends Module {
     ConnectionMetadata connection = user.meta().connection();
     FeedbackQueue feedbackQueue = connection.feedbackQueue();
     Random selectedRandom = connection.feedbackUserKeyRandom;
+
     int pending = feedbackQueue.size();
-    int attempts = 1000;
+    int attempts = 100;
     short counter = Short.MIN_VALUE;
     // select a random seed every time to prevent players from predicting the user key in RAND mode
     // predicted transactions could be a security issue, at least theoretically
     selectedRandom.setSeed(System.currentTimeMillis() ^ System.nanoTime() ^ pending ^ player.getUniqueId().hashCode());
     connection.generatorRunningNum = 0;
-
-    boolean recentlyBooted = System.currentTimeMillis() - bootTime < 120_000;
+    boolean recentlyBooted = System.currentTimeMillis() - bootTime < 120_000 ;
     IdGeneratorMode selectedGenerator = recentlyBooted ? IdGeneratorMode.highestCompatibility() : activeGenerator;
 
     int lastGeneration;
@@ -289,31 +288,11 @@ public final class FeedbackSender extends Module {
         generatedKey = IdGeneratorMode.highestCompatibility().generate(user, connection.lastFeedbackUserKey);
       }
       counter = (short) generatedKey;
-    } while (feedbackQueue.hasUserKey(counter) && lastGeneration != counter && attempts-- > 0);
-    // if 1000 searches are not enough
+    } while ((feedbackQueue.hasUserKey(counter) && attempts > 5) && lastGeneration != counter && attempts-- > 0);
+    // if 100 searches are not enough
     if (attempts <= 0) {
-      // try to go through all possible user keys randomly and find the first one that is not used
-      attempts = 1000;
-      counter = MIN_USER_KEY;
-      do {
-        counter++;
-      } while (feedbackQueue.hasUserKey(counter) && attempts-- > 0);
-
-      // if that also fails, try to find a user key randomly again
-      if (attempts <= 0) {
-        attempts = 1000;
-        while (feedbackQueue.hasUserKey(counter) && counter >= MIN_USER_KEY && attempts-- > 0) {
-          if (MIN_USER_KEY + pending >= MAX_USER_KEY) {
-            break;
-          }
-          counter = (short) ThreadLocalRandom.current().nextInt(MIN_USER_KEY + pending, MAX_USER_KEY);
-        }
-        if (attempts <= 0) {
-          // should only happen when a player is not responding to any feedback requests
-          user.kick("Feedback response overdue");
-          return -1;
-        }
-      }
+      // relax uniqueness requirements
+      counter = (short) IdGeneratorMode.RANDOM.generate(user, connection.lastFeedbackUserKey);
     }
     return (short) (connection.lastFeedbackUserKey = counter);
   }
