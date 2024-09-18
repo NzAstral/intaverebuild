@@ -213,6 +213,9 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean clientPressedJump = false;
   public boolean forceCorrectReduce = false;
   public double invalidReduceVL = 0;
+  public int afterRespawnTicks = 0;
+  public double lastRespawnX, lastRespawnY, lastRespawnZ;
+  public boolean allowRespawnLeniency = false;
   private volatile WeakReference<Object> nmsWorld;
   private boolean hasJumpFactor;
   private double resetMotion, frictionPosSubtraction;
@@ -1029,6 +1032,7 @@ public final class MovementMetadata implements SimulationEnvironment {
     pastFlyingPacketAccurate++;
     pastClientFlyingPacket++;
     pastNearbyCollisionInaccuracy++;
+    afterRespawnTicks++;
   }
 
   @Override
@@ -1501,6 +1505,11 @@ public final class MovementMetadata implements SimulationEnvironment {
   @Override
   public boolean pushedByEntity() {
     return pushedByEntity;
+  }
+
+  @Override
+  public int afterRespawnTicks() {
+    return afterRespawnTicks;
   }
 
   @Override

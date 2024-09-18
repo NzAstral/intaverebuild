@@ -476,6 +476,11 @@ public final class TestSimulationEnvironment implements SimulationEnvironment {
   }
 
   @Override
+  public int afterRespawnTicks() {
+    return 0;
+  }
+
+  @Override
   public int pastAnyVelocity() {
     return 100;
   }

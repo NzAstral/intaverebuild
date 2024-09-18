@@ -106,28 +106,34 @@ public final class MovementDispatcher extends Module {
     Player player = event.getPlayer();
     User user = UserRepository.userOf(player);
     PlayerTeleportEvent.TeleportCause cause = event.getCause();
-    if (cause == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL || cause == PlayerTeleportEvent.TeleportCause.UNKNOWN) {
+//    System.out.println("Teleport cause: " + cause);
+    if (cause == PlayerTeleportEvent.TeleportCause.NETHER_PORTAL/* || cause == PlayerTeleportEvent.TeleportCause.UNKNOWN*/) {
       return;
     }
     Location fromLocation = event.getFrom();
     Location toLocation = event.getTo();
     World world = toLocation.getWorld();
-    if (toLocation.getWorld() != player.getWorld() || toLocation.distance(fromLocation) > 8) {
-      MovementMetadata movement = user.meta().movement();
-
-      BoundingBox bb = BoundingBox.fromPosition(user, movement, toLocation);
-      int shiftAllowed = 5;
-      Location oldToLocation = toLocation.clone();
-      while (toLocation.getY() < WorldHeight.UPPER_WORLD_LIMIT && shiftAllowed-- > 0 && Collision.unsafePresent(world, player, bb) && Collision.unsafeNonePresent(world, player, bb.offset(0, 0.5, 0))) {
-        toLocation.add(0, 0.1, 0);
-        bb = BoundingBox.fromPosition(user, movement, toLocation);
-      }
-      if (IntaveControl.DEBUG_STUCK_REVIVAL) {
-        player.sendMessage("SREV " + shiftAllowed + " " + toLocation.distance(oldToLocation) + " cause " + cause);
-      }
-      event.setTo(toLocation);
+    double teleportDistance = toLocation.distance(fromLocation);
+//    System.out.println("Teleport distance: " + teleportDistance);
+    if (toLocation.getWorld() != player.getWorld() || teleportDistance > 8) {
+//      MovementMetadata movement = user.meta().movement();
+//      BoundingBox bb = BoundingBox.fromPosition(user, movement, toLocation);
+//      int shiftAllowed = 5;
+//      Location oldToLocation = toLocation.clone();
+//      while (toLocation.getY() < WorldHeight.UPPER_WORLD_LIMIT && shiftAllowed-- > 0 && Collision.unsafePresent(world, player, bb) && Collision.unsafeNonePresent(world, player, bb.offset(0, 0.5, 0))) {
+//        toLocation.add(0, 0.1, 0);
+//        bb = BoundingBox.fromPosition(user, movement, toLocation).expand(0.25, 0.5, 0.25);
+//      }
+//      if (IntaveControl.DEBUG_STUCK_REVIVAL) {
+//        player.sendMessage("SREV " + shiftAllowed + " " + toLocation.distance(oldToLocation) + " cause " + cause);
+//      }
+      Location fixed = fixLocation(user, toLocation);
+//      event.setTo(fixed);
+//      event.getTo().setY(fixed.getY());
+      Synchronizer.synchronize(() -> {
+        player.teleport(fixed, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+      });
     }
-//    respawn.setRespawnLocation(toLocation);
     MovementMetadata movementData = user.meta().movement();
     movementData.artificialFallDistance = 0;
   }
@@ -161,19 +167,36 @@ public final class MovementDispatcher extends Module {
   public void postShift(PlayerRespawnEvent respawn) {
     Player player = respawn.getPlayer();
     User user = UserRepository.userOf(player);
-    MovementMetadata movement = user.meta().movement();
     Location respawnLocation = respawn.getRespawnLocation().clone();
-    World world = respawnLocation.getWorld();
-    int shiftAllowed = 5;
-    BoundingBox bb = BoundingBox.fromPosition(user, movement, respawnLocation);
-    while (respawnLocation.getY() < WorldHeight.UPPER_WORLD_LIMIT && shiftAllowed-- > 0 && Collision.unsafePresent(world, player, bb) && Collision.unsafeNonePresent(world, player, bb.offset(0, 0.5, 0))) {
-      respawnLocation.add(0, 0.1, 0);
-      bb = BoundingBox.fromPosition(user, movement, respawnLocation);
-      if (IntaveControl.DEBUG_STUCK_REVIVAL) {
-        player.sendMessage("SREV " + shiftAllowed + " " + respawnLocation.distance(respawn.getRespawnLocation()) + " respawn");
-      }
+    respawn.setRespawnLocation(fixLocation(user, respawnLocation));
+  }
+
+  private static final int BASE_SHIFTS = 8;
+
+  private Location fixLocation(User user, Location location) {
+    if (location == null) {
+      return null;
     }
-    respawn.setRespawnLocation(respawnLocation);
+    MovementMetadata movement = user.meta().movement();
+    int baseShifts = BASE_SHIFTS;
+    Location fixedLocation = location.clone();
+    World world = location.getWorld();
+
+    // A: move out of existing blocks
+    BoundingBox bb = BoundingBox.fromPosition(user, movement, fixedLocation);
+    while (fixedLocation.getY() < WorldHeight.UPPER_WORLD_LIMIT && baseShifts-- > 0 && Collision.unsafePresent(world, user.player(), bb) && Collision.unsafeNonePresent(world, user.player(), bb.offset(0, BASE_SHIFTS * 0.1, 0))) {
+      fixedLocation.add(0, 0.101, 0);
+      bb = BoundingBox.fromPosition(user, movement, fixedLocation).grow(0.1);
+    }
+
+    // B: if clear of blocks, move up 1 block
+    baseShifts = 5;
+    bb = BoundingBox.fromPosition(user, movement, fixedLocation);
+    while (fixedLocation.getY() < WorldHeight.UPPER_WORLD_LIMIT && baseShifts-- > 0 && Collision.unsafeNonePresent(world, user.player(), bb)) {
+      fixedLocation.add(0, 0.101, 0);
+      bb = BoundingBox.fromPosition(user, movement, fixedLocation).grow(0.1).expand(0.5, 0.45, 0.5);
+    }
+    return fixedLocation;
   }
 
   @BukkitEventSubscription

@@ -134,6 +134,7 @@ public interface SimulationEnvironment {
   void setPushedByEntity(boolean pushedByEntity);
   boolean pushedByEntity();
 
+  int afterRespawnTicks();
   int pastAnyVelocity();
   int pastExternalVelocity();
   int pastNearbyCollisionInaccuracy();

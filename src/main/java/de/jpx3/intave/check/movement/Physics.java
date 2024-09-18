@@ -804,6 +804,16 @@ public final class Physics extends Check {
         }
       }
 
+//      if (movementData.allowRespawnLeniency) {
+//        double horizontalDistance = MathHelper.resolveHorizontalDistance(receivedPositionX, receivedPositionZ, movementData.lastRespawnX, movementData.lastRespawnZ);
+//        boolean notTooFarAway = horizontalDistance < 2;
+//        boolean notTooFastHorizontally = Math.abs(movementData.motionX()) < 0.4 && Math.abs(movementData.motionZ()) < 0.4;
+//        boolean falling = movementData.motionY() <= 0.01;
+//        if (notTooFarAway && notTooFastHorizontally && falling) {
+//          setback = false;
+//        }
+//      }
+
       // Apply manual setback override when the deviation is greater than a certain amount of blocks
       if (distance > manualOverrideDistance) {
         setback = true;
