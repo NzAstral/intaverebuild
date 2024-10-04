@@ -49,7 +49,7 @@ public final class EncryptedLegacyResource implements LegacyResource {
       throw new IllegalStateException();
     }
     fileStore().setLastModified(System.currentTimeMillis());
-    PluginInvocation pluginInvocation = Caller.pluginInfo();
+    PluginInvocation pluginInvocation = Caller.pluginInfo(false);
     if (pluginInvocation != null && !"Intave".equals(pluginInvocation.pluginName())) {
       throw new IllegalStateException("Unable to access resource file \"" + resourceId() + "\", is it corrupted?");
     }
@@ -90,7 +90,7 @@ public final class EncryptedLegacyResource implements LegacyResource {
       exception.printStackTrace();
       return false;
     }
-    PluginInvocation pluginInvocation = Caller.pluginInfo();
+    PluginInvocation pluginInvocation = Caller.pluginInfo(false);
     if (pluginInvocation == null || !"Intave".equals(pluginInvocation.pluginName())) {
       throw new IllegalStateException("Unable to access resource file \"" + resourceId() + "\", is it corrupted?");
     }

@@ -112,7 +112,7 @@ public final class PlayerAccessor {
       public void setTrustFactor(TrustFactor factor) {
         user.setTrustFactor(factor);
         if (ConsoleOutput.TRUSTFACTOR_DEBUG) {
-          PluginInvocation pluginInvocation = Caller.pluginInfo();
+          PluginInvocation pluginInvocation = Caller.pluginInfo(true);
           String message;
           if (pluginInvocation == null) {
             message = "Changed trustfactor of " + player.getName() + " to " + factor.name() + " (unknown origin)";

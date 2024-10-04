@@ -524,7 +524,7 @@ public final class SetbackSimulator extends Module {
       @Override
       public void setCancelled(boolean cancel) {
         if (IntaveControl.DEBUG_INTAVE_TELEPORT_EVENT_CANCELS && cancel) {
-          PluginInvocation pluginInvocation = Caller.pluginInfo();
+          PluginInvocation pluginInvocation = Caller.pluginInfo(false);
           if (pluginInvocation == null) {
             IntaveLogger.logger().printLine("[Intave] Intave's teleport event was cancelled anonymously");
           } else {

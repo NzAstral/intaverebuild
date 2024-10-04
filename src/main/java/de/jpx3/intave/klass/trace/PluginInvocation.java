@@ -27,4 +27,9 @@ public final class PluginInvocation {
   public String methodName() {
     return methodName;
   }
+
+  @Override
+  public String toString() {
+    return pluginName + " -> " + className + "." + methodName;
+  }
 }

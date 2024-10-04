@@ -12,7 +12,7 @@ public final class Caller {
   }
 
   @Deprecated
-  public static PluginInvocation pluginInfo() {
+  public static PluginInvocation pluginInfo(boolean onlyExternal) {
     StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
     int i = 0;
     for (StackTraceElement element : stacktrace) {
@@ -22,6 +22,9 @@ public final class Caller {
       if (!pluginName.equalsIgnoreCase(NO_PLUGIN_FOUND)
         && i++ > 1
       ) {
+        if (onlyExternal && ("Intave".equalsIgnoreCase(pluginName) || "ProtocolLib".equalsIgnoreCase(pluginName))) {
+          continue;
+        }
         return new PluginInvocation(
           pluginName,
           callerClassName,

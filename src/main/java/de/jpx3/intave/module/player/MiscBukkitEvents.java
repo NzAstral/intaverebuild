@@ -63,7 +63,7 @@ public final class MiscBukkitEvents extends Module {
   @IdoNotBelongHere
   public void on(PlayerTeleportEvent teleport) {
     if (IntaveControl.DEBUG_TELEPORT_CAUSE_AND_CAUSER) {
-      PluginInvocation pluginInvocation = Caller.pluginInfo();
+      PluginInvocation pluginInvocation = Caller.pluginInfo(false);
       String pluginClass = pluginInvocation == null ? "no other plugin" : pluginInvocation.className();
       teleport.getPlayer().sendMessage("Teleport " + teleport.getCause() + " " + teleport.getTo() + " by " + pluginClass);
     }
