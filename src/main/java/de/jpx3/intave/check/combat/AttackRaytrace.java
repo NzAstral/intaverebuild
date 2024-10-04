@@ -290,7 +290,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
       double general = feedbackAnalysis.generalLatency(user);
       double combat = feedbackAnalysis.entityNearLatency(user);
 
-      if (Math.abs(general - combat) > 50) {
+      if (Math.abs(general - combat) > 75) {
         Violation violation = Violation.builderFor(AttackRaytrace.class)
           .forPlayer(player).withCustomThreshold("timeout")
           .withVL(2)
