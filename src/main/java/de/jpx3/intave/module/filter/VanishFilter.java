@@ -37,8 +37,8 @@ public final class VanishFilter extends Filter {
 
   private static final PlayerInfoData FAKE_JPX3_DATA = new PlayerInfoData(
     new WrappedGameProfile(
-      UUID.fromString("5ee6db6d-6751-4081-9cbf-28eb0f6cc055"),
-      "Jpx3"
+      UUID.fromString("3ad99947-352f-4719-be96-9bfccc36ae71"),
+      "funkeln"
     ),
     ThreadLocalRandom.current().nextInt(1, 100),
     SURVIVAL,
@@ -54,7 +54,7 @@ public final class VanishFilter extends Filter {
 
     User user = UserRepository.userOf(player);
     ProtocolMetadata protocol = user.meta().protocol();
-    List<UUID> shownPlayers = protocol.shownPlayers;
+    Set<UUID> shownPlayers = protocol.shownPlayers;
 
     PlayerInfoReader reader = PacketReaders.readerOf(packet);
     Set<EnumWrappers.PlayerInfoAction> actions = reader.playerInfoActions();
@@ -75,12 +75,13 @@ public final class VanishFilter extends Filter {
             shownPlayers.add(uuid);
           });
           break;
+        case UPDATE_GAME_MODE:
         case UPDATE_LATENCY:
           playerInfos.removeIf(playerInfo -> {
             UUID infoId = playerInfo.getProfile().getUUID();
             boolean toBeRemoved = !shownPlayers.contains(infoId);
             if (toBeRemoved) {
-//              System.out.println("Hiding " + playerInfo.getProfile().getName() + " from you");
+              System.out.println("Hiding " + playerInfo.getProfile().getName() + " from " + player.getName());
             }
             return toBeRemoved;
           });
@@ -125,7 +126,7 @@ public final class VanishFilter extends Filter {
     Player player = event.getPlayer();
     User user = UserRepository.userOf(player);
     ProtocolMetadata protocol = user.meta().protocol();
-    List<UUID> shownPlayers = protocol.shownPlayers;
+    Set<UUID> shownPlayers = protocol.shownPlayers;
 
     PacketContainer packet = event.getPacket();
     String[] stuff = packet.getStringArrays().readSafely(0);
@@ -169,7 +170,7 @@ public final class VanishFilter extends Filter {
     PacketContainer packet = event.getPacket();
     User user = UserRepository.userOf(player);
     ProtocolMetadata protocol = user.meta().protocol();
-    List<UUID> shownPlayers = protocol.shownPlayers;
+    Set<UUID> shownPlayers = protocol.shownPlayers;
     PlayerInfoRemoveReader reader = PacketReaders.readerOf(packet);
     List<UUID> uuids = reader.playersToRemove();
     uuids.removeIf(uuid -> !shownPlayers.contains(uuid));

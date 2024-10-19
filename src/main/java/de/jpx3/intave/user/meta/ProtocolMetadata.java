@@ -8,8 +8,8 @@ import de.jpx3.intave.user.User;
 import de.jpx3.intave.version.ProtocolVersionConverter;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Relocate
@@ -44,7 +44,7 @@ public final class ProtocolMetadata {
   private final User user;
   private int refreshes;
 
-  public List<UUID> shownPlayers = new ArrayList<>();
+  public Set<UUID> shownPlayers = new HashSet<>();
 
   public ProtocolMetadata(Player player, User user) {
     this.user = user;
