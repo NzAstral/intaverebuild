@@ -13,6 +13,7 @@ import de.jpx3.intave.block.type.MaterialSearch;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.tracker.entity.Entity;
+import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.player.Effects;
 import de.jpx3.intave.player.Enchantments;
 import de.jpx3.intave.player.collider.Colliders;
@@ -466,10 +467,11 @@ class BaseSimulator extends Simulator {
     }
 
     if (!violationLevelData.isInActiveTeleportBundle) {
-      if (violationLevelData.ignorePostTickMotionReset) {
-        violationLevelData.ignorePostTickMotionReset = false;
-        //        player.sendMessage("Ignore physics motion reset " + motion);
+      if (violationLevelData.doNotVerifyBaseMotion) {
+        violationLevelData.doNotVerifyBaseMotion = false;
       } else {
+        PacketLogging logging = Modules.tracker().packetLogging();
+        logging.logSystemMessage(user, () -> "MOTION LOGIC: Base motion override: " + motion.motionX + " " + motion.motionY + " " + motion.motionZ);
         environment.setBaseMotion(motion);
       }
     }

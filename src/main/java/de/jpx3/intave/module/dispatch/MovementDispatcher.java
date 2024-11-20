@@ -317,12 +317,6 @@ public final class MovementDispatcher extends Module {
     boolean hasMovement = vehicleMove || packet.getBooleans().read(1);
     boolean hasRotation = vehicleMove || packet.getBooleans().read(2);
 
-    if (violationLevelData.disableActiveTeleportBundleNextTick) {
-      violationLevelData.disableActiveTeleportBundleNextTick = false;
-      violationLevelData.isInActiveTeleportBundle = false;
-      movementData.dropPostTickMotionProcessing = true;
-    }
-
     if (movementData.isInVehicle() && !vehicleMove && hasRotation && !hasMovement) {
       movementData.applyGroundInformationToPacket(packet);
       movementData.rotationYaw = packet.getFloat().read(0);
@@ -1191,6 +1185,8 @@ public final class MovementDispatcher extends Module {
       }
       movementData.willReceiveSetbackVelocity = false;
       movementData.willReceiveFinalSetbackVelocity = false;
+      PacketLogging logging = Modules.tracker().packetLogging();
+      logging.logSystemMessage(user, () -> "MOTION LOGIC: Velocity base motion set to " + MathHelper.formatMotion(velocity));
     }
     movementData.pastVelocity = 0;
 //    movementData.pendingVelocityPackets.decrementAndGet();

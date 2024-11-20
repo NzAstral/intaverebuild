@@ -74,7 +74,6 @@ public final class PredictiveSimulationProcessor implements SimulationProcessor 
       forward, strafe, 0,
       movementData.sprintingAllowed(),
       jumped, meta.inventory().handActive(), false
-
     );
     Simulation simulate = simulator.simulate(user, motion, movementData, configuration);
 

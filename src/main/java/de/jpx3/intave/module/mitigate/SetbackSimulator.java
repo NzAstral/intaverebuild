@@ -74,8 +74,7 @@ public final class SetbackSimulator extends Module {
       if (IntaveControl.DEBUG_EMULATION) {
         player.sendMessage(ChatColor.DARK_PURPLE + "[E-] Exit by " + teleport.getCause() + " teleport event");
       }
-//      violationLevelData.isInActiveTeleportBundle = false;
-      violationLevelData.disableActiveTeleportBundleNextTick = true;
+      violationLevelData.disableActiveTeleportBundleNextTeleportAccept = true;
     }
   }
 
@@ -260,7 +259,7 @@ public final class SetbackSimulator extends Module {
        * however, we have a teleport packet after, requiring the client to respond
        */
       user.tickFeedback(
-        () -> violationLevelData.disableActiveTeleportBundleNextTick = true
+        () -> violationLevelData.disableActiveTeleportBundleNextTeleportAccept = true
       );
       teleport(player, motion.getY(), futurePosition);
 //      violationLevelData.isInActiveTeleportBundle = false;

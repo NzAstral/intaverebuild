@@ -573,7 +573,7 @@ public class Entity {
   @Override
   public String toString() {
     if (this == DESTROYED_ENTITY) {
-      return "Destroyed";
+      return "E[Destroyed]";
     }
     if (typeData == null) {
       return "E[" + entityId + "]";

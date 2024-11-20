@@ -369,7 +369,6 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
             user.nerf(AttackNerfStrategy.CANCEL, "67");
           }
 
-
           violationLevel.lastBacktrackVLChange = System.currentTimeMillis();
         }
       }

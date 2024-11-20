@@ -28,9 +28,11 @@ import de.jpx3.intave.entity.datawatcher.DataWatcherAccess;
 import de.jpx3.intave.executor.RateLimiter;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.MathHelper;
+import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.dispatch.MovementDispatcher;
 import de.jpx3.intave.module.feedback.Superposition;
 import de.jpx3.intave.module.tracker.entity.Entity;
+import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.player.Effects;
 import de.jpx3.intave.player.ItemProperties;
 import de.jpx3.intave.share.Rotation;
@@ -336,6 +338,7 @@ public final class MovementMetadata implements SimulationEnvironment {
     PacketContainer packet,
     boolean hasMovement, boolean hasRotation
   ) {
+    PacketLogging logging = Modules.tracker().packetLogging();
     if (!boundingBoxSetup) {
       setupDefaults();
     }
@@ -355,6 +358,7 @@ public final class MovementMetadata implements SimulationEnvironment {
       motionX = positionX - verifiedPositionX;
       motionY = positionY - verifiedPositionY;
       motionZ = positionZ - verifiedPositionZ;
+      logging.logSystemMessage(user, () -> "MOTION LOGIC: Received motion: " + motionX + " " + motionY + " " + motionZ);
       boolean falling = motionY() <= 0.0D;
       if (falling && Effects.slowFallingEffectActive(player)) {
         artificialFallDistance = 0f;

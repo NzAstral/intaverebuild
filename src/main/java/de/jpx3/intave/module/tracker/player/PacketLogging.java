@@ -10,6 +10,7 @@ import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.share.MovingObjectPosition;
 import de.jpx3.intave.user.User;
+import de.jpx3.intave.user.UserRepository;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class PacketLogging extends Module {
 
@@ -99,7 +99,7 @@ public class PacketLogging extends Module {
           }
           if (event.getPlayer().getUniqueId().equals(finalUserId)) {
             synchronized (printStream) {
-              printStream.println((System.currentTimeMillis() % 1000) + " --> " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket()));
+              printStream.println((System.currentTimeMillis() % 1000) + " <--out-- " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket(), UserRepository.userOf(event.getPlayer())));
             }
           }
         }
@@ -111,17 +111,15 @@ public class PacketLogging extends Module {
           }
           if (event.getPlayer().getUniqueId().equals(finalUserId)) {
             synchronized (printStream) {
-              printStream.println((System.currentTimeMillis() % 1000) + " <-- " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket()));
+              printStream.println((System.currentTimeMillis() % 1000) + " --in--> " + event.getPacketType().name() + (event.isCancelled() ? " (cancelled)" : "") + " " + packetContent(event.getPacket(), UserRepository.userOf(event.getPlayer())));
             }
           }
         }
       };
       adapterMap.put(userId, adapter);
       ProtocolLibrary.getProtocolManager().addPacketListener(adapter);
-
       packetLoggers.put(sender.getName(), userId);
       packetLogStreams.put(userId, printStream);
-
     } catch (FileNotFoundException exception) {
       exception.printStackTrace();
     }
@@ -152,15 +150,30 @@ public class PacketLogging extends Module {
     }
   }
 
-  private static String packetContent(PacketContainer packet) {
+  private static String packetContent(PacketContainer packet, User receiver) {
     if (packet == null) {
       return "null";
     }
-    String contents = packet.getModifier().getValues().stream()
+    String typeName = packet.getType().name();
+    String[] array = packet.getModifier().getValues().stream()
       .map(PacketLogging::stringFromType)
       .filter(s -> !s.isEmpty())
-      .collect(Collectors.joining(", "));
-    return "{" + contents + "}";
+      .toArray(String[]::new);
+    if (typeName.toUpperCase().contains("ENTITY")) {
+      Integer entityId = packet.getIntegers().readSafely(0);
+      if (entityId != null) {
+        array[0] = receiver.meta().connection().entityBy(entityId) + "";
+      }
+    }
+    StringBuilder extra = new StringBuilder();
+    if (typeName.equalsIgnoreCase("ENTITY_VELOCITY")) {
+      // convert
+      double x = packet.getIntegers().readSafely(1) / 8000.0;
+      double y = packet.getIntegers().readSafely(2) / 8000.0;
+      double z = packet.getIntegers().readSafely(3) / 8000.0;
+      extra.append("x=").append(x).append(", y=").append(y).append(", z=").append(z);
+    }
+    return "{" + String.join(", ", array) + "}" + (extra.length() == 0 ? "" : " [" + extra + "]");
   }
 
   private static String stringFromType(Object object) {

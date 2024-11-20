@@ -223,7 +223,7 @@ public final class SimulationEvaluator {
       double moveToAttachMoveDelta = abs(movement.motion().length() - distanceMoved);
       boolean movementInLineWithDistance = moveToAttachMoveDelta < 0.5;
 //      player.sendMessage(attachAllowed + " " + movementInLineWithDistance + " " + moveToAttachMoveDelta);
-      if (attachAllowed && movementInLineWithDistance) {
+      if (attachAllowed /*&& movementInLineWithDistance*/) {
         verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 5);
         tags.add(EvaluationTag.ATTACH);
       }
@@ -435,9 +435,9 @@ public final class SimulationEvaluator {
       );
       BoundingBox currentPlayerBox = movement.boundingBox();
       boolean attachAllowed = grownBoatBox.intersectsWith(nextPlayerBox) || grownBoatBox.intersectsWith(currentPlayerBox);
-      double moveToAttachMoveDelta = abs(movement.motion().length() - distanceMoved);
-      boolean movementInLineWithDistance = moveToAttachMoveDelta < 0.5;
-      if (attachAllowed && movementInLineWithDistance) {
+//      double moveToAttachMoveDelta = abs(movement.motion().length() - distanceMoved);
+//      boolean movementInLineWithDistance = moveToAttachMoveDelta < 0.5;
+      if (attachAllowed /*&& movementInLineWithDistance*/) {
         horizontalLegitimateDeviation = Math.max(horizontalLegitimateDeviation, 5);
         tags.add(EvaluationTag.ATTACH);
         if (distance > 0.1) {

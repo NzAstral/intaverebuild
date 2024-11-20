@@ -254,7 +254,8 @@ public final class Cloud {
           break;
         }
       }
-      if (!sent) {
+      boolean cloudWasDeactivated = !cloudConfig.isEnabled();
+      if (!sent && !cloudWasDeactivated) {
         IntaveLogger.logger().error("Unable to send packet " + packet.name() + " to any shard");
       }
     });

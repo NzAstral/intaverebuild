@@ -502,6 +502,15 @@ public final class Physics extends Check {
       }
     }
 
+    if (movementData.attachVehicleTicks <= 1) {
+      movementData.endMotionXOverride = true;
+      movementData.endMotionYOverride = true;
+      movementData.endMotionZOverride = true;
+      movementData.endMotionXOverrideValue = 0;
+      movementData.endMotionYOverrideValue = 0;
+      movementData.endMotionZOverrideValue = 0;
+    }
+
     // TODO: 05/28/22 check if this worked, and deal with adjustments
     // trustfactor limit is just temporary
     boolean suspectSafeWalk = user.trustFactor().atOrBelow(TrustFactor.YELLOW);

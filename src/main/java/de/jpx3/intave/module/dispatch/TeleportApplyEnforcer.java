@@ -16,12 +16,14 @@ import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketEventSubscriber;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
+import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.packet.TeleportFlag;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.MovementMetadata;
+import de.jpx3.intave.user.meta.ViolationMetadata;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -34,6 +36,7 @@ import org.bukkit.util.Vector;
 import java.util.Set;
 
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.DROP_ITEM;
+import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.BLOCK_DIG;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.TELEPORT_ACCEPT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Server.POSITION;
@@ -307,6 +310,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
   private void checkPotentialTeleport(Player player) {
     User user = UserRepository.userOf(player);
     MovementMetadata movementData = user.meta().movement();
+    ViolationMetadata violationMetadata = user.meta().violationLevel();
     double positionX = movementData.positionX;
     double positionY = movementData.positionY;
     double positionZ = movementData.positionZ;
@@ -361,7 +365,6 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
         }
       }
       isTeleport = validPosition;
-
       if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
         player.sendMessage(
           IntavePlugin.prefix() + "Movement " + (isTeleport ? "matched" : "did not match")
@@ -372,6 +375,13 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
       }
     }
     if (isTeleport) {
+      PacketLogging logging = Modules.tracker().packetLogging();
+      double finalPositionX = positionX, finalPositionY = positionY, finalPositionZ = positionZ;
+      logging.logSystemMessage(user, () -> "Accepted teleport move to " + formatDouble(finalPositionX, 3) + " " + formatDouble(finalPositionY, 3) + " " + formatDouble(finalPositionZ, 3));
+      if (violationMetadata.disableActiveTeleportBundleNextTeleportAccept) {
+        violationMetadata.disableActiveTeleportBundleNextTeleportAccept = false;
+        violationMetadata.isInActiveTeleportBundle = false;
+      }
       releaseAwaitTeleportLock(player);
       applyPositionConfirmationUpdate(player, positionX, positionY, positionZ);
       double teleportLength = MathHelper.resolveHorizontalDistance(
@@ -411,6 +421,8 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     movementData.baseMotionY = 0.0;
     movementData.baseMotionZ = 0.0;
 
+    PacketLogging logging = Modules.tracker().packetLogging();
+    logging.logSystemMessage(user, () -> "MOTION LOGIC: Reset base motion to 0.0");
     movementData.lastOnGround = false;
     movementData.setBoundingBox(BoundingBox.fromPosition(user, movementData, movementData.teleportLocation));
   }
