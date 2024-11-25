@@ -47,7 +47,6 @@ import de.jpx3.intave.player.ItemProperties;
 import de.jpx3.intave.share.*;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.UserLocal;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.*;
 import de.jpx3.intave.world.raytrace.Raytracing;
@@ -1103,8 +1102,6 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
   }
 
-  private final UserLocal<List<BlockPosition>> lockedBlocks = UserLocal.withInitial(() -> new ArrayList<>());
-
   @BukkitEventSubscription(
     priority = EventPriority.MONITOR
   )
@@ -1113,7 +1110,8 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     User user = userOf(player);
     BlockTrustChain trustChain = user.meta().movement().placementTrustChain;
     BlockPosition blockPosition = new BlockPosition(event.getBlockPlaced().getLocation());
-    lockedBlocks.get(user).remove(blockPosition);
+    // keep invalidated anchors until next tick, then remove them
+    // this avoids problems when a player places a block multiple times in a single tick
     boolean requireFeedbackTimedRemoval = trustChain.collapseState(blockPosition, !event.isCancelled());
     if (requireFeedbackTimedRemoval) {
       // next tick

@@ -142,9 +142,9 @@ final class MultiChunkKeyBlockCache implements BlockCache {
 
   @Override
   public void moveClientSpeculationsToOverride(World world, int seqReq) {
-    for (Map.Entry<BlockPosition, BlockState> e : speculativeHeads.entrySet()) {
-      BlockPosition blockPosition = e.getKey();
-      BlockState blockState = e.getValue();
+    for (Map.Entry<BlockPosition, BlockState> speculativeHead : speculativeHeads.entrySet()) {
+      BlockPosition blockPosition = speculativeHead.getKey();
+      BlockState blockState = speculativeHead.getValue();
       int sequenceNumber = speculativeSequenceNumbers.getOrDefault(blockPosition, -1);
       int posX = blockPosition.getX();
       int posY = blockPosition.getY();

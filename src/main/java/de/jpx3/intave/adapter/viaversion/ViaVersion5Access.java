@@ -3,6 +3,7 @@ package de.jpx3.intave.adapter.viaversion;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.protocol.packet.PacketTracker;
+import de.jpx3.intave.IntaveLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -40,6 +41,17 @@ public final class ViaVersion5Access implements ViaVersionAccess {
       }
       int maxpps = maxPPSField.getInt(config);
       maxPPSField.set(config, Math.max(maxpps, 600));
+      try {
+        Field fix121PlacementField = configurationClass.getDeclaredField("fix1_21PlacementRotation");
+        if (!fix121PlacementField.isAccessible()) {
+          fix121PlacementField.setAccessible(true);
+        }
+        if (fix121PlacementField.getBoolean(config)) {
+          fix121PlacementField.set(config, false);
+          IntaveLogger.logger().info("Disabled ViaVersion 1.21 placement rotation fix");
+        }
+//        fix121PlacementField.set(config, false);
+      } catch (Throwable x) {}
     } catch (Exception exception) {
       throw new IllegalStateException("Failed to alter ViaVersion configuration", exception);
     }
