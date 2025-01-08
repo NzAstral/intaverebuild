@@ -104,8 +104,8 @@ public final class AbilityMetadata {
       attributes.put(name, reduceNumberPrecision(attribute));
       attributeModifiers.put(name, new CopyOnWriteArrayList<>());
     } catch (Exception e) {
-//      IntaveLogger.logger().error("Unable to setup attribute " + name + " for player " + player.getName());
-//      e.printStackTrace();
+      IntaveLogger.logger().error("Unable to setup attribute " + name + " for player " + player.getName());
+      e.printStackTrace();
     }
   }
 
@@ -179,16 +179,31 @@ public final class AbilityMetadata {
   static {
     KEY_WRAPPED = MinecraftVersions.VER1_16_0.atOrAbove();
     Map<String, String> remap = new HashMap<>();
-    remap.put("generic.maxHealth", "generic.max_health");
-    remap.put("generic.followRange", "generic.follow_range");
-    remap.put("generic.knockbackResistance", "generic.knockback_resistance");
-    remap.put("generic.movementSpeed", "generic.movement_speed");
-    remap.put("generic.attackDamage", "generic.attack_damage");
-    remap.put("generic.attackSpeed", "generic.attack_speed");
-    remap.put("generic.armorToughness", "generic.armor_toughness");
-    remap.put("generic.attackKnockback", "generic.attack_knockback");
-    remap.put("horse.jumpStrength", "horse.jump_strength");
-    remap.put("zombie.spawnReinforcements", "zombie.spawn_reinforcements");
+    if (MinecraftVersions.VER1_21_4.atOrAbove()) {
+      remap.put("generic.maxHealth", "max_health");
+      remap.put("generic.followRange", "follow_range");
+      remap.put("generic.knockbackResistance", "knockback_resistance");
+      remap.put("generic.movementSpeed", "movement_speed");
+      remap.put("generic.attackDamage", "attack_damage");
+      remap.put("generic.attackSpeed", "attack_speed");
+      remap.put("generic.armorToughness", "armor_toughness");
+      remap.put("generic.attackKnockback", "attack_knockback");
+      remap.put("horse.jumpStrength", "jump_strength");
+      remap.put("zombie.spawnReinforcements", "spawn_reinforcements");
+      remap.put("generic.scale", "scale");
+      remap.put("player.sneaking_speed", "sneaking_speed");
+    } else {
+      remap.put("generic.maxHealth", "generic.max_health");
+      remap.put("generic.followRange", "generic.follow_range");
+      remap.put("generic.knockbackResistance", "generic.knockback_resistance");
+      remap.put("generic.movementSpeed", "generic.movement_speed");
+      remap.put("generic.attackDamage", "generic.attack_damage");
+      remap.put("generic.attackSpeed", "generic.attack_speed");
+      remap.put("generic.armorToughness", "generic.armor_toughness");
+      remap.put("generic.attackKnockback", "generic.attack_knockback");
+      remap.put("horse.jumpStrength", "horse.jump_strength");
+      remap.put("zombie.spawnReinforcements", "zombie.spawn_reinforcements");
+    }
     REMAP = ImmutableMap.copyOf(remap);
   }
 

@@ -81,7 +81,6 @@ final class PatchyTranslator {
             methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc
         ), instructionTarget = originalInstruction;
         instructionTarget = process(instructionTarget, configuration);
-        System.out.println("Original: " + methodInsnNode.name + methodInsnNode.desc + " new " + instructionTarget.name + instructionTarget.desc);
         methodInsnNode.owner = instructionTarget.owner;
         methodInsnNode.name = instructionTarget.name;
         methodInsnNode.desc = instructionTarget.desc;
