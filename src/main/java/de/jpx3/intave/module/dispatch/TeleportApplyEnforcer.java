@@ -1,9 +1,7 @@
 package de.jpx3.intave.module.dispatch;
 
-import com.comphenix.protocol.events.InternalStructure;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.reflect.StructureModifier;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
@@ -19,6 +17,8 @@ import de.jpx3.intave.module.linker.packet.PacketEventSubscriber;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.packet.TeleportFlag;
+import de.jpx3.intave.packet.reader.PacketReaders;
+import de.jpx3.intave.packet.reader.PlayerTeleportReader;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
@@ -75,32 +75,15 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     PacketContainer packet = event.getPacket();
     User user = UserRepository.userOf(player);
     MovementMetadata movementData = user.meta().movement();
-    boolean vectors = MinecraftVersions.VER1_21_4.atOrAbove();
 
-    StructureModifier<Double> doubles = packet.getDoubles();
-    Double positionX;
-    Double positionY;
-    Double positionZ;
-    StructureModifier<Float> floats = packet.getFloat();
-    Float yaw;
-    Float pitch;
-    if (vectors) {
-      InternalStructure posRot = packet.getStructures().read(0);
-      Vector position = posRot.getVectors().read(0);
-      positionX = position.getX();
-      positionY = position.getY();
-      positionZ = position.getZ();
-      yaw = posRot.getFloat().read(0);
-      pitch = posRot.getFloat().read(1);
-    } else {
-      positionX = doubles.read(0);
-      positionY = doubles.read(1);
-      positionZ = doubles.read(2);
-      yaw = floats.read(0);
-      pitch = floats.read(1);
-    }
+    PlayerTeleportReader reader = PacketReaders.readerOf(packet);
+    double positionX = reader.positionX();
+    double positionY = reader.positionY();
+    double positionZ = reader.positionZ();
+    float yaw = reader.yaw();
+    float pitch = reader.pitch();
+    Set<TeleportFlag> flags = reader.flags();
 
-    Set<TeleportFlag> flags = TeleportFlag.flagsFrom(packet);
     boolean relativeX = flags.contains(TeleportFlag.X);
     boolean relativeY = flags.contains(TeleportFlag.Y);
     boolean relativeZ = flags.contains(TeleportFlag.Z);
@@ -123,42 +106,27 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
 
     if (relativeX) {
       positionX += user.meta().movement().verifiedPositionX();
-      if (vectors) {
-        Vector vec = packet.getStructures().read(0).getVectors().read(0);
-        vec.setX(positionX);
-      } else {
-        doubles.write(0, positionX);
-      }
+      reader.setPositionX(positionX);
       flags.remove(TeleportFlag.X);
       flagModification = true;
     }
 
     if (relativeY) {
       positionY += user.meta().movement().verifiedPositionY();
-      if (vectors) {
-        Vector vec = packet.getStructures().read(0).getVectors().read(0);
-        vec.setY(positionY);
-      } else {
-        doubles.write(1, positionY);
-      }
+      reader.setPositionY(positionY);
       flags.remove(TeleportFlag.Y);
       flagModification = true;
     }
 
     if (relativeZ) {
       positionZ += user.meta().movement().verifiedPositionZ();
-      if (vectors) {
-        Vector vec = packet.getStructures().read(0).getVectors().read(0);
-        vec.setZ(positionZ);
-      } else {
-        doubles.write(2, positionZ);
-      }
+      reader.setPositionZ(positionZ);
       flags.remove(TeleportFlag.Z);
       flagModification = true;
     }
 
     if (flagModification) {
-      TeleportFlag.writeFlags(packet, flags);
+      reader.setFlags(flags);
     }
 
     boolean expectRotation = false;//!flags.contains(TeleportFlag.X_ROT) && !flags.contains(TeleportFlag.Y_ROT);

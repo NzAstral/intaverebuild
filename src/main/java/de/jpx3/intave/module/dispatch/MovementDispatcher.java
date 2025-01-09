@@ -3,7 +3,6 @@ package de.jpx3.intave.module.dispatch;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.InternalStructure;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.reflect.StructureModifier;
@@ -1010,7 +1009,6 @@ public final class MovementDispatcher extends Module {
       movementData.clientPressedJump = jumping;
     }
   }
-
 
   @PacketSubscription(
     engine = Engine.ASYNC_INTERNAL,
