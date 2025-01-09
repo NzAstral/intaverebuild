@@ -302,9 +302,9 @@ public class Entity {
     InternalStructure playerPosition = packet.getStructures().read(0);
     Vector position = playerPosition.getVectors().read(0);
     Set<TeleportFlag> flags = TeleportFlag.flagsFrom(packet);
-    double currentX = flags.contains(TeleportFlag.X) ? this.position.posX : 0.0;
-    double currentY = flags.contains(TeleportFlag.Y) ? this.position.posY : 0.0;
-    double currentZ = flags.contains(TeleportFlag.Z) ? this.position.posZ : 0.0;
+    double currentX = flags.contains(TeleportFlag.X) ? immediateServerPosition.getX() : 0.0;
+    double currentY = flags.contains(TeleportFlag.Y) ? immediateServerPosition.getY() : 0.0;
+    double currentZ = flags.contains(TeleportFlag.Z) ? immediateServerPosition.getZ() : 0.0;
     newPosX = currentX + position.getX();
     newPosY = currentY + position.getY();
     newPosZ = currentZ + position.getZ();
