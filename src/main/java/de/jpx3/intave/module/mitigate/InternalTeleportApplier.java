@@ -1,9 +1,11 @@
 package de.jpx3.intave.module.mitigate;
 
+import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.IntaveInternalException;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.klass.Lookup;
-import de.jpx3.intave.packet.TeleportFlag;
+import de.jpx3.intave.klass.rewrite.PatchyLoadingInjector;
+import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Location;
@@ -16,18 +18,31 @@ import java.util.Set;
 
 final class InternalTeleportApplier {
   private static final boolean WEIRD_BOOLEAN_IN_INVOKE = MinecraftVersions.VER1_17_0.atOrAbove() && !MinecraftVersions.VER1_19_4.atOrAbove();
+  private static final boolean WITHOUT_SET = MinecraftVersions.VER1_21_3.atOrAbove();
   //  private final Set<Object> teleportFlags = new HashSet<>();
   private final Method internalTeleportMethod;
+  private TeleportApplier applier;
 
   {
     try {
       Class<?> playerConnectionClass = Lookup.serverClass("PlayerConnection");
-      if (WEIRD_BOOLEAN_IN_INVOKE) {
+      if (WITHOUT_SET) {
+        String className = "de.jpx3.intave.module.mitigate.v214TeleportApplier";
+        PatchyLoadingInjector.loadUnloadedClassPatched(IntavePlugin.class.getClassLoader(), className);
+        try {
+          applier = (TeleportApplier) Class.forName(className).newInstance();
+        } catch (Exception exception) {
+          throw new IntaveInternalException(exception);
+        }
+
+        // Unused
+        internalTeleportMethod = null;
+      } else if (WEIRD_BOOLEAN_IN_INVOKE) {
         internalTeleportMethod = playerConnectionClass.getDeclaredMethod("internalTeleport", Double.TYPE, Double.TYPE, Double.TYPE, Float.TYPE, Float.TYPE, Set.class, Boolean.TYPE);
       } else {
         internalTeleportMethod = playerConnectionClass.getDeclaredMethod("internalTeleport", Double.TYPE, Double.TYPE, Double.TYPE, Float.TYPE, Float.TYPE, Set.class);
       }
-      if (!internalTeleportMethod.isAccessible()) {
+      if (internalTeleportMethod != null && !internalTeleportMethod.isAccessible()) {
         internalTeleportMethod.setAccessible(true);
       }
     } catch (NoSuchMethodException exception) {
@@ -43,13 +58,15 @@ final class InternalTeleportApplier {
       }
       float fallDistance = player.getFallDistance();
       Object playerConnection = user.playerConnection();
-      Set<?> rFlags = rotationFlags ? TeleportFlag.noRotationChange() : Collections.emptySet();
+      Set<?> rFlags = rotationFlags ? Relative.noRotationChange() : Collections.emptySet();
       double posX = dest.getX();
       double posY = dest.getY();
       double posZ = dest.getZ();
-      if (WEIRD_BOOLEAN_IN_INVOKE) {
+      if (WITHOUT_SET) {
+        applier.teleport(player, posX, posY, posZ, yaw, pitch, rFlags);
+      } else if (WEIRD_BOOLEAN_IN_INVOKE) {
         internalTeleportMethod.invoke(playerConnection, posX, posY, posZ, yaw, pitch, rFlags, false);
-      } else {
+      } else if (!WITHOUT_SET) {
         internalTeleportMethod.invoke(playerConnection, posX, posY, posZ, yaw, pitch, rFlags);
       }
       if (motionY > 0) {

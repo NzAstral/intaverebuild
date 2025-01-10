@@ -9,16 +9,15 @@ import de.jpx3.intave.entity.type.EntityTypeData;
 import de.jpx3.intave.math.Hypot;
 import de.jpx3.intave.module.feedback.FeedbackObserver;
 import de.jpx3.intave.module.feedback.PendingCountingFeedbackObserver;
-import de.jpx3.intave.share.BoundingBox;
-import de.jpx3.intave.share.ClientMath;
-import de.jpx3.intave.share.HistoryWindow;
-import de.jpx3.intave.share.Position;
+import de.jpx3.intave.packet.Relative;
+import de.jpx3.intave.share.*;
 import de.jpx3.intave.user.User;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Entity {
   /*
@@ -27,8 +26,9 @@ public class Entity {
   this type of entity ensures that the synchrosized packets are handled correctly.
   */
   private static Entity DESTROYED_ENTITY;
-  private static final boolean NEW_POSITION_PROCESSING_1_9 = MinecraftVersions.VER1_9_0.atOrAbove();
-  private static final boolean NEW_POSITION_PROCESSING_1_14 = MinecraftVersions.VER1_14_0.atOrAbove();
+  private static final boolean POSITION_PROCESSING_1_9 = MinecraftVersions.VER1_9_0.atOrAbove();
+  private static final boolean POSITION_PROCESSING_1_14 = MinecraftVersions.VER1_14_0.atOrAbove();
+  private static final boolean POSITION_PROCESSING_1_21_4 = MinecraftVersions.VER1_21_4.atOrAbove();
   private EntityTypeData typeData;
 
   private final int entityId;
@@ -183,7 +183,18 @@ public class Entity {
     double newPosX;
     double newPosY;
     double newPosZ;
-    if (NEW_POSITION_PROCESSING_1_9) {
+    if (POSITION_PROCESSING_1_21_4) {
+      PositionMoveRotation posMoveRot = PositionMoveRotation.firstFrom(packet);
+      Set<Relative> flags = Relative.flagsFrom(packet);
+      Position old = immediateServerPosition.filtered(flags);
+      Position change = posMoveRot.position();
+      newPosX = old.getX() + change.getX();
+      newPosY = old.getY() + change.getY();
+      newPosZ = old.getZ() + change.getZ();
+      immServerPosX = ClientMath.positionLong(newPosX);
+      immServerPosY = ClientMath.positionLong(newPosY);
+      immServerPosZ = ClientMath.positionLong(newPosZ);
+    } else if (POSITION_PROCESSING_1_9) {
       newPosX = packet.getDoubles().read(0);
       newPosY = packet.getDoubles().read(1);
       newPosZ = packet.getDoubles().read(2);
@@ -200,9 +211,9 @@ public class Entity {
     }
     // Always set on 1.16+ as they removed the threshold
     boolean samePosition =
-        Math.abs(immediateServerPosition.getX() - newPosX) < 0.03125d &&
-            Math.abs(immediateServerPosition.getY() - newPosY) < 0.015625d &&
-            Math.abs(immediateServerPosition.getZ() - newPosZ) < 0.03125d;
+      Math.abs(immediateServerPosition.getX() - newPosX) < 0.03125d &&
+        Math.abs(immediateServerPosition.getY() - newPosY) < 0.015625d &&
+        Math.abs(immediateServerPosition.getZ() - newPosZ) < 0.03125d;
     if (samePosition && user.protocolVersion() < 735 /* 1.16 protocol version */) {
       return;
     }
@@ -214,15 +225,27 @@ public class Entity {
   /**
    * Handles a teleportation. Packets: ENTITY_TELEPORT
    *
-   * @param user user which received the packet
+   * @param user   user which received the packet
    * @param packet contains information about the entity teleportation
    */
   public void handleEntityTeleport(User user, PacketContainer packet) {
     double newPosX;
     double newPosY;
     double newPosZ;
-
-    if (NEW_POSITION_PROCESSING_1_9) {
+    boolean immediateTeleport = false;
+    if (POSITION_PROCESSING_1_21_4) {
+      PositionMoveRotation posMoveRot = PositionMoveRotation.firstFrom(packet);
+      Set<Relative> flags = Relative.flagsFrom(packet);
+      Position old = position.toPosition().filtered(flags);
+      Position change = posMoveRot.position();
+      newPosX = old.getX() + change.getX();
+      newPosY = old.getY() + change.getY();
+      newPosZ = old.getZ() + change.getZ();
+      serverPosX = ClientMath.positionLong(newPosX);
+      serverPosY = ClientMath.positionLong(newPosY);
+      serverPosZ = ClientMath.positionLong(newPosZ);
+      immediateTeleport = squaredDistanceTo(newPosX, newPosY, newPosZ) > 4096;
+    } else if (POSITION_PROCESSING_1_9) {
       newPosX = packet.getDoubles().read(0);
       newPosY = packet.getDoubles().read(1);
       newPosZ = packet.getDoubles().read(2);
@@ -237,20 +260,21 @@ public class Entity {
       newPosY = serverPosY / 32.0;
       newPosZ = serverPosZ / 32.0;
     }
-
-    // Always set on 1.16+ as they removed the threshold
-    boolean samePosition =
-        Math.abs(position.posX - newPosX) < 0.03125d
-            && Math.abs(position.posY - newPosY) < 0.015625d
-            && Math.abs(position.posZ - newPosZ) < 0.03125d;
-    if (samePosition && user.protocolVersion() < 735 /* 1.16 protocol version */) {
-      setPositionAndRotationEntityLiving(position.posX, position.posY, position.posZ, 3);
+    if (immediateTeleport) {
+      setPosition(newPosX, newPosY, newPosZ);
     } else {
-      setPositionAndRotationEntityLiving(newPosX, newPosY, newPosZ, 3);
+      // Always set on 1.16+ as they removed the threshold
+      boolean samePosition =
+        Math.abs(position.posX - newPosX) < 0.03125d
+          && Math.abs(position.posY - newPosY) < 0.015625d
+          && Math.abs(position.posZ - newPosZ) < 0.03125d;
+      if (samePosition && user.protocolVersion() < 735 /* 1.16 protocol version */) {
+        setPositionAndRotationEntityLiving(position.posX, position.posY, position.posZ, 3);
+      } else {
+        setPositionAndRotationEntityLiving(newPosX, newPosY, newPosZ, 3);
+      }
     }
-
     double alternativeNewPosY = (double) this.serverPosY / 32d + 0.015625d;
-
     if (Math.abs(position.posX - newPosX) < 0.03125d &&
       Math.abs(alternativePosition.posY - alternativeNewPosY) < 0.015625d &&
       Math.abs(position.posZ - newPosZ) < 0.03125d) {
@@ -260,11 +284,57 @@ public class Entity {
     }
   }
 
+  public void handleEntityPositionSync(PacketContainer packet) {
+    double newPosX;
+    double newPosY;
+    double newPosZ;
+    PositionMoveRotation posMoveRot = PositionMoveRotation.firstFrom(packet);
+    Position position = posMoveRot.position();
+    newPosX = position.getX();
+    newPosY = position.getY();
+    newPosZ = position.getZ();
+    serverPosX = ClientMath.positionLong(newPosX);
+    serverPosY = ClientMath.positionLong(newPosY);
+    serverPosZ = ClientMath.positionLong(newPosZ);
+
+    boolean instantTeleport = squaredDistanceTo(newPosX, newPosY, newPosZ) > 4096;
+    if (instantTeleport) {
+      setPosition(newPosX, newPosY, newPosZ);
+    } else {
+      setPositionAndRotationEntityLiving(newPosX, newPosY, newPosZ, 3);
+    }
+  }
+
+  public void immediateEntityPositionSync(PacketContainer packet) {
+    double newPosX;
+    double newPosY;
+    double newPosZ;
+    PositionMoveRotation posMoveRot = PositionMoveRotation.firstFrom(packet);
+    Position position = posMoveRot.position();
+    newPosX = position.getX();
+    newPosY = position.getY();
+    newPosZ = position.getZ();
+    immServerPosX = ClientMath.positionLong(newPosX);
+    immServerPosY = ClientMath.positionLong(newPosY);
+    immServerPosZ = ClientMath.positionLong(newPosZ);
+
+    immediateServerPosition.setX(newPosX);
+    immediateServerPosition.setY(newPosY);
+    immediateServerPosition.setZ(newPosZ);
+  }
+
+  private double squaredDistanceTo(double newX, double newY, double newZ) {
+    double d = newX - position.posX;
+    double e = newY - position.posY;
+    double f = newZ - position.posZ;
+    return d * d + e * e + f * f;
+  }
+
   public void immediateEntityMovement(PacketContainer packet) {
     double newPosX;
     double newPosY;
     double newPosZ;
-    if (NEW_POSITION_PROCESSING_1_14) {
+    if (POSITION_PROCESSING_1_14) {
       StructureModifier<Short> shorts = packet.getShorts();
       this.immServerPosX += shorts.readSafely(0);
       this.immServerPosY += shorts.readSafely(1);
@@ -272,7 +342,7 @@ public class Entity {
       newPosX = (double) immServerPosX / 4096d;
       newPosY = (double) immServerPosY / 4096d;
       newPosZ = (double) immServerPosZ / 4096d;
-    } else if (NEW_POSITION_PROCESSING_1_9) {
+    } else if (POSITION_PROCESSING_1_9) {
       StructureModifier<Integer> integers = packet.getIntegers();
       this.immServerPosX += integers.readSafely(1);
       this.immServerPosY += integers.readSafely(2);
@@ -305,7 +375,7 @@ public class Entity {
     double alternativeNewPosY;
     double newPosZ;
 
-    if (NEW_POSITION_PROCESSING_1_14) {
+    if (POSITION_PROCESSING_1_14) {
       StructureModifier<Short> shorts = packet.getShorts();
       this.serverPosX += shorts.readSafely(0);
       this.serverPosY += shorts.readSafely(1);
@@ -315,7 +385,7 @@ public class Entity {
       newPosY = (double) serverPosY / 4096d;
       alternativeNewPosY = newPosY;
       newPosZ = (double) serverPosZ / 4096d;
-    } else if (NEW_POSITION_PROCESSING_1_9) {
+    } else if (POSITION_PROCESSING_1_9) {
       StructureModifier<Integer> integers = packet.getIntegers();
       this.serverPosX += integers.readSafely(1);
       this.serverPosY += integers.readSafely(2);

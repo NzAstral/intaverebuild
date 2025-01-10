@@ -1,5 +1,6 @@
 package de.jpx3.intave.user.meta;
 
+import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.BlockPosition;
@@ -33,6 +34,7 @@ import de.jpx3.intave.module.dispatch.MovementDispatcher;
 import de.jpx3.intave.module.feedback.Superposition;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.module.tracker.player.PacketLogging;
+import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.player.Effects;
 import de.jpx3.intave.player.ItemProperties;
 import de.jpx3.intave.share.Rotation;
@@ -195,6 +197,8 @@ public final class MovementMetadata implements SimulationEnvironment {
   public volatile boolean transactionTeleportAllow = false;
   public boolean awaitClickMovementSkip;
   public Location teleportLocation;
+  public Motion teleportMotion = new Motion();
+  public Set<Relative> teleportRelatives = EnumSet.noneOf(Relative.class);
   public int teleportResendCountdown = 20;
   public int outgoingTeleportCountdown = 5;
   public long lastRescueAttempt;
@@ -253,6 +257,8 @@ public final class MovementMetadata implements SimulationEnvironment {
   public double criticalEnterPosX, criticalEnterPosY, criticalEnterPosZ;
   public final RateLimiter criticalTeleportRateLimiter = new RateLimiter(10, 2, TimeUnit.SECONDS);
   private volatile Location verifiedLocation;
+  public Input input = new Input();
+  public Input lastInput = new Input();
 
   public MovementMetadata(Player player, User user) {
     this.player = player;
@@ -338,6 +344,8 @@ public final class MovementMetadata implements SimulationEnvironment {
     PacketContainer packet,
     boolean hasMovement, boolean hasRotation
   ) {
+    boolean vehicleMove = packet.getType() == PacketType.Play.Client.VEHICLE_MOVE;
+    boolean containsCollision = MinecraftVersions.VER1_21_4.atOrAbove();
     PacketLogging logging = Modules.tracker().packetLogging();
     if (!boundingBoxSetup) {
       setupDefaults();
@@ -352,6 +360,9 @@ public final class MovementMetadata implements SimulationEnvironment {
     }
     if (hasMovement) {
       StructureModifier<Double> position = packet.getDoubles();
+      if (containsCollision && vehicleMove) {
+        position = packet.getStructures().read(0).getDoubles();
+      }
       positionX = position.read(0);
       positionY = position.read(1);
       positionZ = position.read(2);

@@ -78,6 +78,7 @@ public final class AttributeTracker extends Module {
       Set<WrappedAttributeModifier> serverAttributes = attribute.getModifiers();
       movement.hasSprintSpeed = serverAttributes.contains(MovementMetadata.SPRINTING_MODIFIER);
       intaveAttributes.addAll(new HashSet<>(serverAttributes));
+//      System.out.println(attribute.getAttributeKey());
       abilities.modifyBaseValue(attribute.getAttributeKey(), attribute.getBaseValue());
     }
   }

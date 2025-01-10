@@ -314,8 +314,9 @@ public final class MovementDispatcher extends Module {
 
     PacketType packetType = event.getPacketType();
     boolean vehicleMove = packetType == PacketType.Play.Client.VEHICLE_MOVE;
-    boolean hasMovement = vehicleMove || packet.getBooleans().read(1);
-    boolean hasRotation = vehicleMove || packet.getBooleans().read(2);
+    boolean containsCollision = MinecraftVersions.VER1_21_3.atOrAbove();
+    boolean hasMovement = vehicleMove || packet.getBooleans().read(containsCollision ? 2 : 1);
+    boolean hasRotation = vehicleMove || packet.getBooleans().read(containsCollision ? 3 : 2);
 
     if (movementData.isInVehicle() && !vehicleMove && hasRotation && !hasMovement) {
       movementData.applyGroundInformationToPacket(packet);
@@ -338,6 +339,9 @@ public final class MovementDispatcher extends Module {
 
     if (hasMovement) {
       StructureModifier<Double> modifier = packet.getDoubles();
+      if (containsCollision && vehicleMove) {
+        modifier = packet.getStructures().read(0).getDoubles();
+      }
       for (int i = 0; i < 3; i++) {
         Double read = modifier.read(i);
         if ((read == null || Double.isInfinite(read) || Double.isNaN(read)) && FaultKicks.POSITION_FAULTS) {
@@ -382,6 +386,9 @@ public final class MovementDispatcher extends Module {
       && packet.getType() == PacketType.Play.Client.POSITION_LOOK
     ) {
       StructureModifier<Double> modifier = packet.getDoubles();
+      if (containsCollision && vehicleMove) {
+        modifier = packet.getStructures().read(0).getDoubles();
+      }
       double positionX = modifier.read(0);
       double positionY = modifier.read(1);
       double positionZ = modifier.read(2);
@@ -728,8 +735,9 @@ public final class MovementDispatcher extends Module {
 
     PacketType packetType = event.getPacketType();
     boolean vehicleMove = packetType == PacketType.Play.Client.VEHICLE_MOVE;
-    boolean hasMovement = vehicleMove || packet.getBooleans().read(1);
-    boolean hasRotation = vehicleMove || packet.getBooleans().read(2);
+    boolean containsCollision = MinecraftVersions.VER1_21_3.atOrAbove();
+    boolean hasMovement = vehicleMove || packet.getBooleans().read(containsCollision ? 2 : 1);
+    boolean hasRotation = vehicleMove || packet.getBooleans().read(containsCollision ? 3 : 2);
     boolean claimsToBeOnGround = vehicleMove ? player.isOnGround() : packet.getBooleans().read(0);
 
     for (Superposition<?> superposition : movement.superpositions()) {
@@ -974,20 +982,33 @@ public final class MovementDispatcher extends Module {
     User user = UserRepository.userOf(player);
     MovementMetadata movementData = user.meta().movement();
     PacketContainer packet = event.getPacket();
-    int strafeKey = (int) (packet.getFloat().read(0) / 0.98f);
-    int forwardKey = (int) (packet.getFloat().read(1) / 0.98f);
-    if ((Math.abs(strafeKey) > 1 || Math.abs(forwardKey) > 1) && FaultKicks.INVALID_KEY_INPUT) {
-      user.kick("Invalid key input");
-      return;
-    }
+    if (MinecraftVersions.VER1_21_3.atOrAbove()) {
+      StructureModifier<Boolean> inputBooleans = packet.getStructures().read(0).getBooleans();
+      movementData.lastInput = movementData.input;
+      Input input = new Input();
+      input.setForward(inputBooleans.read(0));
+      input.setBackward(inputBooleans.read(1));
+      input.setLeft(inputBooleans.read(2));
+      input.setRight(inputBooleans.read(3));
+      input.setJump(inputBooleans.read(4));
+      input.setShift(inputBooleans.read(5));
+      input.setSprint(inputBooleans.read(6));
+      movementData.input = input;
+    } else {
+      int strafeKey = (int) (packet.getFloat().read(0) / 0.98f);
+      int forwardKey = (int) (packet.getFloat().read(1) / 0.98f);
+      if ((Math.abs(strafeKey) > 1 || Math.abs(forwardKey) > 1) && FaultKicks.INVALID_KEY_INPUT) {
+        user.kick("Invalid key input");
+        return;
+      }
 //    System.out.println("Steering the vehicle: " + strafeKey + " " + forwardKey);
-    Boolean jumping = packet.getBooleans().read(0);
-    movementData.externalKeyApply = true;
-    movementData.clientStrafeKey = strafeKey;
-    movementData.clientForwardKey = forwardKey;
-    movementData.clientPressedJump = jumping;
+      Boolean jumping = packet.getBooleans().read(0);
+      movementData.externalKeyApply = true;
+      movementData.clientStrafeKey = strafeKey;
+      movementData.clientForwardKey = forwardKey;
+      movementData.clientPressedJump = jumping;
+    }
   }
-
 
   @PacketSubscription(
     engine = Engine.ASYNC_INTERNAL,

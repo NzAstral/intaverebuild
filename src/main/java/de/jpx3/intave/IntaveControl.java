@@ -43,7 +43,7 @@ public final class IntaveControl {
   public static final boolean SIBYL_DEBUG = false;
   public static final boolean SIBYL_ALLOW_ALL = false;
   public static final boolean ENABLE_MEMTRACE = false;
-  public static final boolean NETTY_DUMP_ON_TIMEOUT = false;
+  public static final boolean NETTY_DUMP_ON_TIMEOUT = true;
   public static final boolean FILL_UFOE_STACKTRACE = false;
   public static final boolean USE_TIMINGS = true;
   public static final boolean DEBUG_COLLISION_BOXES = false;
@@ -53,7 +53,7 @@ public final class IntaveControl {
   public static final boolean DEBUG_GRAYLIST = false;
   public static final boolean DEBUG_BLUELIST = false;
   public static final boolean DEBUG_CMS = false;
-  public static final boolean USE_DEBUG_LOCATE_RESOURCE = false;
+  public static final boolean USE_DEBUG_LOCATE_RESOURCE = true;
   public static final boolean USE_DEBUG_TRUSTFACTOR_RESOURCE = false;
   public static final boolean USE_DEBUG_SCRIPT_RESOURCES = false;
   public static final boolean DEBUG_OUTPUT_FOR_TESTS = false;
@@ -76,6 +76,7 @@ public final class IntaveControl {
   public static final boolean MOVEMENT_DEBUGGER_COLLECTOR_POSTTICK_OUTPUT = false;
   public static final boolean AUTHENTICATION_DEBUG_MODE = AUTHTEST;
   public static final boolean CLIENT_KEEP_ALIVE_NETTY_CHECK = false;
+  public static final boolean NOTIFY_MISSING_PACKET_FLUSHES = !PRODUCTION;
 
   public static final OperationalMode SAMPLE_OPERATIONAL_MODE = GOMME ? /*GOMME_UPLOAD*/CLOUD_STORAGE : (PRODUCTION ? CLOUD_STORAGE : LOCAL_STORAGE);
 

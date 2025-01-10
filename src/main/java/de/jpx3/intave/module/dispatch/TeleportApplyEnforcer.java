@@ -2,7 +2,6 @@ package de.jpx3.intave.module.dispatch;
 
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.reflect.StructureModifier;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
@@ -17,8 +16,11 @@ import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketEventSubscriber;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.tracker.player.PacketLogging;
-import de.jpx3.intave.packet.TeleportFlag;
+import de.jpx3.intave.packet.Relative;
+import de.jpx3.intave.packet.reader.PacketReaders;
+import de.jpx3.intave.packet.reader.PlayerTeleportReader;
 import de.jpx3.intave.share.BoundingBox;
+import de.jpx3.intave.share.Motion;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
@@ -31,8 +33,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.DROP_ITEM;
@@ -64,10 +66,10 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
   }
 
   @PacketSubscription(
-    priority = ListenerPriority.LOW,
-    packetsOut = {
-      POSITION
-    }
+      priority = ListenerPriority.LOW,
+      packetsOut = {
+          POSITION
+      }
   )
   public void receiveOutgoingTeleport(PacketEvent event) {
     Player player = event.getPlayer();
@@ -75,58 +77,51 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     User user = UserRepository.userOf(player);
     MovementMetadata movementData = user.meta().movement();
 
-    StructureModifier<Double> doubles = packet.getDoubles();
-    Double positionX = doubles.read(0);
-    Double positionY = doubles.read(1);
-    Double positionZ = doubles.read(2);
-    StructureModifier<Float> floats = packet.getFloat();
-    Float yaw = floats.read(0);
-    Float pitch = floats.read(1);
+    PlayerTeleportReader reader = PacketReaders.readerOf(packet);
+    double positionX = reader.positionX();
+    double positionY = reader.positionY();
+    double positionZ = reader.positionZ();
+    float yaw = reader.yaw();
+    float pitch = reader.pitch();
+    Set<Relative> flags = reader.flags();
 
-    Set<TeleportFlag> flags = TeleportFlag.flagsFrom(packet);
-    boolean relativeX = flags.contains(TeleportFlag.X);
-    boolean relativeY = flags.contains(TeleportFlag.Y);
-    boolean relativeZ = flags.contains(TeleportFlag.Z);
+    boolean relativeX = flags.contains(Relative.X);
+    boolean relativeY = flags.contains(Relative.Y);
+    boolean relativeZ = flags.contains(Relative.Z);
+    boolean relativeXMotion = flags.contains(Relative.DELTA_X);
+    boolean relativeYMotion = flags.contains(Relative.DELTA_Y);
+    boolean relativeZMotion = flags.contains(Relative.DELTA_Z);
+    boolean rotateDelta = flags.contains(Relative.ROTATE_DELTA);
 
     Boolean funkyBoolean = packet.getBooleans().readSafely(0);
     if (funkyBoolean == null) {
       funkyBoolean = false;
     }
 
-    if (relativeX || relativeY || relativeZ) {
-      Vector teleportOffset = new Vector(positionX, positionY, positionZ);
-      if (teleportOffset.length() == 0) {
-        movementData.awaitTeleport = true;
-        movementData.awaitOutgoingTeleport = false;
-        return;
-      }
-    }
-
     boolean flagModification = false;
-
     if (relativeX) {
       positionX += user.meta().movement().verifiedPositionX();
-      doubles.write(0, positionX);
-      flags.remove(TeleportFlag.X);
+      reader.setPositionX(positionX);
+      flags.remove(Relative.X);
       flagModification = true;
     }
 
     if (relativeY) {
       positionY += user.meta().movement().verifiedPositionY();
-      doubles.write(1, positionY);
-      flags.remove(TeleportFlag.Y);
+      reader.setPositionY(positionY);
+      flags.remove(Relative.Y);
       flagModification = true;
     }
 
     if (relativeZ) {
       positionZ += user.meta().movement().verifiedPositionZ();
-      doubles.write(2, positionZ);
-      flags.remove(TeleportFlag.Z);
+      reader.setPositionZ(positionZ);
+      flags.remove(Relative.Z);
       flagModification = true;
     }
 
     if (flagModification) {
-      TeleportFlag.writeFlags(packet, flags);
+      reader.setFlags(flags);
     }
 
     boolean expectRotation = false;//!flags.contains(TeleportFlag.X_ROT) && !flags.contains(TeleportFlag.Y_ROT);
@@ -139,6 +134,11 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
 
     Location teleportLocation = new Location(player.getWorld(), positionX, positionY, positionZ, yaw, pitch);
     movementData.teleportLocation = teleportLocation;
+    if (relativeXMotion || relativeYMotion || relativeZMotion) {
+      movementData.teleportMotion.setTo(reader.motion());
+    }
+    movementData.teleportRelatives = new HashSet<>(flags);
+
     movementData.setVerifiedLocation(teleportLocation.clone(), "Teleportation to " + teleportLocation);
     if (NEW_TELEPORTATION) {
       movementData.teleportId = packet.getIntegers().read(0);
@@ -173,13 +173,15 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     movementData.teleportResendCountdown = 20;
 //    movementData.outgoingTeleportCountdown = 5;
     movementData.isTeleportConfirmationPacket = false;
+
+    reader.release();
   }
 
   @PacketSubscription(
-    priority = ListenerPriority.NORMAL,
-    packetsIn = {
-      TELEPORT_ACCEPT
-    }
+      priority = ListenerPriority.NORMAL,
+      packetsIn = {
+          TELEPORT_ACCEPT
+      }
   )
   public void receiveTeleportAccept(PacketEvent event) {
     Player player = event.getPlayer();
@@ -201,10 +203,10 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
   }
 
   @PacketSubscription(
-    priority = ListenerPriority.HIGH,
-    packetsIn = {
-      BLOCK_DIG
-    }
+      priority = ListenerPriority.HIGH,
+      packetsIn = {
+          BLOCK_DIG
+      }
   )
   public void clientClickUpdate(PacketEvent event) {
     if (!IntaveControl.TELEPORT_FAR_AWAY_ON_Q_PRESS) {
@@ -256,7 +258,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
         }
         Synchronizer.synchronize(() -> {
           Location location = movementData.teleportLocation.clone();
-          if (System.currentTimeMillis() - movementData.lastRescueAttempt > 5000 && !MaterialMagic.blocksMovement(VolatileBlockAccess.typeAccess(user, location.clone().add(0, 1,0)))) {
+          if (System.currentTimeMillis() - movementData.lastRescueAttempt > 5000 && !MaterialMagic.blocksMovement(VolatileBlockAccess.typeAccess(user, location.clone().add(0, 1, 0)))) {
             Material material = VolatileBlockAccess.typeAccess(user, location);
             int limit = 100;
             while (limit-- > 0 && ((material.isBlock() && material != Material.AIR) || MaterialMagic.blocksMovement(material))) {
@@ -287,7 +289,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
           teleportLocation = player.getLocation();
         }
         Location location = teleportLocation.clone();
-        if (System.currentTimeMillis() - movementData.lastRescueAttempt > 5000 && !MaterialMagic.blocksMovement(VolatileBlockAccess.typeAccess(user, location.clone().add(0, 1,0)))) {
+        if (System.currentTimeMillis() - movementData.lastRescueAttempt > 5000 && !MaterialMagic.blocksMovement(VolatileBlockAccess.typeAccess(user, location.clone().add(0, 1, 0)))) {
           Material material = VolatileBlockAccess.typeAccess(user, location);
           int limit = 100;
           while (limit-- > 0 && ((material.isBlock() && material != Material.AIR) || MaterialMagic.blocksMovement(material))) {
@@ -331,8 +333,8 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
       }
     } else {
       double positionDeviation = MathHelper.distanceOf(
-        positionX, positionY, positionZ,
-        teleportLocation.getX(), teleportLocation.getY(), teleportLocation.getZ()
+          positionX, positionY, positionZ,
+          teleportLocation.getX(), teleportLocation.getY(), teleportLocation.getZ()
       );
       if (IntaveControl.DEBUG_TELEPORT_LOCKS) {
         String position = MathHelper.formatPosition(positionX, positionY, positionZ);
@@ -367,10 +369,10 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
       isTeleport = validPosition;
       if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
         player.sendMessage(
-          IntavePlugin.prefix() + "Movement " + (isTeleport ? "matched" : "did not match")
-            + " teleport request to " + MathHelper.formatPosition(teleportLocation) +
-            " (dev: " + positionDeviation + ", rrot: " + movementData.expectTeleportWithRotation +
-            ", tra: "+movementData.transactionTeleportAllow+")"
+            IntavePlugin.prefix() + "Movement " + (isTeleport ? "matched" : "did not match")
+                + " teleport request to " + MathHelper.formatPosition(teleportLocation) +
+                " (dev: " + positionDeviation + ", rrot: " + movementData.expectTeleportWithRotation +
+                ", tra: " + movementData.transactionTeleportAllow + ")"
         );
       }
     }
@@ -385,8 +387,8 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
       releaseAwaitTeleportLock(player);
       applyPositionConfirmationUpdate(player, positionX, positionY, positionZ);
       double teleportLength = MathHelper.resolveHorizontalDistance(
-        movementData.lastPositionX, movementData.lastPositionZ,
-        teleportLocation.getX(), teleportLocation.getZ()
+          movementData.lastPositionX, movementData.lastPositionZ,
+          teleportLocation.getX(), teleportLocation.getZ()
       );
       if (teleportLength > 20) {
         movementData.pastLongTeleport = 0;
@@ -417,9 +419,19 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     movementData.verifiedPositionZ = positionZ;
     movementData.verifiedPositionOrigin = "Teleport";
 
-    movementData.baseMotionX = 0.0;
-    movementData.baseMotionY = 0.0;
-    movementData.baseMotionZ = 0.0;
+    Motion teleportMotionModify = movementData.teleportMotion;
+    Set<Relative> teleportRelatives = movementData.teleportRelatives;
+    if (teleportMotionModify == null || teleportRelatives == null || teleportRelatives.isEmpty()) {
+      movementData.baseMotionX = 0.0;
+      movementData.baseMotionY = 0.0;
+      movementData.baseMotionZ = 0.0;
+    } else {
+      Motion keepMotion = movementData.baseMotion().filtered(teleportRelatives);
+      Motion newMotion = keepMotion.add(teleportMotionModify);
+      movementData.setBaseMotion(newMotion);
+      movementData.teleportMotion.setNull();
+      movementData.teleportRelatives.clear();
+    }
 
     PacketLogging logging = Modules.tracker().packetLogging();
     logging.logSystemMessage(user, () -> "MOTION LOGIC: Reset base motion to 0.0");
