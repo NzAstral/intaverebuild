@@ -98,6 +98,13 @@ public final class MathHelper {
     return formatPosition(vector.getX(), vector.getY(), vector.getZ());
   }
 
+  public static String formatMotion(Motion vector) {
+    if (vector == null) {
+      return "null";
+    }
+    return formatPosition(vector.motionX(), vector.motionY(), vector.motionZ());
+  }
+
   public static String formatPosition(double x, double y, double z) {
     return formatDouble(x, 3) + ", " + formatDouble(y, 4) + ", " + formatDouble(z, 3);
   }

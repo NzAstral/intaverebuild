@@ -7,6 +7,7 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.BlockPosition;
+import com.comphenix.protocol.wrappers.BukkitConverters;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
@@ -79,6 +80,7 @@ import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_9;
 
 @Relocate
 public final class MovementDispatcher extends Module {
+  private final static boolean NEW_EXPLOSION = MinecraftVersions.VER1_21_3.atOrAbove();
   private static final boolean ELYTRA_SUPPORTED = MinecraftVersions.VER1_9_0.atOrAbove();
   private TeleportApplyEnforcer teleportApplyEnforcer;
   private Physics physicsCheck;
@@ -275,13 +277,15 @@ public final class MovementDispatcher extends Module {
       EXPLOSION
     }
   )
-  public void sentExplosion(
-    User user,
-    ExplosionReader reader
-  ) {
-    Motion knockback = reader.knockback();
+  public void sentExplosion(PacketEvent event) {
+    Player player = event.getPlayer();
+    User user = UserRepository.userOf(player);
+    Motion knockback = readExplosionMotion(event);
     if (knockback != null) {
-      user.tickFeedback(() -> {
+      user.packetTickFeedback(event, () -> {
+        if (IntaveControl.DEBUG_VELOCITY_RECEIVE) {
+          player.sendMessage("§a" + MathHelper.formatMotion(knockback));
+        }
         MovementMetadata movementData = user.meta().movement();
         movementData.baseMotionX += knockback.motionX;
         movementData.baseMotionY += knockback.motionY;
@@ -425,7 +429,7 @@ public final class MovementDispatcher extends Module {
     movementData.awaitClickMovementSkip = false;
 
     if (user.receives(MessageChannel.DEBUG_POSITION)) {
-      player.sendMessage("intave:" + formatDouble(movementData.positionY, 2) + " server:" + formatDouble(player.getLocation().getY(),2) );
+      player.sendMessage("intave:" + formatDouble(movementData.positionY, 2) + " server:" + formatDouble(player.getLocation().getY(), 2));
     }
 
     connectionData.receiveMovement();
@@ -1181,11 +1185,11 @@ public final class MovementDispatcher extends Module {
 //          end -> movementData.pendingVelocityPackets.decrementAndGet()
 //        );
 //      } else {
-        Vector finalVelocity = velocity;
-        user.packetTickFeedback(event, () -> {
-          receiveVelocity(player, finalVelocity);
-          movementData.pendingVelocityPackets.decrementAndGet();
-        });
+      Vector finalVelocity = velocity;
+      user.packetTickFeedback(event, () -> {
+        receiveVelocity(player, finalVelocity);
+        movementData.pendingVelocityPackets.decrementAndGet();
+      });
 //      }
       movementData.pastReceiveVelocityPacket = 0;
     }
@@ -1217,8 +1221,8 @@ public final class MovementDispatcher extends Module {
   }
 
   private static final Set<Material> SHULKER_BOX_MATERIALS = MaterialSearch.materialsThatContain("SHULKER_BOX");
-  private static final Set<Material> PISTON_MATERIALS = MaterialSearch.materialsThatContain("PISTON");
 
+  private static final Set<Material> PISTON_MATERIALS = MaterialSearch.materialsThatContain("PISTON");
   @PacketSubscription(
     packetsOut = BLOCK_ACTION
   )
@@ -1483,5 +1487,24 @@ public final class MovementDispatcher extends Module {
     movementData.baseMotionY = movementData.baseMotionYResetCache;
     movementData.baseMotionZ = movementData.baseMotionZResetCache;
     movementData.willReceiveSetbackVelocity = movementData.willReceiveSetbackVelocityResetCache;
+  }
+
+  private Motion readExplosionMotion(PacketEvent event) {
+    PacketContainer packet = event.getPacket();
+    if (NEW_EXPLOSION) {
+      Optional<Vector> read = packet.getOptionals(BukkitConverters.getVectorConverter()).read(0);
+      if (read.isPresent()) {
+        Vector vector = read.get();
+        return new Motion(vector.getX(), vector.getY(), vector.getZ());
+      } else {
+        return null;
+      }
+    } else {
+      StructureModifier<Float> floats = packet.getFloat();
+      double motionX = floats.readSafely(1);
+      double motionY = floats.readSafely(2);
+      double motionZ = floats.readSafely(3);
+      return new Motion(motionX, motionY, motionZ);
+    }
   }
 }
