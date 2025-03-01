@@ -80,11 +80,7 @@ public final class AbilityTracker extends Module {
           Player player = user.player();
           position.setWorld(player.getWorld());
           player.teleport(position);
-          Synchronizer.synchronizeDelayed(() -> {
-            user.tickFeedback(() -> {
-              moovement.criticalFlyingBlockMovementStacks++;
-            });
-          }, 1);
+          moovement.criticalFlyingBlockMovementStacks++;
           if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
             player.sendMessage(IntavePlugin.prefix() + "Teleport to " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " as " + ChatColor.RED + " not responding to critical flight disallow");
           }

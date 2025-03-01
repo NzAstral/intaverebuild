@@ -14,6 +14,7 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.annotate.Native;
+import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckStatistics;
 import de.jpx3.intave.cleanup.GarbageCollector;
@@ -38,6 +39,7 @@ import de.jpx3.intave.player.DamageModify;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.ResourceRegistry;
 import de.jpx3.intave.security.HashAccess;
+import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
@@ -72,6 +74,7 @@ import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -579,8 +582,28 @@ public final class DiagnosticsStage extends CommandStage {
         Bukkit.getScheduler().cancelTask(id[0]);
         return;
       }
+      int attempts = 100;
+      BoundingBox playerBox = BoundingBox.fromPosition(
+        user, user.meta().movement(), player.getLocation()
+      );
+      double moveX;
+      do {
+        moveX = ThreadLocalRandom.current().nextGaussian();
+      } while (Collision.present(player, playerBox.move(moveX, 0, 0)) && attempts-- > 0);
+      if (attempts <= 0) moveX = 0;
+      attempts = 100;
+      double moveY;
+      do {
+        moveY = ThreadLocalRandom.current().nextGaussian();
+      } while (Collision.present(player, playerBox.move(0, moveY, 0)) && attempts-- > 0);
+      double moveZ;
+      do {
+        moveZ = ThreadLocalRandom.current().nextGaussian();
+      } while (Collision.present(player, playerBox.move(0, 0, moveZ)) && attempts-- > 0);
+      if (attempts <= 0) moveZ = 0;
+      if (attempts <= 0) moveY = 0;
+      player.teleport(player.getLocation().clone().add(moveX, moveY, moveZ));
 
-      player.teleport(player.getLocation().add(0, 0, 0));
       if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
         player.sendMessage(IntavePlugin.prefix() + "Teleport to " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " as " + ChatColor.RED + " it was command-requested");
       }
@@ -693,7 +716,7 @@ public final class DiagnosticsStage extends CommandStage {
   @SubCommand(
     selectors = "resync",
     usage = "",
-    permission = "intave.command.diagnostics.performance",
+    permission = "intave.command.diagnostics.statistics",
     description = "Output packet re-synchronizations"
   )
   public void checkPacketResync(CommandSender sender) {

@@ -133,11 +133,6 @@ final class PlayerUser implements User {
     clientData.refresh(player);
     applyNewProtocolVersion();
     outputVersionJoinInfo();
-
-    // requires too many resources
-//    if (IntaveControl.GOMME_MODE && trustFactor().atOrBelow(TrustFactor.RED)) {
-//      MiningStrategy.EMULATION_LIGHT.apply(this);
-//    }
   }
 
   @Override
