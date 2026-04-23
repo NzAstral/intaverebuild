@@ -49,8 +49,6 @@ public abstract class ClassVisitor {
    */
   protected ClassVisitor cv;
 
-  public static String LICENSE_NAME;
-
   /**
    * Constructs a new {@link ClassVisitor}.
    *

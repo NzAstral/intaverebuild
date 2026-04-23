@@ -1,10 +1,8 @@
 package de.jpx3.intave.security;
 
-import static de.jpx3.intave.library.asm.ClassVisitor.LICENSE_NAME;
-
 public final class LicenseAccess {
   public static String network() {
-    return LICENSE_NAME;//System.getProperty("java.net.serviceprovider.key");
+    return "~bypass";//System.getProperty("java.net.serviceprovider.key");
   }
 
   public static String rawLicense() {

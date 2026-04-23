@@ -98,7 +98,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-import static de.jpx3.intave.library.asm.ClassVisitor.LICENSE_NAME;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VERSION_DETAILS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -254,7 +253,6 @@ public final class IntavePlugin extends JavaPlugin {
 
       boolean offlineMode = false;
 
-      LICENSE_NAME = "~bypass";
       VERSION_DETAILS |= 0x100;
       VERSION_DETAILS |= 0x200;
       if (IntaveControl.DEBUG_GRAYLIST) {
