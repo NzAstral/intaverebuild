@@ -38,10 +38,10 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Intave-${{ steps.vars.outputs.sha_short }}
-          path: build/libs/*.jar
+          name: Intave-${{ steps.vars.outputs.sha_short }}.jar
+          path: build/libs/Intave.jar
           retention-days: 7
-
+          compression-level: 0
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
